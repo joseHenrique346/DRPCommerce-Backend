@@ -1,0 +1,6 @@
+@DropCommerce.Api_HostAddress = http://localhost:5069
+
+GET {{DropCommerce.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
