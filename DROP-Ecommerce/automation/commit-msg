@@ -1,0 +1,22 @@
+#!/bin/sh
+
+commit_msg=$(cat "$1")
+
+pattern="^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?(!)?: .{1,100}$"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "Commit rejeitado! A mensagem não segue o padrão Conventional Commits."
+  echo ""
+  echo "   Formato esperado: type(scope): descrição"
+  echo "   Exemplos:"
+  echo "     feat(auth): adiciona login com Google"
+  echo "     fix(api): corrige erro 500 no endpoint de usuários"
+  echo "     chore: atualiza dependências do projeto"
+  echo ""
+  echo "   Tipos válidos: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert"
+  echo ""
+  exit 1
+fi
+
+exit 0
