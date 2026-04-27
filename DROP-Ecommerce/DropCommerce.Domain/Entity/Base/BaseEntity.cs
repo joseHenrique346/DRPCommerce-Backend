@@ -1,6 +1,6 @@
 namespace DropCommerce.Domain.Entity;
 
-public class BaseEntity
+public abstract class BaseEntity
 {
     #region Properties
     public long Id { get; private set; }
