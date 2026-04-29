@@ -1,4 +1,4 @@
-﻿namespace StoreCommerce.Application.Result
+namespace DropCommerce.Application.Result
 {
     internal class Result<TContent>
     {
@@ -17,12 +17,13 @@
             return new Result<TContent>
             {
                 Content = content,
+                IsSuccess = true
             };
         }
 
         public static Result<TContent> FailureFromList(List<string> errors)
         {
-            var result = new Result<TContent> { };
+            var result = new Result<TContent>();
             result.IsSuccess = false;
             result.ListMessageErrors.AddRange(errors);
             return result;
