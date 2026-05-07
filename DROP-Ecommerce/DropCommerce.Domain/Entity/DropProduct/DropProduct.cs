@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropProduct : BaseEntity
 {
+    #region Properties
+
     public long DropEventId { get; private set; }
     public long ProductId { get; private set; }
     public string SKU { get; private set; }
@@ -11,9 +13,13 @@ public class DropProduct : BaseEntity
     public decimal Price { get; private set; }
     public bool IsActive { get; private set; }
 
-    public DropProduct() { }
+    #endregion
 
-    public DropProduct(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    #region Constructors
+
+    protected DropProduct() { }
+
+    private DropProduct(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
         DropEventId = dropEventId;
         ProductId = productId;
@@ -24,4 +30,29 @@ public class DropProduct : BaseEntity
         Price = price;
         IsActive = isActive;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static DropProduct Create(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateNotNullValue(productId);
+        BaseValidate<long>.ValidateIdValue(productId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(sku);
+
+        BaseValidate<int>.ValidateNotNullValue(unitsAllocated);
+        BaseValidate<int>.ValidateNotNullValue(unitsSold);
+        BaseValidate<int>.ValidateNotNullValue(maxPerCustomer);
+
+        BaseValidate<decimal>.ValidateNotNullValue(price);
+
+        return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
+    }
+
+    #endregion
 }

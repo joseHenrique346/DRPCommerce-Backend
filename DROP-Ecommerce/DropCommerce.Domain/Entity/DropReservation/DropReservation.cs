@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropReservation : BaseEntity
 {
+    #region Properties
+
     public long DropEventId { get; private set; }
     public long DropProductId { get; private set; }
     public long CustomerId { get; private set; }
@@ -16,9 +18,13 @@ public class DropReservation : BaseEntity
     public DateTime? ConfirmedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
 
-    public DropReservation() { }
+    #endregion
 
-    public DropReservation(long dropEventId, long dropProductId, long customerId, long queueEntryId, long statusId, int quantity, decimal unitPrice, decimal totalAmount, string lockToken, DateTime reservedAt, DateTime expiresAt, DateTime? confirmedAt, DateTime? cancelledAt)
+    #region Constructors
+
+    protected DropReservation() { }
+
+    private DropReservation(long dropEventId, long dropProductId, long customerId, long queueEntryId, long statusId, int quantity, decimal unitPrice, decimal totalAmount, string lockToken, DateTime reservedAt, DateTime expiresAt, DateTime? confirmedAt, DateTime? cancelledAt)
     {
         DropEventId = dropEventId;
         DropProductId = dropProductId;
@@ -34,4 +40,41 @@ public class DropReservation : BaseEntity
         ConfirmedAt = confirmedAt;
         CancelledAt = cancelledAt;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static DropReservation Create(long dropEventId, long dropProductId, long customerId, long queueEntryId, long statusId, int quantity, decimal unitPrice, decimal totalAmount, string lockToken, DateTime reservedAt, DateTime expiresAt, DateTime? confirmedAt, DateTime? cancelledAt)
+    {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateNotNullValue(dropProductId);
+        BaseValidate<long>.ValidateIdValue(dropProductId);
+
+        BaseValidate<long>.ValidateNotNullValue(customerId);
+        BaseValidate<long>.ValidateIdValue(customerId);
+
+        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
+        BaseValidate<long>.ValidateIdValue(queueEntryId);
+
+        BaseValidate<long>.ValidateNotNullValue(statusId);
+        BaseValidate<long>.ValidateIdValue(statusId);
+
+        BaseValidate<int>.ValidateNotNullValue(quantity);
+
+        BaseValidate<decimal>.ValidateNotNullValue(unitPrice);
+        BaseValidate<decimal>.ValidateNotNullValue(totalAmount);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(lockToken);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(reservedAt);
+        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
+
+        return new DropReservation(dropEventId, dropProductId, customerId, queueEntryId, statusId, quantity, unitPrice, totalAmount, lockToken, reservedAt, expiresAt, confirmedAt, cancelledAt);
+    }
+
+
+    #endregion
 }
