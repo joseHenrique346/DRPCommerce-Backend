@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropOrderItem : BaseEntity
 {
+    #region Properties
+
     public long DropOrderId { get; private set; }
     public long DropProductId { get; private set; }
     public string ItemName { get; private set; }
@@ -10,9 +12,13 @@ public class DropOrderItem : BaseEntity
     public decimal UnitPrice { get; private set; }
     public decimal TotalPrice { get; private set; }
 
-    public DropOrderItem() { }
+    #endregion
 
-    public DropOrderItem(long dropOrderId, long dropProductId, string itemName, string sku, int quantity, decimal unitPrice, decimal totalPrice)
+    #region Constructors
+
+    protected DropOrderItem() { }
+
+    private DropOrderItem(long dropOrderId, long dropProductId, string itemName, string sku, int quantity, decimal unitPrice, decimal totalPrice)
     {
         DropOrderId = dropOrderId;
         DropProductId = dropProductId;
@@ -22,4 +28,15 @@ public class DropOrderItem : BaseEntity
         UnitPrice = unitPrice;
         TotalPrice = totalPrice;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static DropOrderItem Create(long dropOrderId, long dropProductId, string itemName, string sku, int quantity, decimal unitPrice, decimal totalPrice)
+    {
+        return new DropOrderItem(dropOrderId, dropProductId, itemName, sku, quantity, unitPrice, totalPrice);
+    }
+
+    #endregion
 }

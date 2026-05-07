@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropEvent : BaseEntity
 {
+    #region Properties
+
     public long EnterpriseId { get; private set; }
     public long ProductId { get; private set; }
     public string Name { get; private set; }
@@ -22,9 +24,13 @@ public class DropEvent : BaseEntity
     public DateTime DropStartsAt { get; private set; }
     public DateTime DropEndsAt { get; private set; }
 
-    public DropEvent() { }
+    #endregion
 
-    public DropEvent(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    #region Constructors
+
+    protected DropEvent() { }
+
+    private DropEvent(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         EnterpriseId = enterpriseId;
         ProductId = productId;
@@ -46,4 +52,15 @@ public class DropEvent : BaseEntity
         DropStartsAt = dropStartsAt;
         DropEndsAt = dropEndsAt;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static DropEvent Create(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    {
+        return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, statusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
+    }
+
+    #endregion
 }

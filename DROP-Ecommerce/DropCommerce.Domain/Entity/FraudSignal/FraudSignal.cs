@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class FraudSignal : BaseEntity
 {
+    #region Properties
+
     public long CustomerId { get; private set; }
     public long DropEventId { get; private set; }
     public long QueueEntryId { get; private set; }
@@ -15,9 +17,13 @@ public class FraudSignal : BaseEntity
     public DateTime DetectedAt { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
 
-    public FraudSignal() { }
+    #endregion
 
-    public FraudSignal(long customerId, long dropEventId, long queueEntryId, long signalTypeId, long severityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
+    #region Constructors
+
+    protected FraudSignal() { }
+
+    private FraudSignal(long customerId, long dropEventId, long queueEntryId, long signalTypeId, long severityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
     {
         CustomerId = customerId;
         DropEventId = dropEventId;
@@ -32,4 +38,15 @@ public class FraudSignal : BaseEntity
         DetectedAt = detectedAt;
         ReviewedAt = reviewedAt;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static FraudSignal Create(long customerId, long dropEventId, long queueEntryId, long signalTypeId, long severityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
+    {
+        return new FraudSignal(customerId, dropEventId, queueEntryId, signalTypeId, severityId, description, ipAddress, deviceFingerprint, isConfirmed, wasBlocked, detectedAt, reviewedAt);
+    }
+
+    #endregion
 }

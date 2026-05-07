@@ -2,6 +2,8 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropAuditLog : BaseEntity
 {
+    #region Properties
+
     public long DropEventId { get; private set; }
     public long? CustomerId { get; private set; }
     public long? EmployeeId { get; private set; }
@@ -14,9 +16,13 @@ public class DropAuditLog : BaseEntity
     public string UserAgent { get; private set; }
     public DateTime OccurredAt { get; private set; }
 
-    public DropAuditLog() { }
+    #endregion
 
-    public DropAuditLog(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
+    #region Constructors
+
+    protected DropAuditLog() { }
+
+    private DropAuditLog(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
     {
         DropEventId = dropEventId;
         CustomerId = customerId;
@@ -30,4 +36,15 @@ public class DropAuditLog : BaseEntity
         UserAgent = userAgent;
         OccurredAt = occurredAt;
     }
+
+    #endregion
+
+    #region Functions
+
+    public static DropAuditLog Create(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
+    {
+        return new DropAuditLog(dropEventId, customerId, employeeId, action, entityName, entityId, oldValues, newValues, ipAddress, userAgent, occurredAt);
+    }
+
+    #endregion
 }
