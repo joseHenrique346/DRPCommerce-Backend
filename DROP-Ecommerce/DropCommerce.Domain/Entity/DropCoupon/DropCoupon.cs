@@ -47,6 +47,28 @@ public class DropCoupon : BaseEntity
 
     public static DropCoupon Create(long dropEventId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
     {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(code);
+
+        BaseValidate<long>.ValidateNotNullValue(typeId);
+        BaseValidate<long>.ValidateIdValue(typeId);
+
+        BaseValidate<decimal>.ValidateNotNullValue(discountValue);
+        BaseValidate<decimal>.ValidateNotNullValue(minOrderValue);
+        BaseValidate<decimal>.ValidateNotNullValue(maxDiscountCap);
+
+        BaseValidate<int>.ValidateNotNullValue(maxUses);
+        BaseValidate<int>.ValidateNotNullValue(usedCount);
+
+        BaseValidate<bool>.ValidateNotNullValue(isActive);
+        BaseValidate<bool>.ValidateNotNullValue(isSingleUse);
+        BaseValidate<bool>.ValidateNotNullValue(isExclusiveToRegistered);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(startsAt);
+        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
+
         return new DropCoupon(dropEventId, code, typeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, isExclusiveToRegistered, startsAt, expiresAt);
     }
 

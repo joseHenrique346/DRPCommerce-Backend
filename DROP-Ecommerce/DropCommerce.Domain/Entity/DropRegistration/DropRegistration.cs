@@ -34,6 +34,21 @@ public class DropRegistration : BaseEntity
 
     public static DropRegistration Create(long dropEventId, long customerId, long statusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
     {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateNotNullValue(customerId);
+        BaseValidate<long>.ValidateIdValue(customerId);
+
+        BaseValidate<long>.ValidateNotNullValue(statusId);
+        BaseValidate<long>.ValidateIdValue(statusId);
+
+        BaseValidate<bool>.ValidateNotNullValue(isEligible);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(eligibilityReason);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(registeredAt);
+
         return new DropRegistration(dropEventId, customerId, statusId, isEligible, eligibilityReason, registeredAt, eligibilityCheckedAt);
     }
 

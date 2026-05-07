@@ -35,6 +35,20 @@ public class DropOrderItem : BaseEntity
 
     public static DropOrderItem Create(long dropOrderId, long dropProductId, string itemName, string sku, int quantity, decimal unitPrice, decimal totalPrice)
     {
+        BaseValidate<long>.ValidateNotNullValue(dropOrderId);
+        BaseValidate<long>.ValidateIdValue(dropOrderId);
+
+        BaseValidate<long>.ValidateNotNullValue(dropProductId);
+        BaseValidate<long>.ValidateIdValue(dropProductId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(itemName);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(sku);
+
+        BaseValidate<int>.ValidateNotNullValue(quantity);
+
+        BaseValidate<decimal>.ValidateNotNullValue(unitPrice);
+        BaseValidate<decimal>.ValidateNotNullValue(totalPrice);
+
         return new DropOrderItem(dropOrderId, dropProductId, itemName, sku, quantity, unitPrice, totalPrice);
     }
 

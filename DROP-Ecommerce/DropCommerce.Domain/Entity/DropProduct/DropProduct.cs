@@ -37,6 +37,20 @@ public class DropProduct : BaseEntity
 
     public static DropProduct Create(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateNotNullValue(productId);
+        BaseValidate<long>.ValidateIdValue(productId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(sku);
+
+        BaseValidate<int>.ValidateNotNullValue(unitsAllocated);
+        BaseValidate<int>.ValidateNotNullValue(unitsSold);
+        BaseValidate<int>.ValidateNotNullValue(maxPerCustomer);
+
+        BaseValidate<decimal>.ValidateNotNullValue(price);
+
         return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
     }
 

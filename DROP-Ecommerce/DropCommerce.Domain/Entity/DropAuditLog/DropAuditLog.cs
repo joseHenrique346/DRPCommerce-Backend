@@ -43,6 +43,25 @@ public class DropAuditLog : BaseEntity
 
     public static DropAuditLog Create(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
     {
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateIdValue(customerId ?? 1);
+        BaseValidate<long>.ValidateIdValue(employeeId ?? 1);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(action);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(entityName);
+
+        BaseValidate<long>.ValidateIdValue(entityId);
+        BaseValidate<long>.ValidateNotNullValue(entityId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(oldValues);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(newValues);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(ipAddress);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(userAgent);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(occurredAt);
+
         return new DropAuditLog(dropEventId, customerId, employeeId, action, entityName, entityId, oldValues, newValues, ipAddress, userAgent, occurredAt);
     }
 

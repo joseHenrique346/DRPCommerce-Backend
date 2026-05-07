@@ -35,6 +35,22 @@ public class QueueSession : BaseEntity
 
     public static QueueSession Create(long queueEntryId, long customerId, string token, long statusId, DateTime issuedAt, DateTime expiresAt, DateTime lastHeartbeatAt)
     {
+        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
+        BaseValidate<long>.ValidateIdValue(queueEntryId);
+
+        BaseValidate<long>.ValidateNotNullValue(customerId);
+        BaseValidate<long>.ValidateIdValue(customerId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(token);
+
+        BaseValidate<long>.ValidateNotNullValue(statusId);
+
+        BaseValidate<long>.ValidateIdValue(statusId);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(issuedAt);
+        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
+        BaseValidate<DateTime>.ValidateNotNullValue(lastHeartbeatAt);
+
         return new QueueSession(queueEntryId, customerId, token, statusId, issuedAt, expiresAt, lastHeartbeatAt);
     }
 

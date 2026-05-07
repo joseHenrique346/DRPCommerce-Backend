@@ -45,6 +45,30 @@ public class FraudSignal : BaseEntity
 
     public static FraudSignal Create(long customerId, long dropEventId, long queueEntryId, long signalTypeId, long severityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
     {
+        BaseValidate<long>.ValidateNotNullValue(customerId);
+        BaseValidate<long>.ValidateIdValue(customerId);
+
+        BaseValidate<long>.ValidateNotNullValue(dropEventId);
+        BaseValidate<long>.ValidateIdValue(dropEventId);
+
+        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
+        BaseValidate<long>.ValidateIdValue(queueEntryId);
+
+        BaseValidate<long>.ValidateNotNullValue(signalTypeId);
+        BaseValidate<long>.ValidateIdValue(signalTypeId);
+
+        BaseValidate<long>.ValidateNotNullValue(severityId);
+        BaseValidate<long>.ValidateIdValue(severityId);
+
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(description);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(ipAddress);
+        BaseValidate<string>.ValidateStringWhiteSpaceValue(deviceFingerprint);
+
+        BaseValidate<bool>.ValidateNotNullValue(isConfirmed);
+        BaseValidate<bool>.ValidateNotNullValue(wasBlocked);
+
+        BaseValidate<DateTime>.ValidateNotNullValue(detectedAt);
+
         return new FraudSignal(customerId, dropEventId, queueEntryId, signalTypeId, severityId, description, ipAddress, deviceFingerprint, isConfirmed, wasBlocked, detectedAt, reviewedAt);
     }
 
