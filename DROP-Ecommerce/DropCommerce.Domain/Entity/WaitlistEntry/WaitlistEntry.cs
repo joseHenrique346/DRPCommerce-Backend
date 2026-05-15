@@ -42,7 +42,8 @@ public class WaitlistEntry : BaseEntity
         BaseValidate<long>.ValidateNotNullValue(dropEventId);
         BaseValidate<long>.ValidateIdValue(dropEventId);
 
-        BaseValidate<long>.ValidateIdValue(dropProductId ?? 1);
+        if (dropProductId.HasValue)
+            BaseValidate<long>.ValidateIdValue(dropProductId.Value);
 
         BaseValidate<long>.ValidateNotNullValue(customerId);
         BaseValidate<long>.ValidateIdValue(customerId);

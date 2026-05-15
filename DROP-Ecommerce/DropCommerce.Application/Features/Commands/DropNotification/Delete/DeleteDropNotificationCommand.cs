@@ -1,5 +1,6 @@
+﻿using DropCommerce.Application.Result;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class DeleteDropNotificationCommand
-{
-}
+public record class DeleteDropNotificationCommand(long id) : IRequest<Result<bool>> { }

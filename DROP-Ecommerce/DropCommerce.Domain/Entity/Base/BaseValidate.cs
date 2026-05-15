@@ -18,6 +18,17 @@ public static class BaseValidate<TProperty>
         return property;
     }
 
+    public static long? ValidateIdValue(long? property)
+    {
+        if (!property.HasValue)
+            return property;
+
+        if (property.Value == 0)
+            throw new ArgumentNullException(nameof(property) + " Não pode ser 0");
+
+        return property;
+    }
+
     public static string ValidateStringWhiteSpaceValue(string property)
     {
         if (string.IsNullOrWhiteSpace(property))

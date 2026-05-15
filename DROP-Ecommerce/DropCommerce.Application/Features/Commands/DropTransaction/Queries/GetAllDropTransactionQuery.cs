@@ -1,5 +1,8 @@
+﻿using System.Collections.Generic;
+using DropCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllDropTransactionQuery
-{
-}
+public record class GetAllDropTransactionQuery : IRequest<Result<List<DropTransaction>>> { }
