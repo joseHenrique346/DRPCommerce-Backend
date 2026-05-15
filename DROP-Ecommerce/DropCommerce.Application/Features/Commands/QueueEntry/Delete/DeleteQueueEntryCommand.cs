@@ -1,5 +1,6 @@
+﻿using DropCommerce.Application.Result;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class DeleteQueueEntryCommand
-{
-}
+public record class DeleteQueueEntryCommand(long id) : IRequest<Result<bool>> { }

@@ -62,7 +62,8 @@ public class DropOrder : BaseEntity
         BaseValidate<long>.ValidateNotNullValue(reservationId);
         BaseValidate<long>.ValidateIdValue(reservationId);
 
-        BaseValidate<long>.ValidateIdValue(couponId ?? 1);
+        if (couponId.HasValue)
+            BaseValidate<long>.ValidateIdValue(couponId.Value);
 
         BaseValidate<long>.ValidateNotNullValue(statusId);
         BaseValidate<long>.ValidateIdValue(statusId);

@@ -46,8 +46,10 @@ public class DropAuditLog : BaseEntity
         BaseValidate<long>.ValidateNotNullValue(dropEventId);
         BaseValidate<long>.ValidateIdValue(dropEventId);
 
-        BaseValidate<long>.ValidateIdValue(customerId ?? 1);
-        BaseValidate<long>.ValidateIdValue(employeeId ?? 1);
+        if (customerId.HasValue)
+            BaseValidate<long>.ValidateIdValue(customerId.Value);
+        if (employeeId.HasValue)
+            BaseValidate<long>.ValidateIdValue(employeeId.Value);
 
         BaseValidate<string>.ValidateStringWhiteSpaceValue(action);
         BaseValidate<string>.ValidateStringWhiteSpaceValue(entityName);
