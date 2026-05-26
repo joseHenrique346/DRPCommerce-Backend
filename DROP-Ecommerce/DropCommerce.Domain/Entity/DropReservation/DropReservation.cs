@@ -47,34 +47,21 @@ public class DropReservation : BaseEntity
 
     public static DropReservation Create(long dropEventId, long dropProductId, long customerId, long queueEntryId, long statusId, int quantity, decimal unitPrice, decimal totalAmount, string lockToken, DateTime reservedAt, DateTime expiresAt, DateTime? confirmedAt, DateTime? cancelledAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(dropProductId);
-        BaseValidate<long>.ValidateIdValue(dropProductId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
-        BaseValidate<long>.ValidateIdValue(queueEntryId);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<int>.ValidateNotNullValue(quantity);
-
-        BaseValidate<decimal>.ValidateNotNullValue(unitPrice);
-        BaseValidate<decimal>.ValidateNotNullValue(totalAmount);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(lockToken);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(reservedAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateMinimum(quantity, 1, nameof(quantity));
+        BaseValidate.ValidateMinimumDecimal(unitPrice, 0.01m, nameof(unitPrice));
+        BaseValidate.ValidateMinimumDecimal(totalAmount, 0.01m, nameof(totalAmount));
+        BaseValidate.ValidateString(lockToken, nameof(lockToken));
+        BaseValidate.ValidateDate(reservedAt, nameof(reservedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(reservedAt, expiresAt, nameof(reservedAt), nameof(expiresAt));
 
         return new DropReservation(dropEventId, dropProductId, customerId, queueEntryId, statusId, quantity, unitPrice, totalAmount, lockToken, reservedAt, expiresAt, confirmedAt, cancelledAt);
     }
-
 
     #endregion
 }

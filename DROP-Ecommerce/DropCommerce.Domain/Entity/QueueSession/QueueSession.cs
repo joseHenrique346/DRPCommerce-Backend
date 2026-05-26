@@ -35,21 +35,14 @@ public class QueueSession : BaseEntity
 
     public static QueueSession Create(long queueEntryId, long customerId, string token, long statusId, DateTime issuedAt, DateTime expiresAt, DateTime lastHeartbeatAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
-        BaseValidate<long>.ValidateIdValue(queueEntryId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(token);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(issuedAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(lastHeartbeatAt);
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateString(token, nameof(token));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateDate(issuedAt, nameof(issuedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(issuedAt, expiresAt, nameof(issuedAt), nameof(expiresAt));
+        BaseValidate.ValidateDate(lastHeartbeatAt, nameof(lastHeartbeatAt));
 
         return new QueueSession(queueEntryId, customerId, token, statusId, issuedAt, expiresAt, lastHeartbeatAt);
     }

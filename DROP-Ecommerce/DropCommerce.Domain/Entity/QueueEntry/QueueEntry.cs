@@ -45,24 +45,15 @@ public class QueueEntry : BaseEntity
 
     public static QueueEntry Create(long dropEventId, long customerId, string sessionToken, int position, long statusId, string deviceFingerprint, string ipAddress, string userAgent, DateTime enteredAt, DateTime? calledAt, DateTime? expiredAt, DateTime? checkedOutAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(sessionToken);
-
-        BaseValidate<int>.ValidateNotNullValue(position);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(deviceFingerprint);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(ipAddress);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(userAgent);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(enteredAt);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateString(sessionToken, nameof(sessionToken));
+        BaseValidate.ValidateMinimum(position, 1, nameof(position));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateString(deviceFingerprint, nameof(deviceFingerprint));
+        BaseValidate.ValidateRegexString(ipAddress, @"^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$", nameof(ipAddress));
+        BaseValidate.ValidateString(userAgent, nameof(userAgent));
+        BaseValidate.ValidateDate(enteredAt, nameof(enteredAt));
 
         return new QueueEntry(dropEventId, customerId, sessionToken, position, statusId, deviceFingerprint, ipAddress, userAgent, enteredAt, calledAt, expiredAt, checkedOutAt);
     }

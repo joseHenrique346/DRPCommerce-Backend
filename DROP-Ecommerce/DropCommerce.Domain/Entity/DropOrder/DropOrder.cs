@@ -19,7 +19,7 @@ public class DropOrder : BaseEntity
     public string ShippingCity { get; private set; }
     public string ShippingState { get; private set; }
     public string ShippingZipCode { get; private set; }
-    public string Notes { get; private set; }
+    public string? Notes { get; private set; }
 
     #endregion
 
@@ -27,7 +27,7 @@ public class DropOrder : BaseEntity
 
     protected DropOrder() { }
 
-    private DropOrder(long dropEventId, long customerId, long reservationId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    private DropOrder(long dropEventId, long customerId, long reservationId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string? notes)
     {
         DropEventId = dropEventId;
         CustomerId = customerId;
@@ -51,37 +51,23 @@ public class DropOrder : BaseEntity
 
     #region Functions
 
-    public static DropOrder Create(long dropEventId, long customerId, long reservationId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    public static DropOrder Create(long dropEventId, long customerId, long reservationId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string? notes)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<long>.ValidateNotNullValue(reservationId);
-        BaseValidate<long>.ValidateIdValue(reservationId);
-
-        if (couponId.HasValue)
-            BaseValidate<long>.ValidateIdValue(couponId.Value);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<long>.ValidateNotNullValue(paymentStatusId);
-        BaseValidate<long>.ValidateIdValue(paymentStatusId);
-
-        BaseValidate<decimal>.ValidateNotNullValue(subTotal);
-        BaseValidate<decimal>.ValidateNotNullValue(discountAmount);
-        BaseValidate<decimal>.ValidateNotNullValue(shippingCost);
-        BaseValidate<decimal>.ValidateNotNullValue(taxAmount);
-        BaseValidate<decimal>.ValidateNotNullValue(totalAmount);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(shippingAddressLine);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(shippingCity);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(shippingState);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(shippingZipCode);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(notes);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(reservationId, nameof(reservationId));
+        BaseValidate.ValidateIdNullable(couponId, nameof(couponId));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateId(paymentStatusId, nameof(paymentStatusId));
+        BaseValidate.ValidatePositiveDecimal(subTotal, nameof(subTotal));
+        BaseValidate.ValidatePositiveDecimal(discountAmount, nameof(discountAmount));
+        BaseValidate.ValidatePositiveDecimal(shippingCost, nameof(shippingCost));
+        BaseValidate.ValidatePositiveDecimal(taxAmount, nameof(taxAmount));
+        BaseValidate.ValidatePositiveDecimal(totalAmount, nameof(totalAmount));
+        BaseValidate.ValidateString(shippingAddressLine, nameof(shippingAddressLine));
+        BaseValidate.ValidateString(shippingCity, nameof(shippingCity));
+        BaseValidate.ValidateString(shippingState, nameof(shippingState));
+        BaseValidate.ValidateString(shippingZipCode, nameof(shippingZipCode));
 
         return new DropOrder(dropEventId, customerId, reservationId, couponId, statusId, paymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingState, shippingZipCode, notes);
     }

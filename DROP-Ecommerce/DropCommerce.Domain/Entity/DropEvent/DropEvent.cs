@@ -59,32 +59,25 @@ public class DropEvent : BaseEntity
 
     public static DropEvent Create(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(enterpriseId);
-        BaseValidate<long>.ValidateIdValue(enterpriseId);
-
-        BaseValidate<long>.ValidateNotNullValue(productId);
-        BaseValidate<long>.ValidateIdValue(productId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(name);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(slug);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(description);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(coverImageUrl);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(bannerImageUrl);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<int>.ValidateNotNullValue(totalUnitsAvailable);
-        BaseValidate<int>.ValidateNotNullValue(unitsReserved);
-        BaseValidate<int>.ValidateNotNullValue(unitsSold);
-
-        BaseValidate<decimal>.ValidateNotNullValue(price);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(registrationStartsAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(registrationEndsAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(queueOpensAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(dropStartsAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(dropEndsAt);
+        BaseValidate.ValidateId(enterpriseId, nameof(enterpriseId));
+        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateString(name, nameof(name));
+        BaseValidate.ValidateString(slug, nameof(slug));
+        BaseValidate.ValidateString(description, nameof(description));
+        BaseValidate.ValidateString(coverImageUrl, nameof(coverImageUrl));
+        BaseValidate.ValidateString(bannerImageUrl, nameof(bannerImageUrl));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateMinimum(totalUnitsAvailable, 1, nameof(totalUnitsAvailable));
+        BaseValidate.ValidatePositive(unitsReserved, nameof(unitsReserved));
+        BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
+        BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
+        BaseValidate.ValidateDate(registrationStartsAt, nameof(registrationStartsAt));
+        BaseValidate.ValidateDate(registrationEndsAt, nameof(registrationEndsAt));
+        BaseValidate.ValidateDateRange(registrationStartsAt, registrationEndsAt, nameof(registrationStartsAt), nameof(registrationEndsAt));
+        BaseValidate.ValidateDate(queueOpensAt, nameof(queueOpensAt));
+        BaseValidate.ValidateDate(dropStartsAt, nameof(dropStartsAt));
+        BaseValidate.ValidateDate(dropEndsAt, nameof(dropEndsAt));
+        BaseValidate.ValidateDateRange(dropStartsAt, dropEndsAt, nameof(dropStartsAt), nameof(dropEndsAt));
 
         return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, statusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
     }

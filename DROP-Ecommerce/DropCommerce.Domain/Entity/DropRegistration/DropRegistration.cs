@@ -3,6 +3,7 @@ namespace DropCommerce.Domain.Entity;
 public class DropRegistration : BaseEntity
 {
     #region Properties
+
     public long DropEventId { get; private set; }
     public long CustomerId { get; private set; }
     public long StatusId { get; private set; }
@@ -30,24 +31,15 @@ public class DropRegistration : BaseEntity
 
     #endregion
 
-    #region Properties
+    #region Functions
 
     public static DropRegistration Create(long dropEventId, long customerId, long statusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<bool>.ValidateNotNullValue(isEligible);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(eligibilityReason);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(registeredAt);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateString(eligibilityReason, nameof(eligibilityReason));
+        BaseValidate.ValidateDate(registeredAt, nameof(registeredAt));
 
         return new DropRegistration(dropEventId, customerId, statusId, isEligible, eligibilityReason, registeredAt, eligibilityCheckedAt);
     }

@@ -2,7 +2,7 @@ namespace DropCommerce.Domain.Entity;
 
 public class DropNotification : BaseEntity
 {
-    #region Properties 
+    #region Properties
 
     public long DropEventId { get; private set; }
     public long CustomerId { get; private set; }
@@ -39,25 +39,14 @@ public class DropNotification : BaseEntity
 
     public static DropNotification Create(long dropEventId, long customerId, long channelId, long typeId, string subject, string body, long statusId, DateTime scheduledAt, DateTime? sentAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<long>.ValidateNotNullValue(channelId);
-        BaseValidate<long>.ValidateIdValue(channelId);
-
-        BaseValidate<long>.ValidateNotNullValue(typeId);
-        BaseValidate<long>.ValidateIdValue(typeId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(subject);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(body);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(scheduledAt);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(channelId, nameof(channelId));
+        BaseValidate.ValidateId(typeId, nameof(typeId));
+        BaseValidate.ValidateString(subject, nameof(subject));
+        BaseValidate.ValidateString(body, nameof(body));
+        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateDate(scheduledAt, nameof(scheduledAt));
 
         return new DropNotification(dropEventId, customerId, channelId, typeId, subject, body, statusId, scheduledAt, sentAt);
     }

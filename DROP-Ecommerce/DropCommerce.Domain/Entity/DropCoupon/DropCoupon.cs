@@ -47,27 +47,20 @@ public class DropCoupon : BaseEntity
 
     public static DropCoupon Create(long dropEventId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateString(code, nameof(code));
+        BaseValidate.ValidateId(typeId, nameof(typeId));
+        BaseValidate.ValidateMinimumDecimal(discountValue, 0.01m, nameof(discountValue));
+        BaseValidate.ValidatePositiveDecimal(minOrderValue, nameof(minOrderValue));
+        BaseValidate.ValidatePositiveDecimal(maxDiscountCap, nameof(maxDiscountCap));
+        BaseValidate.ValidateMinimum(maxUses, 1, nameof(maxUses));
+        BaseValidate.ValidatePositive(usedCount, nameof(usedCount));
+        BaseValidate.ValidateDate(startsAt, nameof(startsAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(startsAt, expiresAt, nameof(startsAt), nameof(expiresAt));
 
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(code);
-
-        BaseValidate<long>.ValidateNotNullValue(typeId);
-        BaseValidate<long>.ValidateIdValue(typeId);
-
-        BaseValidate<decimal>.ValidateNotNullValue(discountValue);
-        BaseValidate<decimal>.ValidateNotNullValue(minOrderValue);
-        BaseValidate<decimal>.ValidateNotNullValue(maxDiscountCap);
-
-        BaseValidate<int>.ValidateNotNullValue(maxUses);
-        BaseValidate<int>.ValidateNotNullValue(usedCount);
-
-        BaseValidate<bool>.ValidateNotNullValue(isActive);
-        BaseValidate<bool>.ValidateNotNullValue(isSingleUse);
-        BaseValidate<bool>.ValidateNotNullValue(isExclusiveToRegistered);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(startsAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
+        if (usedCount > maxUses)
+            throw new ArgumentException("usedCount não pode exceder maxUses.");
 
         return new DropCoupon(dropEventId, code, typeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, isExclusiveToRegistered, startsAt, expiresAt);
     }

@@ -10,8 +10,8 @@ public class DropAuditLog : BaseEntity
     public string Action { get; private set; }
     public string EntityName { get; private set; }
     public long EntityId { get; private set; }
-    public string OldValues { get; private set; }
-    public string NewValues { get; private set; }
+    public string? OldValues { get; private set; }
+    public string? NewValues { get; private set; }
     public string IpAddress { get; private set; }
     public string UserAgent { get; private set; }
     public DateTime OccurredAt { get; private set; }
@@ -22,7 +22,7 @@ public class DropAuditLog : BaseEntity
 
     protected DropAuditLog() { }
 
-    private DropAuditLog(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
+    private DropAuditLog(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string? oldValues, string? newValues, string ipAddress, string userAgent, DateTime occurredAt)
     {
         DropEventId = dropEventId;
         CustomerId = customerId;
@@ -41,28 +41,17 @@ public class DropAuditLog : BaseEntity
 
     #region Functions
 
-    public static DropAuditLog Create(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string oldValues, string newValues, string ipAddress, string userAgent, DateTime occurredAt)
+    public static DropAuditLog Create(long dropEventId, long? customerId, long? employeeId, string action, string entityName, long entityId, string? oldValues, string? newValues, string ipAddress, string userAgent, DateTime occurredAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        if (customerId.HasValue)
-            BaseValidate<long>.ValidateIdValue(customerId.Value);
-        if (employeeId.HasValue)
-            BaseValidate<long>.ValidateIdValue(employeeId.Value);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(action);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(entityName);
-
-        BaseValidate<long>.ValidateIdValue(entityId);
-        BaseValidate<long>.ValidateNotNullValue(entityId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(oldValues);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(newValues);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(ipAddress);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(userAgent);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(occurredAt);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateIdNullable(customerId, nameof(customerId));
+        BaseValidate.ValidateIdNullable(employeeId, nameof(employeeId));
+        BaseValidate.ValidateString(action, nameof(action));
+        BaseValidate.ValidateString(entityName, nameof(entityName));
+        BaseValidate.ValidateId(entityId, nameof(entityId));
+        BaseValidate.ValidateRegexString(ipAddress, @"^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$", nameof(ipAddress));
+        BaseValidate.ValidateString(userAgent, nameof(userAgent));
+        BaseValidate.ValidateDate(occurredAt, nameof(occurredAt));
 
         return new DropAuditLog(dropEventId, customerId, employeeId, action, entityName, entityId, oldValues, newValues, ipAddress, userAgent, occurredAt);
     }

@@ -45,29 +45,15 @@ public class FraudSignal : BaseEntity
 
     public static FraudSignal Create(long customerId, long dropEventId, long queueEntryId, long signalTypeId, long severityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
-
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(queueEntryId);
-        BaseValidate<long>.ValidateIdValue(queueEntryId);
-
-        BaseValidate<long>.ValidateNotNullValue(signalTypeId);
-        BaseValidate<long>.ValidateIdValue(signalTypeId);
-
-        BaseValidate<long>.ValidateNotNullValue(severityId);
-        BaseValidate<long>.ValidateIdValue(severityId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(description);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(ipAddress);
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(deviceFingerprint);
-
-        BaseValidate<bool>.ValidateNotNullValue(isConfirmed);
-        BaseValidate<bool>.ValidateNotNullValue(wasBlocked);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(detectedAt);
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(signalTypeId, nameof(signalTypeId));
+        BaseValidate.ValidateId(severityId, nameof(severityId));
+        BaseValidate.ValidateString(description, nameof(description));
+        BaseValidate.ValidateRegexString(ipAddress, @"^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$", nameof(ipAddress));
+        BaseValidate.ValidateString(deviceFingerprint, nameof(deviceFingerprint));
+        BaseValidate.ValidateDate(detectedAt, nameof(detectedAt));
 
         return new FraudSignal(customerId, dropEventId, queueEntryId, signalTypeId, severityId, description, ipAddress, deviceFingerprint, isConfirmed, wasBlocked, detectedAt, reviewedAt);
     }
