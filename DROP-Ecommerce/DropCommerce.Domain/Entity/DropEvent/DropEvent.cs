@@ -1,3 +1,5 @@
+using DropCommerce.Domain.StaticEntity;
+
 namespace DropCommerce.Domain.Entity;
 
 public class DropEvent : BaseEntity
@@ -11,7 +13,7 @@ public class DropEvent : BaseEntity
     public string Description { get; private set; }
     public string CoverImageUrl { get; private set; }
     public string BannerImageUrl { get; private set; }
-    public long StatusId { get; private set; }
+    public long DropEventStatusId { get; private set; }
     public int TotalUnitsAvailable { get; private set; }
     public int UnitsReserved { get; private set; }
     public int UnitsSold { get; private set; }
@@ -24,13 +26,29 @@ public class DropEvent : BaseEntity
     public DateTime DropStartsAt { get; private set; }
     public DateTime DropEndsAt { get; private set; }
 
+    #region Navigation Properties
+
+    public DropEventStatus DropEventStatus { get; private set; }
+    public ICollection<DropProduct> ListDropProduct { get; private set; } = [];
+    public ICollection<DropOrder> ListDropOrder { get; private set; } = [];
+    public ICollection<DropCoupon> ListDropCoupon { get; private set; } = [];
+    public ICollection<DropRegistration> ListDropRegistration { get; private set; } = [];
+    public ICollection<DropReservation> ListDropReservation { get; private set; } = [];
+    public ICollection<QueueEntry> ListQueueEntry { get; private set; } = [];
+    public ICollection<WaitlistEntry> ListWaitlistEntry { get; private set; } = [];
+    public ICollection<DropNotification> ListDropNotification { get; private set; } = [];
+    public ICollection<DropAuditLog> ListDropAuditLog { get; private set; } = [];
+    public ICollection<FraudSignal> ListFraudSignal { get; private set; } = [];
+
+    #endregion
+
     #endregion
 
     #region Constructors
 
     protected DropEvent() { }
 
-    private DropEvent(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    private DropEvent(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         EnterpriseId = enterpriseId;
         ProductId = productId;
@@ -39,7 +57,7 @@ public class DropEvent : BaseEntity
         Description = description;
         CoverImageUrl = coverImageUrl;
         BannerImageUrl = bannerImageUrl;
-        StatusId = statusId;
+        DropEventStatusId = dropEventStatusId;
         TotalUnitsAvailable = totalUnitsAvailable;
         UnitsReserved = unitsReserved;
         UnitsSold = unitsSold;
@@ -57,7 +75,7 @@ public class DropEvent : BaseEntity
 
     #region Functions
 
-    public static DropEvent Create(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long statusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    public static DropEvent Create(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         BaseValidate.ValidateId(enterpriseId, nameof(enterpriseId));
         BaseValidate.ValidateId(productId, nameof(productId));
@@ -66,7 +84,7 @@ public class DropEvent : BaseEntity
         BaseValidate.ValidateString(description, nameof(description));
         BaseValidate.ValidateString(coverImageUrl, nameof(coverImageUrl));
         BaseValidate.ValidateString(bannerImageUrl, nameof(bannerImageUrl));
-        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateId(dropEventStatusId, nameof(dropEventStatusId));
         BaseValidate.ValidateMinimum(totalUnitsAvailable, 1, nameof(totalUnitsAvailable));
         BaseValidate.ValidatePositive(unitsReserved, nameof(unitsReserved));
         BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
@@ -79,7 +97,7 @@ public class DropEvent : BaseEntity
         BaseValidate.ValidateDate(dropEndsAt, nameof(dropEndsAt));
         BaseValidate.ValidateDateRange(dropStartsAt, dropEndsAt, nameof(dropStartsAt), nameof(dropEndsAt));
 
-        return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, statusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
+        return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, dropEventStatusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
     }
 
     #endregion

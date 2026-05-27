@@ -13,6 +13,15 @@ public class DropProduct : BaseEntity
     public decimal Price { get; private set; }
     public bool IsActive { get; private set; }
 
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public ICollection<DropOrderItem> ListDropOrderItem { get; private set; } = [];
+    public ICollection<DropReservation> ListDropReservation { get; private set; } = [];
+    public ICollection<WaitlistEntry> ListWaitlistEntry { get; private set; } = [];
+
+    #endregion
+
     #endregion
 
     #region Constructors

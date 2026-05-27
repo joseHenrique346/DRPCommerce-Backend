@@ -1,3 +1,5 @@
+using DropCommerce.Domain.StaticEntity;
+
 namespace DropCommerce.Domain.Entity;
 
 public class DropNotification : BaseEntity
@@ -6,13 +8,22 @@ public class DropNotification : BaseEntity
 
     public long DropEventId { get; private set; }
     public long CustomerId { get; private set; }
-    public long ChannelId { get; private set; }
-    public long TypeId { get; private set; }
+    public long DropNotificationChannelId { get; private set; }
+    public long DropNotificationTypeId { get; private set; }
     public string Subject { get; private set; }
     public string Body { get; private set; }
-    public long StatusId { get; private set; }
+    public long DropNotificationStatusId { get; private set; }
     public DateTime ScheduledAt { get; private set; }
     public DateTime? SentAt { get; private set; }
+
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public DropNotificationChannel DropNotificationChannel { get; private set; }
+    public DropNotificationType DropNotificationType { get; private set; }
+    public DropNotificationStatus DropNotificationStatus { get; private set; }
+
+    #endregion
 
     #endregion
 
@@ -20,15 +31,15 @@ public class DropNotification : BaseEntity
 
     protected DropNotification() { }
 
-    private DropNotification(long dropEventId, long customerId, long channelId, long typeId, string subject, string body, long statusId, DateTime scheduledAt, DateTime? sentAt)
+    private DropNotification(long dropEventId, long customerId, long dropNotificationChannelId, long dropNotificationTypeId, string subject, string body, long dropNotificationStatusId, DateTime scheduledAt, DateTime? sentAt)
     {
         DropEventId = dropEventId;
         CustomerId = customerId;
-        ChannelId = channelId;
-        TypeId = typeId;
+        DropNotificationChannelId = dropNotificationChannelId;
+        DropNotificationTypeId = dropNotificationTypeId;
         Subject = subject;
         Body = body;
-        StatusId = statusId;
+        DropNotificationStatusId = dropNotificationStatusId;
         ScheduledAt = scheduledAt;
         SentAt = sentAt;
     }
@@ -37,18 +48,18 @@ public class DropNotification : BaseEntity
 
     #region Functions
 
-    public static DropNotification Create(long dropEventId, long customerId, long channelId, long typeId, string subject, string body, long statusId, DateTime scheduledAt, DateTime? sentAt)
+    public static DropNotification Create(long dropEventId, long customerId, long dropNotificationChannelId, long dropNotificationTypeId, string subject, string body, long dropNotificationStatusId, DateTime scheduledAt, DateTime? sentAt)
     {
         BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
         BaseValidate.ValidateId(customerId, nameof(customerId));
-        BaseValidate.ValidateId(channelId, nameof(channelId));
-        BaseValidate.ValidateId(typeId, nameof(typeId));
+        BaseValidate.ValidateId(dropNotificationChannelId, nameof(dropNotificationChannelId));
+        BaseValidate.ValidateId(dropNotificationTypeId, nameof(dropNotificationTypeId));
         BaseValidate.ValidateString(subject, nameof(subject));
         BaseValidate.ValidateString(body, nameof(body));
-        BaseValidate.ValidateId(statusId, nameof(statusId));
+        BaseValidate.ValidateId(dropNotificationStatusId, nameof(dropNotificationStatusId));
         BaseValidate.ValidateDate(scheduledAt, nameof(scheduledAt));
 
-        return new DropNotification(dropEventId, customerId, channelId, typeId, subject, body, statusId, scheduledAt, sentAt);
+        return new DropNotification(dropEventId, customerId, dropNotificationChannelId, dropNotificationTypeId, subject, body, dropNotificationStatusId, scheduledAt, sentAt);
     }
 
     #endregion
