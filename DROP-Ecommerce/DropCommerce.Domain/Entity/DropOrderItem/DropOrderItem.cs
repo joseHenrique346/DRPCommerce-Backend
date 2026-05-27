@@ -12,6 +12,13 @@ public class DropOrderItem : BaseEntity
     public decimal UnitPrice { get; private set; }
     public decimal TotalPrice { get; private set; }
 
+    #region Navigation Properties
+
+    public DropOrder DropOrder { get; private set; }
+    public DropProduct DropProduct { get; private set; }
+
+    #endregion
+
     #endregion
 
     #region Constructors

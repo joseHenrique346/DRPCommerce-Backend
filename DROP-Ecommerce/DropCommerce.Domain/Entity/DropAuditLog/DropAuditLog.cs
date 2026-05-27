@@ -16,6 +16,12 @@ public class DropAuditLog : BaseEntity
     public string UserAgent { get; private set; }
     public DateTime OccurredAt { get; private set; }
 
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+
+    #endregion
+
     #endregion
 
     #region Constructors
