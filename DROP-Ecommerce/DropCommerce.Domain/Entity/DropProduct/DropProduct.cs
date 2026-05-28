@@ -1,6 +1,8 @@
+using DropCommerce.Domain.Interfaces;
+
 namespace DropCommerce.Domain.Entity;
 
-public class DropProduct : BaseEntity
+public class DropProduct : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -12,6 +14,8 @@ public class DropProduct : BaseEntity
     public int MaxPerCustomer { get; private set; }
     public decimal Price { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     #region Navigation Properties
 
@@ -55,6 +59,12 @@ public class DropProduct : BaseEntity
         BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
 
         return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Supplier : BaseEntity
+public class Supplier : BaseEntity, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public string CompanyName { get; private set; }

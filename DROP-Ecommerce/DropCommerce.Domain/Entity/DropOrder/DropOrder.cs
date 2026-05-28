@@ -1,8 +1,9 @@
 using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Domain.Entity;
 
-public class DropOrder : BaseEntity
+public class DropOrder : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -22,6 +23,8 @@ public class DropOrder : BaseEntity
     public string ShippingState { get; private set; }
     public string ShippingZipCode { get; private set; }
     public string? Notes { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     #region Navigation Properties
 
@@ -84,6 +87,12 @@ public class DropOrder : BaseEntity
         BaseValidate.ValidateString(shippingZipCode, nameof(shippingZipCode));
 
         return new DropOrder(dropEventId, customerId, dropReservationId, dropCouponId, dropOrderStatusId, dropOrderPaymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingState, shippingZipCode, notes);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

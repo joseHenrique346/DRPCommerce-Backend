@@ -1,6 +1,8 @@
-﻿namespace StoreCommerce.Domain.Entity.Service
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity.Service
 {
-    public class Service : BaseEntity
+    public class Service : BaseEntity, ISoftDeletable, ITenantEntity
     {
         public long EnterpriseId { get; private set; }
         public long CategoryId { get; private set; }
@@ -9,6 +11,8 @@
         public decimal Price { get; private set; }
         public int DurationMinutes { get; private set; }
         public bool IsActive { get; private set; }
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAt { get; private set; }
 
         public Service() { }
 
@@ -23,5 +27,6 @@
             IsActive = isActive;
         }
 
+        public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
     }
 }

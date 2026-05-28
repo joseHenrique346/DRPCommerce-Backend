@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Document : BaseEntity
+public class Document : BaseEntity, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public long ReferenceId { get; private set; }

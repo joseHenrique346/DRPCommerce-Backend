@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Order : BaseEntity
+public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public long CustomerId { get; private set; }
@@ -17,6 +19,8 @@ public class Order : BaseEntity
     public string ShippingState { get; private set; }
     public string ShippingZipCode { get; private set; }
     public string Notes { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     public Order() { }
 
@@ -38,4 +42,6 @@ public class Order : BaseEntity
         ShippingZipCode = shippingZipCode;
         Notes = notes;
     }
+
+    public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
 }
