@@ -1,8 +1,9 @@
 using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Domain.Entity;
 
-public class DropRegistration : BaseEntity
+public class DropRegistration : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -13,6 +14,8 @@ public class DropRegistration : BaseEntity
     public string EligibilityReason { get; private set; }
     public DateTime RegisteredAt { get; private set; }
     public DateTime? EligibilityCheckedAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     #region Navigation Properties
 
@@ -51,6 +54,12 @@ public class DropRegistration : BaseEntity
         BaseValidate.ValidateDate(registeredAt, nameof(registeredAt));
 
         return new DropRegistration(dropEventId, customerId, dropRegistrationStatusId, isEligible, eligibilityReason, registeredAt, eligibilityCheckedAt);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

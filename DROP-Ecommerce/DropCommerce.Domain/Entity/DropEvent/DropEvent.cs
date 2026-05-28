@@ -1,13 +1,16 @@
+using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
 
 namespace DropCommerce.Domain.Entity;
 
-public class DropEvent : BaseEntity
+public class DropEvent : BaseEntity, ISoftDeletable
 {
     #region Properties
 
     public long EnterpriseId { get; private set; }
     public long ProductId { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
     public string Name { get; private set; }
     public string Slug { get; private set; }
     public string Description { get; private set; }
@@ -98,6 +101,12 @@ public class DropEvent : BaseEntity
         BaseValidate.ValidateDateRange(dropStartsAt, dropEndsAt, nameof(dropStartsAt), nameof(dropEndsAt));
 
         return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, dropEventStatusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

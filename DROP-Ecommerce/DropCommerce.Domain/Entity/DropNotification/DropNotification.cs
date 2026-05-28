@@ -1,8 +1,9 @@
 using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Domain.Entity;
 
-public class DropNotification : BaseEntity
+public class DropNotification : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -15,6 +16,8 @@ public class DropNotification : BaseEntity
     public long DropNotificationStatusId { get; private set; }
     public DateTime ScheduledAt { get; private set; }
     public DateTime? SentAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     #region Navigation Properties
 
@@ -60,6 +63,12 @@ public class DropNotification : BaseEntity
         BaseValidate.ValidateDate(scheduledAt, nameof(scheduledAt));
 
         return new DropNotification(dropEventId, customerId, dropNotificationChannelId, dropNotificationTypeId, subject, body, dropNotificationStatusId, scheduledAt, sentAt);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

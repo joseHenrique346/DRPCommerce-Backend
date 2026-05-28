@@ -1,6 +1,8 @@
-﻿namespace StoreCommerce.Domain.Entity.Product
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity.Product
 {
-    public class Product : BaseEntity
+    public class Product : BaseEntity, ISoftDeletable, ITenantEntity
     {
         public long EnterpriseId { get; private set; }
         public long CategoryId { get; private set; }
@@ -20,6 +22,8 @@
         public string ImageUrls { get; private set; }
         public bool IsActive { get; private set; }
         public bool IsDigital { get; private set; }
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAt { get; private set; }
 
         public Product() { }
 
@@ -42,7 +46,8 @@
             ImageUrls = imageUrls;
             IsActive = isActive;
             IsDigital = isDigita;
-
         }
+
+        public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
     }
 }

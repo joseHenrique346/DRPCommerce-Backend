@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Invoice : BaseEntity
+public class Invoice : BaseEntity, ITenantEntity
 {
     public long OrderId { get; private set; }
     public long CustomerId { get; private set; }

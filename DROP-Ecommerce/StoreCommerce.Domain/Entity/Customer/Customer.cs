@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Customer : BaseEntity
+public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }
@@ -14,6 +16,8 @@ public class Customer : BaseEntity
     public DateTime DateOfBirth { get; private set; }
     public bool IsVerified { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     public Customer() { }
 
@@ -32,4 +36,6 @@ public class Customer : BaseEntity
         IsVerified = isVerified;
         IsActive = isActive;
     }
+
+    public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
 }

@@ -1,6 +1,8 @@
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity;
 
-public class Employee : BaseEntity
+public class Employee : BaseEntity, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }

@@ -1,8 +1,9 @@
 using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Domain.Entity;
 
-public class DropReservation : BaseEntity
+public class DropReservation : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -19,6 +20,8 @@ public class DropReservation : BaseEntity
     public DateTime ExpiresAt { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     #region Navigation Properties
 
@@ -73,6 +76,12 @@ public class DropReservation : BaseEntity
         BaseValidate.ValidateDateRange(reservedAt, expiresAt, nameof(reservedAt), nameof(expiresAt));
 
         return new DropReservation(dropEventId, dropProductId, customerId, queueEntryId, dropReservationStatusId, quantity, unitPrice, totalAmount, lockToken, reservedAt, expiresAt, confirmedAt, cancelledAt);
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion
