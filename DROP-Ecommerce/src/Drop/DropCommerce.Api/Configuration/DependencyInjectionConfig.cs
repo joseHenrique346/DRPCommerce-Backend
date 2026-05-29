@@ -8,6 +8,7 @@ public static class DependencyInjectionConfig
     public static IServiceCollection AddApiConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
+        services.AddControllers();
         services.AddOpenApi();
 
         var connectionString = Environment.GetEnvironmentVariable("DROPCOMMERCE_CONNECTION_STRING")
