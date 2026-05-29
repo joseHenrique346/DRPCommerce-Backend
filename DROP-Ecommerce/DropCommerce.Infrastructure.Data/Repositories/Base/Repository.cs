@@ -44,6 +44,11 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
         await _dbSet.AddAsync(entity, cancellationToken);
     }
 
+    public async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+    {
+        await _dbSet.AddRangeAsync(entities, cancellationToken);
+    }
+
     #endregion
 
     #region Update
