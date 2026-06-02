@@ -10,6 +10,7 @@ public static class DependencyInjectionConfig
         services.AddHttpContextAccessor();
         services.AddControllers();
         services.AddOpenApi();
+        services.AddSwaggerGen();
 
         var connectionString = Environment.GetEnvironmentVariable("DROPCOMMERCE_CONNECTION_STRING")
             ?? configuration.GetConnectionString("DefaultConnection")!;

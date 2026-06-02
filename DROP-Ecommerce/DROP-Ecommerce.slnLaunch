@@ -1,0 +1,19 @@
+[
+  {
+    "Name": "DRP-Commerce",
+    "Projects": [
+      {
+        "Path": "src\\Store\\StoreCommerce.Api\\StoreCommerce.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\Drop\\DropCommerce.Api\\DropCommerce.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\Gateway\\Commerce.Gateway\\Commerce.Gateway.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
