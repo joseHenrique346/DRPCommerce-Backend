@@ -9,6 +9,7 @@ public static class DependencyInjectionConfig
     {
         services.AddHttpContextAccessor();
         services.AddOpenApi();
+        services.AddSwaggerGen();
 
         var connectionString = Environment.GetEnvironmentVariable("STORECOMMERCE_CONNECTION_STRING")
             ?? configuration.GetConnectionString("DefaultConnection")!;
