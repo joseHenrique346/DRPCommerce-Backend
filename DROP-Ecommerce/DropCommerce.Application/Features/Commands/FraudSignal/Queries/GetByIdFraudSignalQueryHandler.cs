@@ -1,16 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdFraudSignalQueryHandler(IMediator mediator) : IRequestHandler<GetByIdFraudSignalQuery, Result<FraudSignal>>
+public class GetByIdFraudSignalQueryHandler(IRepository<FraudSignal> repository)
+    : BaseGetByIdHandler<GetByIdFraudSignalQuery, FraudSignal>(repository)
 {
-    public async Task<Result<FraudSignal>> Handle(GetByIdFraudSignalQuery request, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetListByListIdFraudSignalQuery([request.id]), cancellationToken);
-        return result.IsSuccess && result.Content.Count > 0
-            ? Result<FraudSignal>.Success(result.Content.First())
-            : Result<FraudSignal>.Failure("FraudSignal não encontrado.");
-    }
+    protected override long GetById(GetByIdFraudSignalQuery request) => request.id;
 }

@@ -1,13 +1,8 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllDropAuditLogQueryHandler : IRequestHandler<GetAllDropAuditLogQuery, Result<List<DropAuditLog>>>
-{
-    public Task<Result<List<DropAuditLog>>> Handle(GetAllDropAuditLogQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-}
+public class GetAllDropAuditLogQueryHandler(IRepository<DropAuditLog> repository)
+    : BaseGetAllHandler<GetAllDropAuditLogQuery, DropAuditLog>(repository);

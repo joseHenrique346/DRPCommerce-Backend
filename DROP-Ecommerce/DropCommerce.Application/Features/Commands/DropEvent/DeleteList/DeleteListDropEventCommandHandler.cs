@@ -1,12 +1,11 @@
-using DropCommerce.Application.Result;
-using MediatR;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
+using DropCommerce.Domain.Entity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class DeleteListDropEventCommandHandler : IRequestHandler<DeleteListDropEventCommand, Result<bool>>
+public class DeleteListDropEventCommandHandler(IRepository<DropEvent> repository, IUnitOfWork unitOfWork)
+    : BaseDeleteListHandler<DeleteListDropEventCommand, DropEvent>(repository, unitOfWork)
 {
-    public Task<Result<bool>> Handle(DeleteListDropEventCommand request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<long> GetIdList(DeleteListDropEventCommand request) => request.ids;
 }

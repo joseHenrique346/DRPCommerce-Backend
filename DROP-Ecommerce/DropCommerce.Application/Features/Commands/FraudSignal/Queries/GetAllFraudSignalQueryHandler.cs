@@ -1,13 +1,8 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllFraudSignalQueryHandler : IRequestHandler<GetAllFraudSignalQuery, Result<List<FraudSignal>>>
-{
-    public Task<Result<List<FraudSignal>>> Handle(GetAllFraudSignalQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-}
+public class GetAllFraudSignalQueryHandler(IRepository<FraudSignal> repository)
+    : BaseGetAllHandler<GetAllFraudSignalQuery, FraudSignal>(repository);

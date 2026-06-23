@@ -70,5 +70,31 @@ public class QueueEntry : BaseEntity
         return new QueueEntry(dropEventId, customerId, sessionToken, position, queueEntryStatusId, deviceFingerprint, ipAddress, userAgent, enteredAt, calledAt, expiredAt, checkedOutAt);
     }
 
+    public void Update(long dropEventId, long customerId, string sessionToken, int position, long queueEntryStatusId, string deviceFingerprint, string ipAddress, string userAgent, DateTime enteredAt, DateTime? calledAt, DateTime? expiredAt, DateTime? checkedOutAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateString(sessionToken, nameof(sessionToken));
+        BaseValidate.ValidateMinimum(position, 1, nameof(position));
+        BaseValidate.ValidateId(queueEntryStatusId, nameof(queueEntryStatusId));
+        BaseValidate.ValidateString(deviceFingerprint, nameof(deviceFingerprint));
+        BaseValidate.ValidateRegexString(ipAddress, @"^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$", nameof(ipAddress));
+        BaseValidate.ValidateString(userAgent, nameof(userAgent));
+        BaseValidate.ValidateDate(enteredAt, nameof(enteredAt));
+
+        DropEventId = dropEventId;
+        CustomerId = customerId;
+        SessionToken = sessionToken;
+        Position = position;
+        QueueEntryStatusId = queueEntryStatusId;
+        DeviceFingerprint = deviceFingerprint;
+        IpAddress = ipAddress;
+        UserAgent = userAgent;
+        EnteredAt = enteredAt;
+        CalledAt = calledAt;
+        ExpiredAt = expiredAt;
+        CheckedOutAt = checkedOutAt;
+    }
+
     #endregion
 }

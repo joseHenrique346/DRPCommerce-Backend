@@ -56,5 +56,25 @@ public class QueueSession : BaseEntity
         return new QueueSession(queueEntryId, customerId, token, queueSessionStatusId, issuedAt, expiresAt, lastHeartbeatAt);
     }
 
+    public void Update(long queueEntryId, long customerId, string token, long queueSessionStatusId, DateTime issuedAt, DateTime expiresAt, DateTime lastHeartbeatAt)
+    {
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateString(token, nameof(token));
+        BaseValidate.ValidateId(queueSessionStatusId, nameof(queueSessionStatusId));
+        BaseValidate.ValidateDate(issuedAt, nameof(issuedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(issuedAt, expiresAt, nameof(issuedAt), nameof(expiresAt));
+        BaseValidate.ValidateDate(lastHeartbeatAt, nameof(lastHeartbeatAt));
+
+        QueueEntryId = queueEntryId;
+        CustomerId = customerId;
+        Token = token;
+        QueueSessionStatusId = queueSessionStatusId;
+        IssuedAt = issuedAt;
+        ExpiresAt = expiresAt;
+        LastHeartbeatAt = lastHeartbeatAt;
+    }
+
     #endregion
 }

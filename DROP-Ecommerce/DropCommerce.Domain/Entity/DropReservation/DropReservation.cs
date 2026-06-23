@@ -78,6 +78,36 @@ public class DropReservation : BaseEntity, ISoftDeletable
         return new DropReservation(dropEventId, dropProductId, customerId, queueEntryId, dropReservationStatusId, quantity, unitPrice, totalAmount, lockToken, reservedAt, expiresAt, confirmedAt, cancelledAt);
     }
 
+    public void Update(long dropEventId, long dropProductId, long customerId, long queueEntryId, long dropReservationStatusId, int quantity, decimal unitPrice, decimal totalAmount, string lockToken, DateTime reservedAt, DateTime expiresAt, DateTime? confirmedAt, DateTime? cancelledAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(dropReservationStatusId, nameof(dropReservationStatusId));
+        BaseValidate.ValidateMinimum(quantity, 1, nameof(quantity));
+        BaseValidate.ValidateMinimumDecimal(unitPrice, 0.01m, nameof(unitPrice));
+        BaseValidate.ValidateMinimumDecimal(totalAmount, 0.01m, nameof(totalAmount));
+        BaseValidate.ValidateString(lockToken, nameof(lockToken));
+        BaseValidate.ValidateDate(reservedAt, nameof(reservedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(reservedAt, expiresAt, nameof(reservedAt), nameof(expiresAt));
+
+        DropEventId = dropEventId;
+        DropProductId = dropProductId;
+        CustomerId = customerId;
+        QueueEntryId = queueEntryId;
+        DropReservationStatusId = dropReservationStatusId;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        TotalAmount = totalAmount;
+        LockToken = lockToken;
+        ReservedAt = reservedAt;
+        ExpiresAt = expiresAt;
+        ConfirmedAt = confirmedAt;
+        CancelledAt = cancelledAt;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

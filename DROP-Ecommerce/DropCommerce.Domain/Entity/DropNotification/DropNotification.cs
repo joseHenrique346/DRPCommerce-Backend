@@ -65,6 +65,28 @@ public class DropNotification : BaseEntity, ISoftDeletable
         return new DropNotification(dropEventId, customerId, dropNotificationChannelId, dropNotificationTypeId, subject, body, dropNotificationStatusId, scheduledAt, sentAt);
     }
 
+    public void Update(long dropEventId, long customerId, long dropNotificationChannelId, long dropNotificationTypeId, string subject, string body, long dropNotificationStatusId, DateTime scheduledAt, DateTime? sentAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropNotificationChannelId, nameof(dropNotificationChannelId));
+        BaseValidate.ValidateId(dropNotificationTypeId, nameof(dropNotificationTypeId));
+        BaseValidate.ValidateString(subject, nameof(subject));
+        BaseValidate.ValidateString(body, nameof(body));
+        BaseValidate.ValidateId(dropNotificationStatusId, nameof(dropNotificationStatusId));
+        BaseValidate.ValidateDate(scheduledAt, nameof(scheduledAt));
+
+        DropEventId = dropEventId;
+        CustomerId = customerId;
+        DropNotificationChannelId = dropNotificationChannelId;
+        DropNotificationTypeId = dropNotificationTypeId;
+        Subject = subject;
+        Body = body;
+        DropNotificationStatusId = dropNotificationStatusId;
+        ScheduledAt = scheduledAt;
+        SentAt = sentAt;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

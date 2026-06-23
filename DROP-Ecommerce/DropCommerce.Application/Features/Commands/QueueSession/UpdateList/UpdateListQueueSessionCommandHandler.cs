@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListQueueSessionCommandHandler : IRequestHandler<UpdateListQueueSessionCommand, Result<List<QueueSession>>>
+public class UpdateListQueueSessionCommandHandler(IRepository<QueueSession> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateQueueSessionCommand, UpdateListQueueSessionCommand, QueueSession>(repository, unitOfWork)
 {
-    public Task<Result<List<QueueSession>>> Handle(UpdateListQueueSessionCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateQueueSessionCommand> GetCommandList(UpdateListQueueSessionCommand request) => request.commands;
+
+    protected override long GetById(UpdateQueueSessionCommand command) => command.id;
+
+    protected override void ApplyChanges(QueueSession entity, UpdateQueueSessionCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.queueEntryId, command.customerId, command.token, command.statusId, command.issuedAt, command.expiresAt, command.lastHeartbeatAt);
     }
 }

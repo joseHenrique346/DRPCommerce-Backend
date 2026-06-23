@@ -89,6 +89,42 @@ public class DropOrder : BaseEntity, ISoftDeletable
         return new DropOrder(dropEventId, customerId, dropReservationId, dropCouponId, dropOrderStatusId, dropOrderPaymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingState, shippingZipCode, notes);
     }
 
+    public void Update(long dropEventId, long customerId, long dropReservationId, long? dropCouponId, long dropOrderStatusId, long dropOrderPaymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string? notes)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropReservationId, nameof(dropReservationId));
+        BaseValidate.ValidateIdNullable(dropCouponId, nameof(dropCouponId));
+        BaseValidate.ValidateId(dropOrderStatusId, nameof(dropOrderStatusId));
+        BaseValidate.ValidateId(dropOrderPaymentStatusId, nameof(dropOrderPaymentStatusId));
+        BaseValidate.ValidatePositiveDecimal(subTotal, nameof(subTotal));
+        BaseValidate.ValidatePositiveDecimal(discountAmount, nameof(discountAmount));
+        BaseValidate.ValidatePositiveDecimal(shippingCost, nameof(shippingCost));
+        BaseValidate.ValidatePositiveDecimal(taxAmount, nameof(taxAmount));
+        BaseValidate.ValidatePositiveDecimal(totalAmount, nameof(totalAmount));
+        BaseValidate.ValidateString(shippingAddressLine, nameof(shippingAddressLine));
+        BaseValidate.ValidateString(shippingCity, nameof(shippingCity));
+        BaseValidate.ValidateString(shippingState, nameof(shippingState));
+        BaseValidate.ValidateString(shippingZipCode, nameof(shippingZipCode));
+
+        DropEventId = dropEventId;
+        CustomerId = customerId;
+        DropReservationId = dropReservationId;
+        DropCouponId = dropCouponId;
+        DropOrderStatusId = dropOrderStatusId;
+        DropOrderPaymentStatusId = dropOrderPaymentStatusId;
+        SubTotal = subTotal;
+        DiscountAmount = discountAmount;
+        ShippingCost = shippingCost;
+        TaxAmount = taxAmount;
+        TotalAmount = totalAmount;
+        ShippingAddressLine = shippingAddressLine;
+        ShippingCity = shippingCity;
+        ShippingState = shippingState;
+        ShippingZipCode = shippingZipCode;
+        Notes = notes;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

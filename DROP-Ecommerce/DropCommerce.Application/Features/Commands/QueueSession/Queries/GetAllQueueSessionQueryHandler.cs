@@ -1,13 +1,8 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllQueueSessionQueryHandler : IRequestHandler<GetAllQueueSessionQuery, Result<List<QueueSession>>>
-{
-    public Task<Result<List<QueueSession>>> Handle(GetAllQueueSessionQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-}
+public class GetAllQueueSessionQueryHandler(IRepository<QueueSession> repository)
+    : BaseGetAllHandler<GetAllQueueSessionQuery, QueueSession>(repository);

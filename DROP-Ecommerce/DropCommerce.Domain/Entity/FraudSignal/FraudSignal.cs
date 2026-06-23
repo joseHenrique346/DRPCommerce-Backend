@@ -69,5 +69,31 @@ public class FraudSignal : BaseEntity
         return new FraudSignal(customerId, dropEventId, queueEntryId, fraudSignalTypeId, fraudSeverityId, description, ipAddress, deviceFingerprint, isConfirmed, wasBlocked, detectedAt, reviewedAt);
     }
 
+    public void Update(long customerId, long dropEventId, long queueEntryId, long fraudSignalTypeId, long fraudSeverityId, string description, string ipAddress, string deviceFingerprint, bool isConfirmed, bool wasBlocked, DateTime detectedAt, DateTime? reviewedAt)
+    {
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(queueEntryId, nameof(queueEntryId));
+        BaseValidate.ValidateId(fraudSignalTypeId, nameof(fraudSignalTypeId));
+        BaseValidate.ValidateId(fraudSeverityId, nameof(fraudSeverityId));
+        BaseValidate.ValidateString(description, nameof(description));
+        BaseValidate.ValidateRegexString(ipAddress, @"^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$", nameof(ipAddress));
+        BaseValidate.ValidateString(deviceFingerprint, nameof(deviceFingerprint));
+        BaseValidate.ValidateDate(detectedAt, nameof(detectedAt));
+
+        CustomerId = customerId;
+        DropEventId = dropEventId;
+        QueueEntryId = queueEntryId;
+        FraudSignalTypeId = fraudSignalTypeId;
+        FraudSeverityId = fraudSeverityId;
+        Description = description;
+        IpAddress = ipAddress;
+        DeviceFingerprint = deviceFingerprint;
+        IsConfirmed = isConfirmed;
+        WasBlocked = wasBlocked;
+        DetectedAt = detectedAt;
+        ReviewedAt = reviewedAt;
+    }
+
     #endregion
 }

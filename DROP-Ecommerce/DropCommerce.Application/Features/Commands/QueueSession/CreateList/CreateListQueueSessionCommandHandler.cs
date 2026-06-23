@@ -1,13 +1,14 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class CreateListQueueSessionCommandHandler : IRequestHandler<CreateListQueueSessionCommand, Result<List<QueueSession>>>
+public class CreateListQueueSessionCommandHandler(IRepository<QueueSession> repository, IUnitOfWork unitOfWork)
+    : BaseCreateListHandler<CreateQueueSessionCommand, CreateListQueueSessionCommand, QueueSession>(repository, unitOfWork)
 {
-    public Task<Result<List<QueueSession>>> Handle(CreateListQueueSessionCommand request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<CreateQueueSessionCommand> GetCommandList(CreateListQueueSessionCommand request) => request.commands;
+
+    protected override QueueSession CreateEntity(CreateQueueSessionCommand command) =>
+        QueueSession.Create(command.queueEntryId, command.customerId, command.token, command.statusId, command.issuedAt, command.expiresAt, command.lastHeartbeatAt);
 }

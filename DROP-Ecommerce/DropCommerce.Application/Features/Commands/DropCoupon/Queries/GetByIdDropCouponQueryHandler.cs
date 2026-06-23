@@ -1,16 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdDropCouponQueryHandler(IMediator mediator) : IRequestHandler<GetByIdDropCouponQuery, Result<DropCoupon>>
+public class GetByIdDropCouponQueryHandler(IRepository<DropCoupon> repository)
+    : BaseGetByIdHandler<GetByIdDropCouponQuery, DropCoupon>(repository)
 {
-    public async Task<Result<DropCoupon>> Handle(GetByIdDropCouponQuery request, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetListByListIdDropCouponQuery([request.id]), cancellationToken);
-        return result.IsSuccess && result.Content.Count > 0
-            ? Result<DropCoupon>.Success(result.Content.First())
-            : Result<DropCoupon>.Failure("DropCoupon não encontrado.");
-    }
+    protected override long GetById(GetByIdDropCouponQuery request) => request.id;
 }

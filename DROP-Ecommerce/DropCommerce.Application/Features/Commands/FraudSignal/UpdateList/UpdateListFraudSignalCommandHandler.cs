@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListFraudSignalCommandHandler : IRequestHandler<UpdateListFraudSignalCommand, Result<List<FraudSignal>>>
+public class UpdateListFraudSignalCommandHandler(IRepository<FraudSignal> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateFraudSignalCommand, UpdateListFraudSignalCommand, FraudSignal>(repository, unitOfWork)
 {
-    public Task<Result<List<FraudSignal>>> Handle(UpdateListFraudSignalCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateFraudSignalCommand> GetCommandList(UpdateListFraudSignalCommand request) => request.commands;
+
+    protected override long GetById(UpdateFraudSignalCommand command) => command.id;
+
+    protected override void ApplyChanges(FraudSignal entity, UpdateFraudSignalCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.customerId, command.dropEventId, command.queueEntryId, command.signalTypeId, command.severityId, command.description, command.ipAddress, command.deviceFingerprint, command.isConfirmed, command.wasBlocked, command.detectedAt, command.reviewedAt);
     }
 }

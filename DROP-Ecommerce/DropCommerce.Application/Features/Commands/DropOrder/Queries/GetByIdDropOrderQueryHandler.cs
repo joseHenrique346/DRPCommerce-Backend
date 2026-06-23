@@ -1,16 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdDropOrderQueryHandler(IMediator mediator) : IRequestHandler<GetByIdDropOrderQuery, Result<DropOrder>>
+public class GetByIdDropOrderQueryHandler(IRepository<DropOrder> repository)
+    : BaseGetByIdHandler<GetByIdDropOrderQuery, DropOrder>(repository)
 {
-    public async Task<Result<DropOrder>> Handle(GetByIdDropOrderQuery request, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetListByListIdDropOrderQuery([request.id]), cancellationToken);
-        return result.IsSuccess && result.Content.Count > 0
-            ? Result<DropOrder>.Success(result.Content.First())
-            : Result<DropOrder>.Failure("DropOrder não encontrado.");
-    }
+    protected override long GetById(GetByIdDropOrderQuery request) => request.id;
 }
