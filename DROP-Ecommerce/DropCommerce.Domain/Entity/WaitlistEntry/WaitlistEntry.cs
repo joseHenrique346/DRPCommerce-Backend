@@ -61,5 +61,27 @@ public class WaitlistEntry : BaseEntity
         return new WaitlistEntry(dropEventId, dropProductId, customerId, position, waitlistEntryStatusId, notificationSent, joinedAt, notifiedAt, expiresAt);
     }
 
+    public void Update(long dropEventId, long? dropProductId, long customerId, int position, long waitlistEntryStatusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateIdNullable(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateMinimum(position, 1, nameof(position));
+        BaseValidate.ValidateId(waitlistEntryStatusId, nameof(waitlistEntryStatusId));
+        BaseValidate.ValidateDate(joinedAt, nameof(joinedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(joinedAt, expiresAt, nameof(joinedAt), nameof(expiresAt));
+
+        DropEventId = dropEventId;
+        DropProductId = dropProductId;
+        CustomerId = customerId;
+        Position = position;
+        WaitlistEntryStatusId = waitlistEntryStatusId;
+        NotificationSent = notificationSent;
+        JoinedAt = joinedAt;
+        NotifiedAt = notifiedAt;
+        ExpiresAt = expiresAt;
+    }
+
     #endregion
 }

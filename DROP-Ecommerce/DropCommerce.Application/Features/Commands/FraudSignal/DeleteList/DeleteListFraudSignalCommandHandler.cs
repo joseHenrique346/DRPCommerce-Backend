@@ -1,12 +1,11 @@
-using DropCommerce.Application.Result;
-using MediatR;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
+using DropCommerce.Domain.Entity;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class DeleteListFraudSignalCommandHandler : IRequestHandler<DeleteListFraudSignalCommand, Result<bool>>
+public class DeleteListFraudSignalCommandHandler(IRepository<FraudSignal> repository, IUnitOfWork unitOfWork)
+    : BaseDeleteListHandler<DeleteListFraudSignalCommand, FraudSignal>(repository, unitOfWork)
 {
-    public Task<Result<bool>> Handle(DeleteListFraudSignalCommand request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<long> GetIdList(DeleteListFraudSignalCommand request) => request.ids;
 }

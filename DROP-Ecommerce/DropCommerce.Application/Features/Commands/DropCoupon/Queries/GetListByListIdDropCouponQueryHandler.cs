@@ -1,13 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetListByListIdDropCouponQueryHandler : IRequestHandler<GetListByListIdDropCouponQuery, Result<List<DropCoupon>>>
+public class GetListByListIdDropCouponQueryHandler(IRepository<DropCoupon> repository)
+    : BaseGetListByListIdHandler<GetListByListIdDropCouponQuery, DropCoupon>(repository)
 {
-    public Task<Result<List<DropCoupon>>> Handle(GetListByListIdDropCouponQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<long> GetListByListId(GetListByListIdDropCouponQuery request) => request.listId;
 }

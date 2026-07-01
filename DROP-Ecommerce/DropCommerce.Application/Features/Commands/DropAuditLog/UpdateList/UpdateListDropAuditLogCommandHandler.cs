@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListDropAuditLogCommandHandler : IRequestHandler<UpdateListDropAuditLogCommand, Result<List<DropAuditLog>>>
+public class UpdateListDropAuditLogCommandHandler(IRepository<DropAuditLog> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateDropAuditLogCommand, UpdateListDropAuditLogCommand, DropAuditLog>(repository, unitOfWork)
 {
-    public Task<Result<List<DropAuditLog>>> Handle(UpdateListDropAuditLogCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateDropAuditLogCommand> GetCommandList(UpdateListDropAuditLogCommand request) => request.commands;
+
+    protected override long GetById(UpdateDropAuditLogCommand command) => command.id;
+
+    protected override void ApplyChanges(DropAuditLog entity, UpdateDropAuditLogCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.dropEventId, command.customerId, command.employeeId, command.action, command.entityName, command.entityId, command.oldValues, command.newValues, command.ipAddress, command.userAgent, command.occurredAt);
     }
 }

@@ -103,6 +103,49 @@ public class DropEvent : BaseEntity, ISoftDeletable
         return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, dropEventStatusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
     }
 
+    public void Update(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    {
+        BaseValidate.ValidateId(enterpriseId, nameof(enterpriseId));
+        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateString(name, nameof(name));
+        BaseValidate.ValidateString(slug, nameof(slug));
+        BaseValidate.ValidateString(description, nameof(description));
+        BaseValidate.ValidateString(coverImageUrl, nameof(coverImageUrl));
+        BaseValidate.ValidateString(bannerImageUrl, nameof(bannerImageUrl));
+        BaseValidate.ValidateId(dropEventStatusId, nameof(dropEventStatusId));
+        BaseValidate.ValidateMinimum(totalUnitsAvailable, 1, nameof(totalUnitsAvailable));
+        BaseValidate.ValidatePositive(unitsReserved, nameof(unitsReserved));
+        BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
+        BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
+        BaseValidate.ValidateDate(registrationStartsAt, nameof(registrationStartsAt));
+        BaseValidate.ValidateDate(registrationEndsAt, nameof(registrationEndsAt));
+        BaseValidate.ValidateDateRange(registrationStartsAt, registrationEndsAt, nameof(registrationStartsAt), nameof(registrationEndsAt));
+        BaseValidate.ValidateDate(queueOpensAt, nameof(queueOpensAt));
+        BaseValidate.ValidateDate(dropStartsAt, nameof(dropStartsAt));
+        BaseValidate.ValidateDate(dropEndsAt, nameof(dropEndsAt));
+        BaseValidate.ValidateDateRange(dropStartsAt, dropEndsAt, nameof(dropStartsAt), nameof(dropEndsAt));
+
+        EnterpriseId = enterpriseId;
+        ProductId = productId;
+        Name = name;
+        Slug = slug;
+        Description = description;
+        CoverImageUrl = coverImageUrl;
+        BannerImageUrl = bannerImageUrl;
+        DropEventStatusId = dropEventStatusId;
+        TotalUnitsAvailable = totalUnitsAvailable;
+        UnitsReserved = unitsReserved;
+        UnitsSold = unitsSold;
+        Price = price;
+        RequiresRegistration = requiresRegistration;
+        IsPublic = isPublic;
+        RegistrationStartsAt = registrationStartsAt;
+        RegistrationEndsAt = registrationEndsAt;
+        QueueOpensAt = queueOpensAt;
+        DropStartsAt = dropStartsAt;
+        DropEndsAt = dropEndsAt;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

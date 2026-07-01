@@ -1,13 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetListByListIdFraudSignalQueryHandler : IRequestHandler<GetListByListIdFraudSignalQuery, Result<List<FraudSignal>>>
+public class GetListByListIdFraudSignalQueryHandler(IRepository<FraudSignal> repository)
+    : BaseGetListByListIdHandler<GetListByListIdFraudSignalQuery, FraudSignal>(repository)
 {
-    public Task<Result<List<FraudSignal>>> Handle(GetListByListIdFraudSignalQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<long> GetListByListId(GetListByListIdFraudSignalQuery request) => request.listId;
 }

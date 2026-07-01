@@ -1,13 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetListByListIdWaitlistEntryQueryHandler : IRequestHandler<GetListByListIdWaitlistEntryQuery, Result<List<WaitlistEntry>>>
+public class GetListByListIdWaitlistEntryQueryHandler(IRepository<WaitlistEntry> repository)
+    : BaseGetListByListIdHandler<GetListByListIdWaitlistEntryQuery, WaitlistEntry>(repository)
 {
-    public Task<Result<List<WaitlistEntry>>> Handle(GetListByListIdWaitlistEntryQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<long> GetListByListId(GetListByListIdWaitlistEntryQuery request) => request.listId;
 }

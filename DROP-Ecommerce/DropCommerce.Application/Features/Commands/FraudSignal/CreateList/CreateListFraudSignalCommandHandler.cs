@@ -1,13 +1,14 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class CreateListFraudSignalCommandHandler : IRequestHandler<CreateListFraudSignalCommand, Result<List<FraudSignal>>>
+public class CreateListFraudSignalCommandHandler(IRepository<FraudSignal> repository, IUnitOfWork unitOfWork)
+    : BaseCreateListHandler<CreateFraudSignalCommand, CreateListFraudSignalCommand, FraudSignal>(repository, unitOfWork)
 {
-    public Task<Result<List<FraudSignal>>> Handle(CreateListFraudSignalCommand request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    protected override IReadOnlyCollection<CreateFraudSignalCommand> GetCommandList(CreateListFraudSignalCommand request) => request.commands;
+
+    protected override FraudSignal CreateEntity(CreateFraudSignalCommand command) =>
+        FraudSignal.Create(command.customerId, command.dropEventId, command.queueEntryId, command.signalTypeId, command.severityId, command.description, command.ipAddress, command.deviceFingerprint, command.isConfirmed, command.wasBlocked, command.detectedAt, command.reviewedAt);
 }

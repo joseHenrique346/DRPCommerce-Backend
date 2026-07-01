@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListDropCouponCommandHandler : IRequestHandler<UpdateListDropCouponCommand, Result<List<DropCoupon>>>
+public class UpdateListDropCouponCommandHandler(IRepository<DropCoupon> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateDropCouponCommand, UpdateListDropCouponCommand, DropCoupon>(repository, unitOfWork)
 {
-    public Task<Result<List<DropCoupon>>> Handle(UpdateListDropCouponCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateDropCouponCommand> GetCommandList(UpdateListDropCouponCommand request) => request.commands;
+
+    protected override long GetById(UpdateDropCouponCommand command) => command.id;
+
+    protected override void ApplyChanges(DropCoupon entity, UpdateDropCouponCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.dropEventId, command.code, command.typeId, command.discountValue, command.minOrderValue, command.maxDiscountCap, command.maxUses, command.usedCount, command.isActive, command.isSingleUse, command.isExclusiveToRegistered, command.startsAt, command.expiresAt);
     }
 }

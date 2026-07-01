@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListDropRegistrationCommandHandler : IRequestHandler<UpdateListDropRegistrationCommand, Result<List<DropRegistration>>>
+public class UpdateListDropRegistrationCommandHandler(IRepository<DropRegistration> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateDropRegistrationCommand, UpdateListDropRegistrationCommand, DropRegistration>(repository, unitOfWork)
 {
-    public Task<Result<List<DropRegistration>>> Handle(UpdateListDropRegistrationCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateDropRegistrationCommand> GetCommandList(UpdateListDropRegistrationCommand request) => request.commands;
+
+    protected override long GetById(UpdateDropRegistrationCommand command) => command.id;
+
+    protected override void ApplyChanges(DropRegistration entity, UpdateDropRegistrationCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.dropEventId, command.customerId, command.statusId, command.isEligible, command.eligibilityReason, command.registeredAt, command.eligibilityCheckedAt);
     }
 }

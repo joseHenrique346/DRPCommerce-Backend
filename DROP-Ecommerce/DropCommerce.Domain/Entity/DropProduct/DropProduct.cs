@@ -61,6 +61,26 @@ public class DropProduct : BaseEntity, ISoftDeletable
         return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
     }
 
+    public void Update(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateString(sku, nameof(sku));
+        BaseValidate.ValidateMinimum(unitsAllocated, 1, nameof(unitsAllocated));
+        BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
+        BaseValidate.ValidateMinimum(maxPerCustomer, 1, nameof(maxPerCustomer));
+        BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
+
+        DropEventId = dropEventId;
+        ProductId = productId;
+        SKU = sku;
+        UnitsAllocated = unitsAllocated;
+        UnitsSold = unitsSold;
+        MaxPerCustomer = maxPerCustomer;
+        Price = price;
+        IsActive = isActive;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

@@ -78,6 +78,38 @@ public class DropCoupon : BaseEntity, ISoftDeletable
         return new DropCoupon(dropEventId, code, dropCouponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, isExclusiveToRegistered, startsAt, expiresAt);
     }
 
+    public void Update(long dropEventId, string code, long dropCouponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateString(code, nameof(code));
+        BaseValidate.ValidateId(dropCouponTypeId, nameof(dropCouponTypeId));
+        BaseValidate.ValidateMinimumDecimal(discountValue, 0.01m, nameof(discountValue));
+        BaseValidate.ValidatePositiveDecimal(minOrderValue, nameof(minOrderValue));
+        BaseValidate.ValidatePositiveDecimal(maxDiscountCap, nameof(maxDiscountCap));
+        BaseValidate.ValidateMinimum(maxUses, 1, nameof(maxUses));
+        BaseValidate.ValidatePositive(usedCount, nameof(usedCount));
+        BaseValidate.ValidateDate(startsAt, nameof(startsAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(startsAt, expiresAt, nameof(startsAt), nameof(expiresAt));
+
+        if (usedCount > maxUses)
+            throw new ArgumentException("usedCount não pode exceder maxUses.");
+
+        DropEventId = dropEventId;
+        Code = code;
+        DropCouponTypeId = dropCouponTypeId;
+        DiscountValue = discountValue;
+        MinOrderValue = minOrderValue;
+        MaxDiscountCap = maxDiscountCap;
+        MaxUses = maxUses;
+        UsedCount = usedCount;
+        IsActive = isActive;
+        IsSingleUse = isSingleUse;
+        IsExclusiveToRegistered = isExclusiveToRegistered;
+        StartsAt = startsAt;
+        ExpiresAt = expiresAt;
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;

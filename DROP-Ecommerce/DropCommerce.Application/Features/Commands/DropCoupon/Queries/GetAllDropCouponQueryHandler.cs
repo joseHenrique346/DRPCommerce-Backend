@@ -1,13 +1,8 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllDropCouponQueryHandler : IRequestHandler<GetAllDropCouponQuery, Result<List<DropCoupon>>>
-{
-    public Task<Result<List<DropCoupon>>> Handle(GetAllDropCouponQuery request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-}
+public class GetAllDropCouponQueryHandler(IRepository<DropCoupon> repository)
+    : BaseGetAllHandler<GetAllDropCouponQuery, DropCoupon>(repository);

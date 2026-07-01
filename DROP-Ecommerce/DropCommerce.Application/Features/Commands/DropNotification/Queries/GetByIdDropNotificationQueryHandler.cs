@@ -1,16 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdDropNotificationQueryHandler(IMediator mediator) : IRequestHandler<GetByIdDropNotificationQuery, Result<DropNotification>>
+public class GetByIdDropNotificationQueryHandler(IRepository<DropNotification> repository)
+    : BaseGetByIdHandler<GetByIdDropNotificationQuery, DropNotification>(repository)
 {
-    public async Task<Result<DropNotification>> Handle(GetByIdDropNotificationQuery request, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetListByListIdDropNotificationQuery([request.id]), cancellationToken);
-        return result.IsSuccess && result.Content.Count > 0
-            ? Result<DropNotification>.Success(result.Content.First())
-            : Result<DropNotification>.Failure("DropNotification não encontrado.");
-    }
+    protected override long GetById(GetByIdDropNotificationQuery request) => request.id;
 }

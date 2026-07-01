@@ -1,13 +1,18 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class UpdateListDropProductCommandHandler : IRequestHandler<UpdateListDropProductCommand, Result<List<DropProduct>>>
+public class UpdateListDropProductCommandHandler(IRepository<DropProduct> repository, IUnitOfWork unitOfWork)
+    : BaseUpdateListHandler<UpdateDropProductCommand, UpdateListDropProductCommand, DropProduct>(repository, unitOfWork)
 {
-    public Task<Result<List<DropProduct>>> Handle(UpdateListDropProductCommand request, CancellationToken cancellationToken)
+    protected override IReadOnlyCollection<UpdateDropProductCommand> GetCommandList(UpdateListDropProductCommand request) => request.commands;
+
+    protected override long GetById(UpdateDropProductCommand command) => command.id;
+
+    protected override void ApplyChanges(DropProduct entity, UpdateDropProductCommand command)
     {
-        throw new NotImplementedException();
+        entity.Update(command.dropEventId, command.productId, command.sku, command.unitsAllocated, command.unitsSold, command.maxPerCustomer, command.price, command.isActive);
     }
 }

@@ -1,16 +1,11 @@
-using DropCommerce.Application.Result;
+﻿using DropCommerce.Application.Features.Commands.Base.Handlers;
 using DropCommerce.Domain.Entity;
-using MediatR;
+using DropCommerce.Domain.Interfaces;
 
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdDropAuditLogQueryHandler(IMediator mediator) : IRequestHandler<GetByIdDropAuditLogQuery, Result<DropAuditLog>>
+public class GetByIdDropAuditLogQueryHandler(IRepository<DropAuditLog> repository)
+    : BaseGetByIdHandler<GetByIdDropAuditLogQuery, DropAuditLog>(repository)
 {
-    public async Task<Result<DropAuditLog>> Handle(GetByIdDropAuditLogQuery request, CancellationToken cancellationToken)
-    {
-        var result = await mediator.Send(new GetListByListIdDropAuditLogQuery([request.id]), cancellationToken);
-        return result.IsSuccess && result.Content.Count > 0
-            ? Result<DropAuditLog>.Success(result.Content.First())
-            : Result<DropAuditLog>.Failure("DropAuditLog não encontrado.");
-    }
+    protected override long GetById(GetByIdDropAuditLogQuery request) => request.id;
 }
