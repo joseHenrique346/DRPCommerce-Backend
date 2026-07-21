@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-coupon")]
+[Route("api/drop-coupons")]
 public class DropCouponController : BaseController<DropCoupon, CreateDropCouponCommand, CreateListDropCouponCommand, UpdateDropCouponCommand, UpdateListDropCouponCommand>
 {
     public DropCouponController(IMediator mediator) : base(mediator)

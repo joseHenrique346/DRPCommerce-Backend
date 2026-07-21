@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-audit-log")]
+[Route("api/drop-audit-logs")]
 public class DropAuditLogController : BaseController<DropAuditLog, CreateDropAuditLogCommand, CreateListDropAuditLogCommand, UpdateDropAuditLogCommand, UpdateListDropAuditLogCommand>
 {
     public DropAuditLogController(IMediator mediator) : base(mediator)

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/queue-session")]
+[Route("api/queue-sessions")]
 public class QueueSessionController : BaseController<QueueSession, CreateQueueSessionCommand, CreateListQueueSessionCommand, UpdateQueueSessionCommand, UpdateListQueueSessionCommand>
 {
     public QueueSessionController(IMediator mediator) : base(mediator)

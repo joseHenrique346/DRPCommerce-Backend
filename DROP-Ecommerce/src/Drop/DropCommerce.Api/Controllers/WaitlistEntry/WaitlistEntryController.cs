@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/waitlist-entry")]
+[Route("api/waitlist-entries")]
 public class WaitlistEntryController : BaseController<WaitlistEntry, CreateWaitlistEntryCommand, CreateListWaitlistEntryCommand, UpdateWaitlistEntryCommand, UpdateListWaitlistEntryCommand>
 {
     public WaitlistEntryController(IMediator mediator) : base(mediator)

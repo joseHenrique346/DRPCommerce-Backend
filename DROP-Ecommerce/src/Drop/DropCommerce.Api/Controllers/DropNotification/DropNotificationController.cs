@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-notification")]
+[Route("api/drop-notifications")]
 public class DropNotificationController : BaseController<DropNotification, CreateDropNotificationCommand, CreateListDropNotificationCommand, UpdateDropNotificationCommand, UpdateListDropNotificationCommand>
 {
     public DropNotificationController(IMediator mediator) : base(mediator)

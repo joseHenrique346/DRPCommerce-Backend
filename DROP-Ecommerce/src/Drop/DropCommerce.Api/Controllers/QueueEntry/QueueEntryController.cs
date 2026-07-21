@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/queue-entry")]
+[Route("api/queue-entries")]
 public class QueueEntryController : BaseController<QueueEntry, CreateQueueEntryCommand, CreateListQueueEntryCommand, UpdateQueueEntryCommand, UpdateListQueueEntryCommand>
 {
     public QueueEntryController(IMediator mediator) : base(mediator)

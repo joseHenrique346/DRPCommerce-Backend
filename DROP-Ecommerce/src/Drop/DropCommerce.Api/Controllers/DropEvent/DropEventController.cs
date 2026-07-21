@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-event")]
+[Route("api/drop-events")]
 public class DropEventController : BaseController<DropEvent, CreateDropEventCommand, CreateListDropEventCommand, UpdateDropEventCommand, UpdateListDropEventCommand>
 {
     public DropEventController(IMediator mediator) : base(mediator)

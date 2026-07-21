@@ -21,41 +21,41 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         _mediator = mediator;
     }
 
-    [HttpPost("Add")]
+    [HttpPost("add")]
     public async Task<IActionResult> AddAsync([FromBody] TCreateCommand command)
     {
         var rangeCommand = WrapCreateInRange(command);
         return await AddRangeAsync(rangeCommand);
     }
 
-    [HttpPost("AddRange")]
+    [HttpPost("add-range")]
     public async Task<IActionResult> AddRangeAsync([FromBody] TCreateRangeCommand command)
     {
         var result = await _mediator.Send(command);
         return HandleResult(result);
     }
 
-    [HttpPut("Update")]
+    [HttpPut("update")]
     public async Task<IActionResult> UpdateAsync([FromBody] TUpdateCommand command)
     {
         var rangeCommand = WrapUpdateInRange(command);
         return await UpdateRangeAsync(rangeCommand);
     }
 
-    [HttpPut("UpdateRange")]
+    [HttpPut("update-range")]
     public async Task<IActionResult> UpdateRangeAsync([FromBody] TUpdateRangeCommand command)
     {
         var result = await _mediator.Send(command);
         return HandleResult(result);
     }
 
-    [HttpDelete("Delete/{id}")]
+    [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(long id)
     {
         return await DeleteRangeAsync(new List<long> { id });
     }
 
-    [HttpDelete("DeleteRange")]
+    [HttpDelete("delete-range")]
     public async Task<IActionResult> DeleteRangeAsync([FromBody] List<long> ids)
     {
         var command = DeleteRangeCommand(ids);
@@ -63,7 +63,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
-    [HttpGet("GetAll")]
+    [HttpGet("get-all")]
     public async Task<IActionResult> GetAllAsync()
     {
         var query = GetAllQuery();
@@ -71,7 +71,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
-    [HttpGet("GetById/{id}")]
+    [HttpGet("get-by-id/{id}")]
     public async Task<IActionResult> GetByIdAsync(long id)
     {
         var query = GetByIdQuery(id);
@@ -79,7 +79,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
-    [HttpPost("GetListByListId")]
+    [HttpPost("get-list-by-list-id")]
     public async Task<IActionResult> GetListByListIdAsync([FromBody] List<long> ids)
     {
         var query = GetListByListIdQuery(ids);
