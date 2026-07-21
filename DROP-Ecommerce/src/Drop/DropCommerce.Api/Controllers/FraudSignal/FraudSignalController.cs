@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/fraud-signal")]
+[Route("api/fraud-signals")]
 public class FraudSignalController : BaseController<FraudSignal, CreateFraudSignalCommand, CreateListFraudSignalCommand, UpdateFraudSignalCommand, UpdateListFraudSignalCommand>
 {
     public FraudSignalController(IMediator mediator) : base(mediator)

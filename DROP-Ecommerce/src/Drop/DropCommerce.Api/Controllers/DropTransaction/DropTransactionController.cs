@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-transaction")]
+[Route("api/drop-transactions")]
 public class DropTransactionController : BaseController<DropTransaction, CreateDropTransactionCommand, CreateListDropTransactionCommand, UpdateDropTransactionCommand, UpdateListDropTransactionCommand>
 {
     public DropTransactionController(IMediator mediator) : base(mediator)

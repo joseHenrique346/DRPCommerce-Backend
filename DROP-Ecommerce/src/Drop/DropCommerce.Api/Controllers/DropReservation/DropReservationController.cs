@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-reservation")]
+[Route("api/drop-reservations")]
 public class DropReservationController : BaseController<DropReservation, CreateDropReservationCommand, CreateListDropReservationCommand, UpdateDropReservationCommand, UpdateListDropReservationCommand>
 {
     public DropReservationController(IMediator mediator) : base(mediator)

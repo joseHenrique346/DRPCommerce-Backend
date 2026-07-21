@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Controllers;
 
-[Route("api/drop-product")]
+[Route("api/drop-products")]
 public class DropProductController : BaseController<DropProduct, CreateDropProductCommand, CreateListDropProductCommand, UpdateDropProductCommand, UpdateListDropProductCommand>
 {
     public DropProductController(IMediator mediator) : base(mediator)
