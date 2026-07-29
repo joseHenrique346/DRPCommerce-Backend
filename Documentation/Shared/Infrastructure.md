@@ -4,6 +4,8 @@
 
 A camada de infraestrutura de dados implementa o acesso ao banco MySQL HeatWave para os dois bounded contexts da aplicação: **DropCommerce** e **StoreCommerce**. Cada módulo possui seu próprio projeto `Infrastructure.Data` com DbContext, repositórios, configurações e extensões de DI independentes.
 
+A integração HTTP do Drop com o Store está documentada em [Drop/Infrastructure/StoreIntegration.md](../Drop/Infrastructure/StoreIntegration.md).
+
 ---
 
 ## Arquitetura
