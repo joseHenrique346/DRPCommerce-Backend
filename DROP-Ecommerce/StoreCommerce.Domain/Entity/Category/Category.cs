@@ -1,6 +1,8 @@
-﻿namespace StoreCommerce.Domain.Entity.Category
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity.Category
 {
-    internal class Category : BaseEntity
+    public class Category : BaseEntity, ISoftDeletable, ITenantEntity
     {
         public long EnterpriseId { get; private set; }
         public long? ParentCategoryId { get; private set; }
@@ -10,6 +12,8 @@
         public string ImageUrl { get; private set; }
         public int DisplayOrder { get; private set; }
         public bool IsActive { get; private set; }
+        public bool IsDeleted { get; private set; }
+        public DateTime? DeletedAt { get; private set; }
 
         public Category() { }
 
@@ -24,5 +28,7 @@
             DisplayOrder = displayOrder;
             IsActive = isActive;
         }
+
+        public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
     }
 }

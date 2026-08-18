@@ -3,6 +3,11 @@ using StoreCommerce.Domain;
 namespace StoreCommerce.Domain.Entity;
 
 public class Document : BaseEntity
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity;
+
+public class Document : BaseEntity, ITenantEntity
 {
     public long EnterpriseId { get; private set; }
     public long ReferenceId { get; private set; }
@@ -11,6 +16,10 @@ public class Document : BaseEntity
     public string Number { get; private set; }
     public string FileUrl { get; private set; }
     public long DocumentStatusId { get; private set; }
+    public long TypeId { get; private set; }
+    public string Number { get; private set; }
+    public string FileUrl { get; private set; }
+    public long StatusId { get; private set; }
     public DateTime IssuedAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
 
@@ -25,6 +34,10 @@ public class Document : BaseEntity
         Number = number;
         FileUrl = fileUrl;
         DocumentStatusId = documentStatusId;
+        TypeId = typeId;
+        Number = number;
+        FileUrl = fileUrl;
+        StatusId = statusId;
         IssuedAt = issuedAt;
         ExpiresAt = expiresAt;
     }

@@ -12,6 +12,14 @@ public class Shipment : BaseEntity
     public string AddressLine { get; private set; }
     public string City { get; private set; }
     public long StateId { get; private set; }
+    public long TypeId { get; private set; }
+    public string CarrierName { get; private set; }
+    public string TrackingCode { get; private set; }
+    public long StatusId { get; private set; }
+    public decimal ShippingCost { get; private set; }
+    public string AddressLine { get; private set; }
+    public string City { get; private set; }
+    public string State { get; private set; }
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public DateTime EstimatedDelivery { get; private set; }
@@ -32,6 +40,13 @@ public class Shipment : BaseEntity
         AddressLine = addressLine;
         City = city;
         StateId = stateId;
+        CarrierName = carrierName;
+        TrackingCode = trackingCode;
+        StatusId = statusId;
+        ShippingCost = shippingCost;
+        AddressLine = addressLine;
+        City = city;
+        State = state;
         ZipCode = zipCode;
         Country = country;
         EstimatedDelivery = estimatedDelivery;

@@ -1,15 +1,18 @@
-﻿namespace StoreCommerce.Application.Result
+namespace StoreCommerce.Application.Result
 {
-    internal class Result<TContent>
+    public class Result<TContent>
     {
         public bool IsSuccess { get; private set; } = true;
         public TContent Content { get; private set; }
-        public List<string> ListMessageErrors { get; private set; }
-        
-        public void Failure(string message)
+        public List<string> ListMessageErrors { get; private set; } = new();
+
+        public static Result<TContent> Failure(string message)
         {
-            IsSuccess = false;
-            ListMessageErrors.Add(message);
+            return new Result<TContent>
+            {
+                IsSuccess = false,
+                ListMessageErrors = new() { message }
+            };
         }
 
         public static Result<TContent> Success(TContent content)
@@ -17,16 +20,17 @@
             return new Result<TContent>
             {
                 Content = content,
+                IsSuccess = true
             };
         }
 
         public static Result<TContent> FailureFromList(List<string> errors)
         {
-            var result = new Result<TContent> { };
-            result.IsSuccess = false;
-            result.ListMessageErrors.AddRange(errors);
-            return result;
-
+            return new Result<TContent>
+            {
+                IsSuccess = false,
+                ListMessageErrors = new(errors)
+            };
         }
     }
 }
