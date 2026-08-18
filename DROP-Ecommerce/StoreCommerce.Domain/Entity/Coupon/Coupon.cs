@@ -4,7 +4,7 @@
     {
         public long EnterpriseId { get; private set; }
         public string Code { get; private set; }
-        public long TypeId { get; private set; }
+        public long CouponTypeId { get; private set; }
         public decimal DiscountValue { get; private set; }
         public decimal MinOrderValue { get; private set; }
         public decimal MaxDiscountCap { get; private set; }
@@ -17,11 +17,11 @@
 
         public Coupon() { }
 
-        public Coupon(long enterpriseId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+        public Coupon(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
         {
             EnterpriseId = enterpriseId;
             Code = code;
-            TypeId = typeId;
+            CouponTypeId = couponTypeId;
             DiscountValue = discountValue;
             MinOrderValue = minOrderValue;
             MaxDiscountCap = maxDiscountCap;
