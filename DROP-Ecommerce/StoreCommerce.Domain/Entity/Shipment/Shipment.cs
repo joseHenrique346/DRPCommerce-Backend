@@ -4,6 +4,14 @@ public class Shipment : BaseEntity
 {
     public long OrderId { get; private set; }
     public long? SupplierId { get; private set; }
+    public long ShipmentTypeId { get; private set; }
+    public string CarrierName { get; private set; }
+    public string TrackingCode { get; private set; }
+    public long ShipmentStatusId { get; private set; }
+    public decimal ShippingCost { get; private set; }
+    public string AddressLine { get; private set; }
+    public string City { get; private set; }
+    public long StateId { get; private set; }
     public long TypeId { get; private set; }
     public string CarrierName { get; private set; }
     public string TrackingCode { get; private set; }
@@ -20,11 +28,18 @@ public class Shipment : BaseEntity
 
     public Shipment() { }
 
-    public Shipment(long orderId, long? supplierId, long typeId, string carrierName, string trackingCode, long statusId, decimal shippingCost, string addressLine, string city, string state, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt)
+    public Shipment(long orderId, long? supplierId, long shipmentTypeId, string carrierName, string trackingCode, long shipmentStatusId, decimal shippingCost, string addressLine, string city, long stateId, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt)
     {
         OrderId = orderId;
         SupplierId = supplierId;
-        TypeId = typeId;
+        ShipmentTypeId = shipmentTypeId;
+        CarrierName = carrierName;
+        TrackingCode = trackingCode;
+        ShipmentStatusId = shipmentStatusId;
+        ShippingCost = shippingCost;
+        AddressLine = addressLine;
+        City = city;
+        StateId = stateId;
         CarrierName = carrierName;
         TrackingCode = trackingCode;
         StatusId = statusId;
