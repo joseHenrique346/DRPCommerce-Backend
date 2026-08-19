@@ -1,4 +1,6 @@
-namespace StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Entity.Base;
+
+namespace StoreCommerce.Domain.Entity.Order;
 
 public class Order : BaseEntity
 using StoreCommerce.Domain.Interfaces;
@@ -7,6 +9,7 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long CustomerId { get; private set; }
     public long? CouponId { get; private set; }
@@ -27,10 +30,12 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public string Notes { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+    #endregion
 
-    public Order() { }
+    #region Constructor
+    protected Order() { }
 
-    public Order(long enterpriseId, long customerId, long? couponId, long orderStatusId, long orderPaymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
+    private Order(long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
     {
         EnterpriseId = enterpriseId;
         CustomerId = customerId;
@@ -51,6 +56,67 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         ShippingZipCode = shippingZipCode;
         Notes = notes;
     }
+    #endregion
 
-    public void SoftDelete() { IsDeleted = true; DeletedAt = DateTime.UtcNow; }
+    #region Functions
+    public static Order Create(long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    {
+        BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
+        BaseValidate.ValidatePositive(customerId, nameof(CustomerId));
+        BaseValidate.ValidateNullablePositive(couponId, nameof(CouponId));
+        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
+        BaseValidate.ValidatePositive(paymentStatusId, nameof(PaymentStatusId));
+        BaseValidate.ValidatePositive(subTotal, nameof(SubTotal));
+        BaseValidate.ValidatePositiveOrZero(discountAmount, nameof(DiscountAmount));
+        BaseValidate.ValidatePositiveOrZero(shippingCost, nameof(ShippingCost));
+        BaseValidate.ValidatePositiveOrZero(taxAmount, nameof(TaxAmount));
+        BaseValidate.ValidatePositive(totalAmount, nameof(TotalAmount));
+        BaseValidate.ValidateMaxLength(shippingAddressLine, 500, nameof(ShippingAddressLine));
+        BaseValidate.ValidateMaxLength(shippingCity, 255, nameof(ShippingCity));
+        BaseValidate.ValidateMaxLength(shippingState, 255, nameof(ShippingState));
+        BaseValidate.ValidateMaxLength(shippingZipCode, 20, nameof(ShippingZipCode));
+        BaseValidate.ValidateMaxLength(notes, 2000, nameof(Notes));
+
+        return new Order(enterpriseId, customerId, couponId, statusId, paymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingState, shippingZipCode, notes);
+    }
+
+    public void UpdateStatus(long statusId, long paymentStatusId)
+    {
+        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
+        BaseValidate.ValidatePositive(paymentStatusId, nameof(PaymentStatusId));
+
+        StatusId = statusId;
+        PaymentStatusId = paymentStatusId;
+    }
+
+    public void UpdateShippingAddress(string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    {
+        BaseValidate.ValidateMaxLength(shippingAddressLine, 500, nameof(ShippingAddressLine));
+        BaseValidate.ValidateMaxLength(shippingCity, 255, nameof(ShippingCity));
+        BaseValidate.ValidateMaxLength(shippingState, 255, nameof(ShippingState));
+        BaseValidate.ValidateMaxLength(shippingZipCode, 20, nameof(ShippingZipCode));
+        BaseValidate.ValidateMaxLength(notes, 2000, nameof(Notes));
+
+        ShippingAddressLine = shippingAddressLine;
+        ShippingCity = shippingCity;
+        ShippingState = shippingState;
+        ShippingZipCode = shippingZipCode;
+        Notes = notes;
+    }
+
+    public void UpdateAmounts(decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount)
+    {
+        BaseValidate.ValidatePositive(subTotal, nameof(SubTotal));
+        BaseValidate.ValidatePositiveOrZero(discountAmount, nameof(DiscountAmount));
+        BaseValidate.ValidatePositiveOrZero(shippingCost, nameof(ShippingCost));
+        BaseValidate.ValidatePositiveOrZero(taxAmount, nameof(TaxAmount));
+        BaseValidate.ValidatePositive(totalAmount, nameof(TotalAmount));
+
+        SubTotal = subTotal;
+        DiscountAmount = discountAmount;
+        ShippingCost = shippingCost;
+        TaxAmount = taxAmount;
+        TotalAmount = totalAmount;
+    }
+    #endregion
 }
