@@ -3,6 +3,11 @@ using StoreCommerce.Domain.Entity.Base;
 namespace StoreCommerce.Domain.Entity.Invoice;
 
 public class Invoice : BaseEntity
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity;
+
+public class Invoice : BaseEntity, ITenantEntity
 {
     #region Properties
     public long OrderId { get; private set; }
@@ -11,6 +16,8 @@ public class Invoice : BaseEntity
     public string Number { get; private set; }
     public string Series { get; private set; }
     public string AccessKey { get; private set; }
+    public long InvoiceTypeId { get; private set; }
+    public long InvoiceStatusId { get; private set; }
     public long TypeId { get; private set; }
     public long StatusId { get; private set; }
     public decimal TotalAmount { get; private set; }
@@ -30,6 +37,8 @@ public class Invoice : BaseEntity
         Number = number;
         Series = series;
         AccessKey = accessKey;
+        InvoiceTypeId = invoiceTypeId;
+        InvoiceStatusId = invoiceStatusId;
         TypeId = typeId;
         StatusId = statusId;
         TotalAmount = totalAmount;

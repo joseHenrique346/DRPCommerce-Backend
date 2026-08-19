@@ -1,6 +1,6 @@
 ﻿using StoreCommerce.Domain.Entity.Base;
 
-namespace StoreCommerce.Domain.Entity.Service;
+namespace StoreCommerce.Domain.Entity;
 
 public class Service : BaseEntity
 {

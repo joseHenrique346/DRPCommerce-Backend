@@ -1,5 +1,7 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetAllDropAuditLogQuery
-{
-}
+public record class GetAllDropAuditLogQuery : IRequest<Result<List<DropAuditLog>>> { }

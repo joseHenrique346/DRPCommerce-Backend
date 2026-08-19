@@ -1,5 +1,7 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetListByListIdDropCouponQuery
-{
-}
+public record class GetListByListIdDropCouponQuery(List<long> listId) : IRequest<Result<List<DropCoupon>>> {}

@@ -1,8 +1,9 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
-namespace StoreCommerce.Domain.Entity.Supplier;
+namespace StoreCommerce.Domain.Entity;
 
-public class Supplier : BaseEntity
+public class Supplier : BaseEntity, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
@@ -10,7 +11,7 @@ public class Supplier : BaseEntity
     public string ContactName { get; private set; }
     public string AddressLine { get; private set; }
     public string City { get; private set; }
-    public string State { get; private set; }
+    public long StateId { get; private set; }
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
@@ -26,7 +27,7 @@ public class Supplier : BaseEntity
         ContactName = contactName;
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
         IsActive = isActive;

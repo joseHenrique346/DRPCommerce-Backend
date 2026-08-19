@@ -1,5 +1,7 @@
+﻿using DropCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class CreateWaitlistEntryCommand
-{
-}
+public record class CreateWaitlistEntryCommand(long dropEventId, long? dropProductId, long customerId, int position, long statusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt) : IRequest<Result<WaitlistEntry>> { }

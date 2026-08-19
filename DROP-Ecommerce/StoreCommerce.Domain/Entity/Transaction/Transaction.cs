@@ -7,6 +7,9 @@ public class Transaction : BaseEntity
     #region Properties
     public long OrderId { get; private set; }
     public long CustomerId { get; private set; }
+    public long TransactionTypeId { get; private set; }
+    public long TransactionMethodId { get; private set; }
+    public long TransactionStatusId { get; private set; }
     public long TypeId { get; private set; }
     public long MethodId { get; private set; }
     public long StatusId { get; private set; }
@@ -26,9 +29,9 @@ public class Transaction : BaseEntity
     {
         OrderId = orderId;
         CustomerId = customerId;
-        TypeId = typeId;
-        MethodId = methodId;
-        StatusId = statusId;
+        TransactionTypeId = transactionTypeId;
+        TransactionMethodId = transactionMethodId;
+        TransactionStatusId = transactionStatusId;
         Amount = amount;
         Fee = fee;
         GatewayReference = gatewayReference;

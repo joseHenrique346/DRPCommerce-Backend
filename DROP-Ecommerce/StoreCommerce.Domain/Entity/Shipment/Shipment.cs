@@ -7,6 +7,14 @@ public class Shipment : BaseEntity
     #region Properties
     public long OrderId { get; private set; }
     public long? SupplierId { get; private set; }
+    public long ShipmentTypeId { get; private set; }
+    public string CarrierName { get; private set; }
+    public string TrackingCode { get; private set; }
+    public long ShipmentStatusId { get; private set; }
+    public decimal ShippingCost { get; private set; }
+    public string AddressLine { get; private set; }
+    public string City { get; private set; }
+    public long StateId { get; private set; }
     public long TypeId { get; private set; }
     public string CarrierName { get; private set; }
     public string TrackingCode { get; private set; }
@@ -29,7 +37,14 @@ public class Shipment : BaseEntity
     {
         OrderId = orderId;
         SupplierId = supplierId;
-        TypeId = typeId;
+        ShipmentTypeId = shipmentTypeId;
+        CarrierName = carrierName;
+        TrackingCode = trackingCode;
+        ShipmentStatusId = shipmentStatusId;
+        ShippingCost = shippingCost;
+        AddressLine = addressLine;
+        City = city;
+        StateId = stateId;
         CarrierName = carrierName;
         TrackingCode = trackingCode;
         StatusId = statusId;

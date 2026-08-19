@@ -3,11 +3,18 @@ using StoreCommerce.Domain.Entity.Base;
 namespace StoreCommerce.Domain.Entity.Order;
 
 public class Order : BaseEntity
+using StoreCommerce.Domain.Interfaces;
+
+namespace StoreCommerce.Domain.Entity;
+
+public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
     public long CustomerId { get; private set; }
     public long? CouponId { get; private set; }
+    public long OrderStatusId { get; private set; }
+    public long OrderPaymentStatusId { get; private set; }
     public long StatusId { get; private set; }
     public long PaymentStatusId { get; private set; }
     public decimal SubTotal { get; private set; }
@@ -17,6 +24,7 @@ public class Order : BaseEntity
     public decimal TotalAmount { get; private set; }
     public string ShippingAddressLine { get; private set; }
     public string ShippingCity { get; private set; }
+    public long ShippingStateId { get; private set; }
     public string ShippingState { get; private set; }
     public string ShippingZipCode { get; private set; }
     public string Notes { get; private set; }
@@ -32,6 +40,8 @@ public class Order : BaseEntity
         EnterpriseId = enterpriseId;
         CustomerId = customerId;
         CouponId = couponId;
+        OrderStatusId = orderStatusId;
+        OrderPaymentStatusId = orderPaymentStatusId;
         StatusId = statusId;
         PaymentStatusId = paymentStatusId;
         SubTotal = subTotal;
@@ -41,6 +51,7 @@ public class Order : BaseEntity
         TotalAmount = totalAmount;
         ShippingAddressLine = shippingAddressLine;
         ShippingCity = shippingCity;
+        ShippingStateId = shippingStateId;
         ShippingState = shippingState;
         ShippingZipCode = shippingZipCode;
         Notes = notes;

@@ -1,6 +1,8 @@
+using DropCommerce.Domain.Interfaces;
+
 namespace DropCommerce.Domain.Entity;
 
-public class DropProduct : BaseEntity
+public class DropProduct : BaseEntity, ISoftDeletable
 {
     #region Properties
 
@@ -12,6 +14,17 @@ public class DropProduct : BaseEntity
     public int MaxPerCustomer { get; private set; }
     public decimal Price { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public ICollection<DropOrderItem> ListDropOrderItem { get; private set; } = [];
+    public ICollection<DropReservation> ListDropReservation { get; private set; } = [];
+    public ICollection<WaitlistEntry> ListWaitlistEntry { get; private set; } = [];
+
+    #endregion
 
     #endregion
 
@@ -37,21 +50,41 @@ public class DropProduct : BaseEntity
 
     public static DropProduct Create(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
-
-        BaseValidate<long>.ValidateNotNullValue(productId);
-        BaseValidate<long>.ValidateIdValue(productId);
-
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(sku);
-
-        BaseValidate<int>.ValidateNotNullValue(unitsAllocated);
-        BaseValidate<int>.ValidateNotNullValue(unitsSold);
-        BaseValidate<int>.ValidateNotNullValue(maxPerCustomer);
-
-        BaseValidate<decimal>.ValidateNotNullValue(price);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateString(sku, nameof(sku));
+        BaseValidate.ValidateMinimum(unitsAllocated, 1, nameof(unitsAllocated));
+        BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
+        BaseValidate.ValidateMinimum(maxPerCustomer, 1, nameof(maxPerCustomer));
+        BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
 
         return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
+    }
+
+    public void Update(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateString(sku, nameof(sku));
+        BaseValidate.ValidateMinimum(unitsAllocated, 1, nameof(unitsAllocated));
+        BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
+        BaseValidate.ValidateMinimum(maxPerCustomer, 1, nameof(maxPerCustomer));
+        BaseValidate.ValidateMinimumDecimal(price, 0.01m, nameof(price));
+
+        DropEventId = dropEventId;
+        ProductId = productId;
+        SKU = sku;
+        UnitsAllocated = unitsAllocated;
+        UnitsSold = unitsSold;
+        MaxPerCustomer = maxPerCustomer;
+        Price = price;
+        IsActive = isActive;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

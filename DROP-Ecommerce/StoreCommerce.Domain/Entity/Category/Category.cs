@@ -1,4 +1,4 @@
-﻿using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Entity.Base;
 
 namespace StoreCommerce.Domain.Entity.Category;
 

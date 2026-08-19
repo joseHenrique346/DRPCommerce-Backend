@@ -1,6 +1,6 @@
-﻿using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Entity.Base;
 
-namespace StoreCommerce.Domain.Entity.Product;
+namespace StoreCommerce.Domain.Entity;
 
 public class Product : BaseEntity
 {

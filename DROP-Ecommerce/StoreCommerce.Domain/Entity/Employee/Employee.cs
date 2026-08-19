@@ -1,8 +1,9 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
-namespace StoreCommerce.Domain.Entity.Employee;
+namespace StoreCommerce.Domain.Entity;
 
-public class Employee : BaseEntity
+public class Employee : BaseEntity, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }

@@ -1,8 +1,9 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
-namespace StoreCommerce.Domain.Entity.Customer;
+namespace StoreCommerce.Domain.Entity;
 
-public class Customer : BaseEntity
+public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
@@ -10,7 +11,7 @@ public class Customer : BaseEntity
     public string PasswordHash { get; private set; }
     public string AddressLine { get; private set; }
     public string City { get; private set; }
-    public string State { get; private set; }
+    public long StateId { get; private set; }
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public string Gender { get; private set; }
@@ -31,7 +32,7 @@ public class Customer : BaseEntity
         PasswordHash = passwordHash;
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
         Gender = gender;

@@ -1,12 +1,15 @@
+using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
+
 namespace DropCommerce.Domain.Entity;
 
-public class DropCoupon : BaseEntity
+public class DropCoupon : BaseEntity, ISoftDeletable
 {
     #region Properties
 
     public long DropEventId { get; private set; }
     public string Code { get; private set; }
-    public long TypeId { get; private set; }
+    public long DropCouponTypeId { get; private set; }
     public decimal DiscountValue { get; private set; }
     public decimal MinOrderValue { get; private set; }
     public decimal MaxDiscountCap { get; private set; }
@@ -17,6 +20,16 @@ public class DropCoupon : BaseEntity
     public bool IsExclusiveToRegistered { get; private set; }
     public DateTime StartsAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public DropCouponType DropCouponType { get; private set; }
+    public ICollection<DropOrder> ListDropOrder { get; private set; } = [];
+
+    #endregion
 
     #endregion
 
@@ -24,11 +37,11 @@ public class DropCoupon : BaseEntity
 
     protected DropCoupon() { }
 
-    private DropCoupon(long dropEventId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
+    private DropCoupon(long dropEventId, string code, long dropCouponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
     {
         DropEventId = dropEventId;
         Code = code;
-        TypeId = typeId;
+        DropCouponTypeId = dropCouponTypeId;
         DiscountValue = discountValue;
         MinOrderValue = minOrderValue;
         MaxDiscountCap = maxDiscountCap;
@@ -45,31 +58,62 @@ public class DropCoupon : BaseEntity
 
     #region Functions
 
-    public static DropCoupon Create(long dropEventId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
+    public static DropCoupon Create(long dropEventId, string code, long dropCouponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateString(code, nameof(code));
+        BaseValidate.ValidateId(dropCouponTypeId, nameof(dropCouponTypeId));
+        BaseValidate.ValidateMinimumDecimal(discountValue, 0.01m, nameof(discountValue));
+        BaseValidate.ValidatePositiveDecimal(minOrderValue, nameof(minOrderValue));
+        BaseValidate.ValidatePositiveDecimal(maxDiscountCap, nameof(maxDiscountCap));
+        BaseValidate.ValidateMinimum(maxUses, 1, nameof(maxUses));
+        BaseValidate.ValidatePositive(usedCount, nameof(usedCount));
+        BaseValidate.ValidateDate(startsAt, nameof(startsAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(startsAt, expiresAt, nameof(startsAt), nameof(expiresAt));
 
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(code);
+        if (usedCount > maxUses)
+            throw new ArgumentException("usedCount não pode exceder maxUses.");
 
-        BaseValidate<long>.ValidateNotNullValue(typeId);
-        BaseValidate<long>.ValidateIdValue(typeId);
+        return new DropCoupon(dropEventId, code, dropCouponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, isExclusiveToRegistered, startsAt, expiresAt);
+    }
 
-        BaseValidate<decimal>.ValidateNotNullValue(discountValue);
-        BaseValidate<decimal>.ValidateNotNullValue(minOrderValue);
-        BaseValidate<decimal>.ValidateNotNullValue(maxDiscountCap);
+    public void Update(long dropEventId, string code, long dropCouponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int maxUses, int usedCount, bool isActive, bool isSingleUse, bool isExclusiveToRegistered, DateTime startsAt, DateTime expiresAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateString(code, nameof(code));
+        BaseValidate.ValidateId(dropCouponTypeId, nameof(dropCouponTypeId));
+        BaseValidate.ValidateMinimumDecimal(discountValue, 0.01m, nameof(discountValue));
+        BaseValidate.ValidatePositiveDecimal(minOrderValue, nameof(minOrderValue));
+        BaseValidate.ValidatePositiveDecimal(maxDiscountCap, nameof(maxDiscountCap));
+        BaseValidate.ValidateMinimum(maxUses, 1, nameof(maxUses));
+        BaseValidate.ValidatePositive(usedCount, nameof(usedCount));
+        BaseValidate.ValidateDate(startsAt, nameof(startsAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(startsAt, expiresAt, nameof(startsAt), nameof(expiresAt));
 
-        BaseValidate<int>.ValidateNotNullValue(maxUses);
-        BaseValidate<int>.ValidateNotNullValue(usedCount);
+        if (usedCount > maxUses)
+            throw new ArgumentException("usedCount não pode exceder maxUses.");
 
-        BaseValidate<bool>.ValidateNotNullValue(isActive);
-        BaseValidate<bool>.ValidateNotNullValue(isSingleUse);
-        BaseValidate<bool>.ValidateNotNullValue(isExclusiveToRegistered);
+        DropEventId = dropEventId;
+        Code = code;
+        DropCouponTypeId = dropCouponTypeId;
+        DiscountValue = discountValue;
+        MinOrderValue = minOrderValue;
+        MaxDiscountCap = maxDiscountCap;
+        MaxUses = maxUses;
+        UsedCount = usedCount;
+        IsActive = isActive;
+        IsSingleUse = isSingleUse;
+        IsExclusiveToRegistered = isExclusiveToRegistered;
+        StartsAt = startsAt;
+        ExpiresAt = expiresAt;
+    }
 
-        BaseValidate<DateTime>.ValidateNotNullValue(startsAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
-
-        return new DropCoupon(dropEventId, code, typeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, isExclusiveToRegistered, startsAt, expiresAt);
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
+using StoreCommerce.Application.Result;
 
 namespace StoreCommerce.Application.Features;
 
@@ -15,26 +16,28 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        if (_validators.Any())
-        {
-            var context = new ValidationContext<TRequest>(request);
+        if (!_validators.Any())
+            return await next();
 
-            var failures = _validators
-                .Select(v => v.Validate(context))
-                .SelectMany(v => v.Errors)
-                .Where(f => f != null)
-                .ToList();
+        var context = new ValidationContext<TRequest>(request);
 
-            if (failures.Count > 0)
-            {
-                var errorMessages = failures.Select(f => f.ErrorMessage).ToList();
+        var failures = (await Task.WhenAll(
+                _validators.Select(v => v.ValidateAsync(context, cancellationToken))))
+            .SelectMany(r => r.Errors)
+            .Where(f => f != null)
+            .ToList();
 
-                return (TResponse)typeof(TResponse)
-                    .GetMethod("FailureFromList")?
-                    .Invoke(null, new object[] { errorMessages })!;
-            }
-        }
+        if (failures.Count == 0)
+            return await next();
 
-        return await next();
+        var errorMessages = failures.Select(f => f.ErrorMessage).ToList();
+
+        var responseType = typeof(TResponse);
+        var failureMethod = responseType.GetMethod("FailureFromList");
+
+        if (failureMethod is null)
+            throw new ValidationException(failures);
+
+        return (TResponse)failureMethod.Invoke(null, new object[] { errorMessages })!;
     }
 }

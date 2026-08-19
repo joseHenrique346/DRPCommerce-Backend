@@ -11,7 +11,7 @@ public class Enterprise : BaseEntity
     public EnterprisePhone Phone { get; private set; }
     public string AddressLine { get; private set; }
     public string City { get; private set; }
-    public string State { get; private set; }
+    public long StateId { get; private set; }
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
@@ -28,7 +28,7 @@ public class Enterprise : BaseEntity
         Phone = phone;
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
         IsActive = isActive;

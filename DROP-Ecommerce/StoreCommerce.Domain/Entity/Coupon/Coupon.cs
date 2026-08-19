@@ -1,4 +1,4 @@
-﻿namespace StoreCommerce.Domain.Entity.Base;
+namespace StoreCommerce.Domain.Entity.Base;
 
 public class Coupon : BaseEntity
 {

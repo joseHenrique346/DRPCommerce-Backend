@@ -1,5 +1,7 @@
+﻿using DropCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
 namespace DropCommerce.Application.Features.Commands;
 
-public class GetByIdDropOrderItemQuery
-{
-}
+public record class GetByIdDropOrderItemQuery(long id) : IRequest<Result<DropOrderItem>> { }

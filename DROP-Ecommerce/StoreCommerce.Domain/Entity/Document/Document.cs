@@ -1,13 +1,18 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
-namespace StoreCommerce.Domain.Entity.Document;
+namespace StoreCommerce.Domain.Entity;
 
-public class Document : BaseEntity
+public class Document : BaseEntity, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
     public long ReferenceId { get; private set; }
     public string ReferenceType { get; private set; }
+    public long DocumentTypeId { get; private set; }
+    public string Number { get; private set; }
+    public string FileUrl { get; private set; }
+    public long DocumentStatusId { get; private set; }
     public long TypeId { get; private set; }
     public string Number { get; private set; }
     public string FileUrl { get; private set; }
@@ -24,6 +29,10 @@ public class Document : BaseEntity
         EnterpriseId = enterpriseId;
         ReferenceId = referenceId;
         ReferenceType = referenceType;
+        DocumentTypeId = documentTypeId;
+        Number = number;
+        FileUrl = fileUrl;
+        DocumentStatusId = documentStatusId;
         TypeId = typeId;
         Number = number;
         FileUrl = fileUrl;
