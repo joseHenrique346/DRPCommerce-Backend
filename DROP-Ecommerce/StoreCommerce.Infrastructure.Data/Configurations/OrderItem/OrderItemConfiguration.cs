@@ -25,12 +25,12 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Product.Product>()
+        builder.HasOne<Product>()
             .WithMany()
             .HasForeignKey(e => e.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Service.Service>()
+        builder.HasOne<Service>()
             .WithMany()
             .HasForeignKey(e => e.ServiceId)
             .OnDelete(DeleteBehavior.Restrict);

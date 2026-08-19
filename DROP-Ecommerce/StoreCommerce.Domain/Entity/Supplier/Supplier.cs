@@ -20,7 +20,7 @@ public class Supplier : BaseEntity, ITenantEntity
     #region Constructor
     protected Supplier() { }
 
-    private Supplier(long enterpriseId, string companyName, string contactName, string addressLine, string city, string state, string zipCode, string country, bool isActive)
+    private Supplier(long enterpriseId, string companyName, string contactName, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         EnterpriseId = enterpriseId;
         CompanyName = companyName;
@@ -35,7 +35,7 @@ public class Supplier : BaseEntity, ITenantEntity
     #endregion
 
     #region Functions
-    public static Supplier Create(long enterpriseId, string companyName, string contactName, string addressLine, string city, string state, string zipCode, string country, bool isActive)
+    public static Supplier Create(long enterpriseId, string companyName, string contactName, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(companyName, nameof(CompanyName));
@@ -43,11 +43,11 @@ public class Supplier : BaseEntity, ITenantEntity
         BaseValidate.ValidateMaxLength(contactName, 255, nameof(ContactName));
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
 
-        return new Supplier(enterpriseId, companyName, contactName, addressLine, city, state, zipCode, country, isActive);
+        return new Supplier(enterpriseId, companyName, contactName, addressLine, city, stateId, zipCode, country, isActive);
     }
 
     public void UpdateInfo(string companyName, string contactName)
@@ -60,17 +60,17 @@ public class Supplier : BaseEntity, ITenantEntity
         ContactName = contactName;
     }
 
-    public void UpdateAddress(string addressLine, string city, string state, string zipCode, string country)
+    public void UpdateAddress(string addressLine, string city, long stateId, string zipCode, string country)
     {
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
 
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
     }

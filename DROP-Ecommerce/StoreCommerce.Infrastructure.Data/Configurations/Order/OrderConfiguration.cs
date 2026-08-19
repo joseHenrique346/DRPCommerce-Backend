@@ -21,7 +21,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(e => e.ShippingAddressLine).HasMaxLength(200);
         builder.Property(e => e.ShippingCity).HasMaxLength(100);
-        builder.Property(e => e.ShippingState).HasMaxLength(100);
         builder.Property(e => e.ShippingZipCode).HasMaxLength(20);
         builder.Property(e => e.Notes).HasMaxLength(500);
 
@@ -39,7 +38,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasForeignKey(e => e.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Coupon.Coupon>()
+        builder.HasOne<Coupon>()
             .WithMany()
             .HasForeignKey(e => e.CouponId)
             .OnDelete(DeleteBehavior.Restrict);

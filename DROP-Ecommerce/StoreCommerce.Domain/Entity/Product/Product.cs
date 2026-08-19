@@ -1,8 +1,9 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class Product : BaseEntity
+public class Product : BaseEntity, ITenantEntity, ISoftDeletable
 {
     #region Properties
     public long EnterpriseId { get; private set; }
@@ -124,6 +125,12 @@ public class Product : BaseEntity
 
         CategoryId = categoryId;
         SupplierId = supplierId;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 }

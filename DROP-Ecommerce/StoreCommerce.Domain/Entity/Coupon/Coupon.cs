@@ -1,6 +1,9 @@
-namespace StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
-public class Coupon : BaseEntity
+namespace StoreCommerce.Domain.Entity;
+
+public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
 {
     #region Properties
     public long EnterpriseId { get; private set; }
@@ -36,6 +39,12 @@ public class Coupon : BaseEntity
         IsSingleUse = isSingleUse;
         StartsAt = startsAt;
         ExpiresAt = expiresAt;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using StoreCommerce.Domain.Entity.Product;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Infrastructure.Data.Configurations;
 

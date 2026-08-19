@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Entity.Coupon;
 
 namespace StoreCommerce.Infrastructure.Data.Configurations;
 

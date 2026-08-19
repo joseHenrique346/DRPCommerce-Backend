@@ -1,4 +1,4 @@
-using StoreCommerce.Domain.Entity.Product;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Domain.Interfaces;
 

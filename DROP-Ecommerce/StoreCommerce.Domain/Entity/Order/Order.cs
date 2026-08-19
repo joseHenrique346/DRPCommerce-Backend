@@ -1,8 +1,4 @@
 using StoreCommerce.Domain.Entity.Base;
-
-namespace StoreCommerce.Domain.Entity.Order;
-
-public class Order : BaseEntity
 using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
@@ -15,8 +11,6 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public long? CouponId { get; private set; }
     public long OrderStatusId { get; private set; }
     public long OrderPaymentStatusId { get; private set; }
-    public long StatusId { get; private set; }
-    public long PaymentStatusId { get; private set; }
     public decimal SubTotal { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal ShippingCost { get; private set; }
@@ -25,7 +19,6 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public string ShippingAddressLine { get; private set; }
     public string ShippingCity { get; private set; }
     public long ShippingStateId { get; private set; }
-    public string ShippingState { get; private set; }
     public string ShippingZipCode { get; private set; }
     public string Notes { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -35,15 +28,13 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     #region Constructor
     protected Order() { }
 
-    private Order(long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    private Order(long enterpriseId, long customerId, long? couponId, long orderStatusId, long orderPaymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
     {
         EnterpriseId = enterpriseId;
         CustomerId = customerId;
         CouponId = couponId;
         OrderStatusId = orderStatusId;
         OrderPaymentStatusId = orderPaymentStatusId;
-        StatusId = statusId;
-        PaymentStatusId = paymentStatusId;
         SubTotal = subTotal;
         DiscountAmount = discountAmount;
         ShippingCost = shippingCost;
@@ -52,20 +43,19 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         ShippingAddressLine = shippingAddressLine;
         ShippingCity = shippingCity;
         ShippingStateId = shippingStateId;
-        ShippingState = shippingState;
         ShippingZipCode = shippingZipCode;
         Notes = notes;
     }
     #endregion
 
     #region Functions
-    public static Order Create(long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    public static Order Create(long enterpriseId, long customerId, long? couponId, long orderStatusId, long orderPaymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidatePositive(customerId, nameof(CustomerId));
         BaseValidate.ValidateNullablePositive(couponId, nameof(CouponId));
-        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
-        BaseValidate.ValidatePositive(paymentStatusId, nameof(PaymentStatusId));
+        BaseValidate.ValidatePositive(orderStatusId, nameof(OrderStatusId));
+        BaseValidate.ValidatePositive(orderPaymentStatusId, nameof(OrderPaymentStatusId));
         BaseValidate.ValidatePositive(subTotal, nameof(SubTotal));
         BaseValidate.ValidatePositiveOrZero(discountAmount, nameof(DiscountAmount));
         BaseValidate.ValidatePositiveOrZero(shippingCost, nameof(ShippingCost));
@@ -73,33 +63,33 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidatePositive(totalAmount, nameof(TotalAmount));
         BaseValidate.ValidateMaxLength(shippingAddressLine, 500, nameof(ShippingAddressLine));
         BaseValidate.ValidateMaxLength(shippingCity, 255, nameof(ShippingCity));
-        BaseValidate.ValidateMaxLength(shippingState, 255, nameof(ShippingState));
+        BaseValidate.ValidatePositive(shippingStateId, nameof(ShippingStateId));
         BaseValidate.ValidateMaxLength(shippingZipCode, 20, nameof(ShippingZipCode));
         BaseValidate.ValidateMaxLength(notes, 2000, nameof(Notes));
 
-        return new Order(enterpriseId, customerId, couponId, statusId, paymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingState, shippingZipCode, notes);
+        return new Order(enterpriseId, customerId, couponId, orderStatusId, orderPaymentStatusId, subTotal, discountAmount, shippingCost, taxAmount, totalAmount, shippingAddressLine, shippingCity, shippingStateId, shippingZipCode, notes);
     }
 
-    public void UpdateStatus(long statusId, long paymentStatusId)
+    public void UpdateStatus(long orderStatusId, long orderPaymentStatusId)
     {
-        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
-        BaseValidate.ValidatePositive(paymentStatusId, nameof(PaymentStatusId));
+        BaseValidate.ValidatePositive(orderStatusId, nameof(OrderStatusId));
+        BaseValidate.ValidatePositive(orderPaymentStatusId, nameof(OrderPaymentStatusId));
 
-        StatusId = statusId;
-        PaymentStatusId = paymentStatusId;
+        OrderStatusId = orderStatusId;
+        OrderPaymentStatusId = orderPaymentStatusId;
     }
 
-    public void UpdateShippingAddress(string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes)
+    public void UpdateShippingAddress(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
     {
         BaseValidate.ValidateMaxLength(shippingAddressLine, 500, nameof(ShippingAddressLine));
         BaseValidate.ValidateMaxLength(shippingCity, 255, nameof(ShippingCity));
-        BaseValidate.ValidateMaxLength(shippingState, 255, nameof(ShippingState));
+        BaseValidate.ValidatePositive(shippingStateId, nameof(ShippingStateId));
         BaseValidate.ValidateMaxLength(shippingZipCode, 20, nameof(ShippingZipCode));
         BaseValidate.ValidateMaxLength(notes, 2000, nameof(Notes));
 
         ShippingAddressLine = shippingAddressLine;
         ShippingCity = shippingCity;
-        ShippingState = shippingState;
+        ShippingStateId = shippingStateId;
         ShippingZipCode = shippingZipCode;
         Notes = notes;
     }
@@ -117,6 +107,12 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         ShippingCost = shippingCost;
         TaxAmount = taxAmount;
         TotalAmount = totalAmount;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 }

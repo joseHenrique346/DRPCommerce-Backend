@@ -20,7 +20,7 @@ public class Enterprise : BaseEntity
     #region Constructor
     protected Enterprise() { }
 
-    private Enterprise(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, string state, string zipCode, string country, bool isActive)
+    private Enterprise(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         TradeName = tradeName;
         LegalName = legalName;
@@ -36,7 +36,7 @@ public class Enterprise : BaseEntity
     #endregion
 
     #region Functions
-    public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, string state, string zipCode, string country, bool isActive)
+    public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(tradeName, nameof(TradeName));
         BaseValidate.ValidateMaxLength(tradeName, 255, nameof(TradeName));
@@ -46,11 +46,11 @@ public class Enterprise : BaseEntity
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
 
-        return new Enterprise(tradeName, legalName, email, phone, addressLine, city, state, zipCode, country, isActive);
+        return new Enterprise(tradeName, legalName, email, phone, addressLine, city, stateId, zipCode, country, isActive);
     }
 
     public void UpdateInfo(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone)
@@ -68,17 +68,17 @@ public class Enterprise : BaseEntity
         Phone = phone;
     }
 
-    public void UpdateAddress(string addressLine, string city, string state, string zipCode, string country)
+    public void UpdateAddress(string addressLine, string city, long stateId, string zipCode, string country)
     {
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
 
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
     }

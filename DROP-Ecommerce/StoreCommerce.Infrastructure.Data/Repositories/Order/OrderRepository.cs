@@ -20,7 +20,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public async Task<IEnumerable<Order>> GetByStatusAsync(long statusId, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Where(e => e.StatusId == statusId).ToListAsync(cancellationToken);
+        return await _dbSet.Where(e => e.OrderStatusId == statusId).ToListAsync(cancellationToken);
     }
 
     #endregion

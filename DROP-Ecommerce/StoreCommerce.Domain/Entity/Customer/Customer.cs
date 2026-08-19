@@ -25,7 +25,7 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #region Constructor
     protected Customer() { }
 
-    private Customer(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, string state, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    private Customer(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         EnterpriseId = enterpriseId;
         FullName = fullName;
@@ -43,7 +43,7 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #endregion
 
     #region Functions
-    public static Customer Create(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, string state, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    public static Customer Create(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
@@ -52,13 +52,13 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateMaxLength(passwordHash, 500, nameof(PasswordHash));
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
         BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
-        return new Customer(enterpriseId, fullName, passwordHash, addressLine, city, state, zipCode, country, gender, dateOfBirth, isVerified, isActive);
+        return new Customer(enterpriseId, fullName, passwordHash, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
     }
 
     public void UpdatePersonalInfo(string fullName, string gender, DateTime dateOfBirth)
@@ -73,17 +73,17 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         DateOfBirth = dateOfBirth;
     }
 
-    public void UpdateAddress(string addressLine, string city, string state, string zipCode, string country)
+    public void UpdateAddress(string addressLine, string city, long stateId, string zipCode, string country)
     {
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
-        BaseValidate.ValidateMaxLength(state, 255, nameof(State));
+        BaseValidate.ValidatePositive(stateId, nameof(StateId));
         BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
         BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
 
         AddressLine = addressLine;
         City = city;
-        State = state;
+        StateId = stateId;
         ZipCode = zipCode;
         Country = country;
     }
@@ -94,6 +94,12 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateMaxLength(passwordHash, 500, nameof(PasswordHash));
 
         PasswordHash = passwordHash;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 }

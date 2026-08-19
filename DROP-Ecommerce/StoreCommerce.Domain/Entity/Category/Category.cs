@@ -1,8 +1,10 @@
 using StoreCommerce.Domain.Entity.Base;
 
+using StoreCommerce.Domain.Interfaces;
+
 namespace StoreCommerce.Domain.Entity.Category;
 
-public class Category : BaseEntity
+public class Category : BaseEntity, ITenantEntity, ISoftDeletable
 {
     #region Properties
     public long EnterpriseId { get; private set; }
@@ -68,6 +70,12 @@ public class Category : BaseEntity
         Dscription = dscription;
         ImageUrl = imageUrl;
         DisplayOrder = displayOrder;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 }

@@ -1,9 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Entity.Category;
-using StoreCommerce.Domain.Entity.Coupon;
-using StoreCommerce.Domain.Entity.Product;
-using StoreCommerce.Domain.Entity.Service;
 using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Infrastructure.Data.Context;

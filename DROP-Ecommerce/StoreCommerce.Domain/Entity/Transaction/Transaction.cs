@@ -10,9 +10,6 @@ public class Transaction : BaseEntity
     public long TransactionTypeId { get; private set; }
     public long TransactionMethodId { get; private set; }
     public long TransactionStatusId { get; private set; }
-    public long TypeId { get; private set; }
-    public long MethodId { get; private set; }
-    public long StatusId { get; private set; }
     public decimal Amount { get; private set; }
     public decimal Fee { get; private set; }
     public string GatewayReference { get; private set; }
@@ -25,7 +22,7 @@ public class Transaction : BaseEntity
     #region Constructor
     protected Transaction() { }
 
-    private Transaction(long orderId, long customerId, long typeId, long methodId, long statusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload, DateTime? paidAt, DateTime? refundedAt)
+    private Transaction(long orderId, long customerId, long transactionTypeId, long transactionMethodId, long transactionStatusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload, DateTime? paidAt, DateTime? refundedAt)
     {
         OrderId = orderId;
         CustomerId = customerId;
@@ -43,13 +40,13 @@ public class Transaction : BaseEntity
     #endregion
 
     #region Functions
-    public static Transaction Create(long orderId, long customerId, long typeId, long methodId, long statusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload, DateTime? paidAt, DateTime? refundedAt)
+    public static Transaction Create(long orderId, long customerId, long transactionTypeId, long transactionMethodId, long transactionStatusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload, DateTime? paidAt, DateTime? refundedAt)
     {
         BaseValidate.ValidatePositive(orderId, nameof(OrderId));
         BaseValidate.ValidatePositive(customerId, nameof(CustomerId));
-        BaseValidate.ValidatePositive(typeId, nameof(TypeId));
-        BaseValidate.ValidatePositive(methodId, nameof(MethodId));
-        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
+        BaseValidate.ValidatePositive(transactionTypeId, nameof(TransactionTypeId));
+        BaseValidate.ValidatePositive(transactionMethodId, nameof(TransactionMethodId));
+        BaseValidate.ValidatePositive(transactionStatusId, nameof(TransactionStatusId));
         BaseValidate.ValidatePositive(amount, nameof(Amount));
         BaseValidate.ValidatePositiveOrZero(fee, nameof(Fee));
         BaseValidate.ValidateMaxLength(gatewayReference, 255, nameof(GatewayReference));
@@ -58,23 +55,23 @@ public class Transaction : BaseEntity
         BaseValidate.ValidateNullableNotFuture(paidAt, nameof(PaidAt));
         BaseValidate.ValidateNullableNotFuture(refundedAt, nameof(RefundedAt));
 
-        return new Transaction(orderId, customerId, typeId, methodId, statusId, amount, fee, gatewayReference, gatewayProvider, gatewayPayload, paidAt, refundedAt);
+        return new Transaction(orderId, customerId, transactionTypeId, transactionMethodId, transactionStatusId, amount, fee, gatewayReference, gatewayProvider, gatewayPayload, paidAt, refundedAt);
     }
 
-    public void UpdateDetails(long typeId, long methodId, long statusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload)
+    public void UpdateDetails(long transactionTypeId, long transactionMethodId, long transactionStatusId, decimal amount, decimal fee, string gatewayReference, string gatewayProvider, string gatewayPayload)
     {
-        BaseValidate.ValidatePositive(typeId, nameof(TypeId));
-        BaseValidate.ValidatePositive(methodId, nameof(MethodId));
-        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
+        BaseValidate.ValidatePositive(transactionTypeId, nameof(TransactionTypeId));
+        BaseValidate.ValidatePositive(transactionMethodId, nameof(TransactionMethodId));
+        BaseValidate.ValidatePositive(transactionStatusId, nameof(TransactionStatusId));
         BaseValidate.ValidatePositive(amount, nameof(Amount));
         BaseValidate.ValidatePositiveOrZero(fee, nameof(Fee));
         BaseValidate.ValidateMaxLength(gatewayReference, 255, nameof(GatewayReference));
         BaseValidate.ValidateMaxLength(gatewayProvider, 255, nameof(GatewayProvider));
         BaseValidate.ValidateMaxLength(gatewayPayload, 5000, nameof(GatewayPayload));
 
-        TypeId = typeId;
-        MethodId = methodId;
-        StatusId = statusId;
+        TransactionTypeId = transactionTypeId;
+        TransactionMethodId = transactionMethodId;
+        TransactionStatusId = transactionStatusId;
         Amount = amount;
         Fee = fee;
         GatewayReference = gatewayReference;
@@ -82,11 +79,11 @@ public class Transaction : BaseEntity
         GatewayPayload = gatewayPayload;
     }
 
-    public void UpdateStatus(long statusId)
+    public void UpdateStatus(long transactionStatusId)
     {
-        BaseValidate.ValidatePositive(statusId, nameof(StatusId));
+        BaseValidate.ValidatePositive(transactionStatusId, nameof(TransactionStatusId));
 
-        StatusId = statusId;
+        TransactionStatusId = transactionStatusId;
     }
     #endregion
 }

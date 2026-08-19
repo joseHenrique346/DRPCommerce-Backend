@@ -1,4 +1,4 @@
-using StoreCommerce.Domain.Entity.Coupon;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Domain.Interfaces;
 

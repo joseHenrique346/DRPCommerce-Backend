@@ -17,7 +17,6 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
         builder.Property(e => e.TrackingCode).HasMaxLength(100);
         builder.Property(e => e.AddressLine).HasMaxLength(200);
         builder.Property(e => e.City).HasMaxLength(100);
-        builder.Property(e => e.State).HasMaxLength(100);
         builder.Property(e => e.ZipCode).HasMaxLength(20);
         builder.Property(e => e.Country).HasMaxLength(100);
 
