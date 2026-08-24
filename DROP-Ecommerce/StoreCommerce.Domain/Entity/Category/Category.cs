@@ -1,6 +1,6 @@
 ﻿namespace StoreCommerce.Domain.Entity.Category
 {
-    internal class Category : BaseEntity
+    public class Category : BaseEntity
     {
         public long EnterpriseId { get; private set; }
         public long? ParentCategoryId { get; private set; }

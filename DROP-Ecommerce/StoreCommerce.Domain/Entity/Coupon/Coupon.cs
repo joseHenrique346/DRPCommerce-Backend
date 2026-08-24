@@ -1,6 +1,6 @@
 ﻿namespace StoreCommerce.Domain.Entity.Coupon
 {
-    internal class Coupon : BaseEntity
+    public class Coupon : BaseEntity
     {
         public long EnterpriseId { get; private set; }
         public string Code { get; private set; }
