@@ -32,7 +32,9 @@ public abstract class BaseUpdateListHandler<TCommand, TRequest, TEntity>(IReposi
         var listId = commands.Select(GetById).ToList();
 
         if (listId.Count != listId.Distinct().Count())
-            return Result<List<TEntity>>.Failure("A lista contém ids duplicados.");
+            return Result<List<TEntity>>.Validation(
+                $"{typeof(TRequest).Name}.DuplicateIds",
+                "A lista contém ids duplicados.");
 
         var storedEntities = (await Repository.GetListByListIdAsync(listId, cancellationToken))
             .ToDictionary(entity => entity.Id);
@@ -40,7 +42,9 @@ public abstract class BaseUpdateListHandler<TCommand, TRequest, TEntity>(IReposi
 
         var missingId = listId.FirstOrDefault(id => !storedEntities.ContainsKey(id));
         if (missingId > 0)
-            return Result<List<TEntity>>.Failure(NotFoundMessage(missingId));
+            return Result<List<TEntity>>.NotFound(
+                $"{typeof(TEntity).Name}.NotFound",
+                NotFoundMessage(missingId));
 
         foreach (var command in commands)
         {

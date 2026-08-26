@@ -1,3 +1,4 @@
+using StoreCommerce.Api.ExceptionHandling;
 using StoreCommerce.Application;
 using StoreCommerce.Infrastructure.Data;
 
@@ -8,6 +9,9 @@ public static class DependencyInjectionConfig
     public static IServiceCollection AddApiConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
+        services.AddControllers();
+        services.AddProblemDetails();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddOpenApi();
         services.AddSwaggerGen();
 
