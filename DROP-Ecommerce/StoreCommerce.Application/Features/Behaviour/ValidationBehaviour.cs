@@ -1,11 +1,13 @@
 using FluentValidation;
 using MediatR;
 using StoreCommerce.Application.Result;
+using System.Text.RegularExpressions;
 
 namespace StoreCommerce.Application.Features;
 
 public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
+    where TResponse : IResult<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -30,14 +32,19 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
         if (failures.Count == 0)
             return await next();
 
-        var errorMessages = failures.Select(f => f.ErrorMessage).ToList();
+        var errors = failures.Select(failure => Error.Validation(
+            CreateErrorCode(failure.PropertyName),
+            failure.ErrorMessage));
 
-        var responseType = typeof(TResponse);
-        var failureMethod = responseType.GetMethod("FailureFromList");
+        return TResponse.Validation(errors);
+    }
 
-        if (failureMethod is null)
-            throw new ValidationException(failures);
+    private static string CreateErrorCode(string? propertyName)
+    {
+        var stablePropertyName = string.IsNullOrWhiteSpace(propertyName)
+            ? "Request"
+            : Regex.Replace(propertyName, @"\[\d+\]", "[]");
 
-        return (TResponse)failureMethod.Invoke(null, new object[] { errorMessages })!;
+        return $"{typeof(TRequest).Name}.{stablePropertyName}";
     }
 }

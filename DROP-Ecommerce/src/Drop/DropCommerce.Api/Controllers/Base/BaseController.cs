@@ -1,3 +1,4 @@
+using DropCommerce.Api.Extensions;
 using DropCommerce.Application.Result;
 using DropCommerce.Domain.Entity;
 using MediatR;
@@ -89,7 +90,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
 
     protected IActionResult HandleResult<T>(Result<T> result)
     {
-        return result.IsSuccess ? Ok(result) : BadRequest(result);
+        return this.ToActionResult(result);
     }
 
     protected abstract TCreateRangeCommand WrapCreateInRange(TCreateCommand command);

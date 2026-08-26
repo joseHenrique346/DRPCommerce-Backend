@@ -23,7 +23,9 @@ public abstract class BaseGetByIdHandler<TRequest, TEntity>(IRepository<TEntity>
         var entity = await Repository.GetByIdAsync(id, cancellationToken);
 
         return entity is null
-            ? Result<TEntity>.Failure(NotFoundMessage(id))
+            ? Result<TEntity>.NotFound(
+                $"{typeof(TEntity).Name}.NotFound",
+                NotFoundMessage(id))
             : Result<TEntity>.Success(entity);
     }
 }

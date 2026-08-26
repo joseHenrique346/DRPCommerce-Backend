@@ -1,3 +1,4 @@
+using DropCommerce.Api.ExceptionHandling;
 using DropCommerce.Application;
 using DropCommerce.Infrastructure.Data;
 
@@ -9,6 +10,8 @@ public static class DependencyInjectionConfig
     {
         services.AddHttpContextAccessor();
         services.AddControllers();
+        services.AddProblemDetails();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddOpenApi();
         services.AddSwaggerGen();
 
