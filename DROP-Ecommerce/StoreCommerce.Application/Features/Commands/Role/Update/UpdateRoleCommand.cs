@@ -4,4 +4,4 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class DeleteInvoiceCommand(long id) : IRequest<Result<Invoice>> { }
+public record class UpdateRoleCommand(long id, string name, string description) : IRequest<Result<Role>> { }

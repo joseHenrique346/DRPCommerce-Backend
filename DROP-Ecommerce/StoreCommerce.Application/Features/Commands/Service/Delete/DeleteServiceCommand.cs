@@ -1,5 +1,7 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Domain.Entity.Service;
 
-public class DeleteServiceCommand
-{
-}
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class DeleteServiceCommand(long id) : IRequest<Result<Service>> { }
