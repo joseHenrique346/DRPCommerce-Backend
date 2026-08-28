@@ -5,6 +5,7 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Document : BaseEntity, ITenantEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long ReferenceId { get; private set; }
     public string ReferenceType { get; private set; }
@@ -14,7 +15,9 @@ public class Document : BaseEntity, ITenantEntity
     public long DocumentStatusId { get; private set; }
     public DateTime IssuedAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
+    #endregion
 
+    #region Constructor
     protected Document() { }
 
     private Document(long enterpriseId, long referenceId, string referenceType, long documentTypeId, string number, string fileUrl, long documentStatusId, DateTime issuedAt, DateTime? expiresAt)
@@ -29,7 +32,9 @@ public class Document : BaseEntity, ITenantEntity
         IssuedAt = issuedAt;
         ExpiresAt = expiresAt;
     }
+    #endregion
 
+    #region Functions
     public static Document Create(long enterpriseId, long referenceId, string referenceType, long documentTypeId, string number, string fileUrl, long documentStatusId, DateTime issuedAt, DateTime? expiresAt)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
@@ -75,4 +80,5 @@ public class Document : BaseEntity, ITenantEntity
         BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
         DocumentStatusId = documentStatusId;
     }
+    #endregion
 }

@@ -4,6 +4,7 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Shipment : BaseEntity
 {
+    #region Properties
     public long OrderId { get; private set; }
     public long? SupplierId { get; private set; }
     public long ShipmentTypeId { get; private set; }
@@ -19,7 +20,9 @@ public class Shipment : BaseEntity
     public DateTime EstimatedDelivery { get; private set; }
     public DateTime? ShippedAt { get; private set; }
     public DateTime? DeliveredAt { get; private set; }
+    #endregion
 
+    #region Constructor
     protected Shipment() { }
 
     private Shipment(long orderId, long? supplierId, long shipmentTypeId, string carrierName, string trackingCode, long shipmentStatusId, decimal shippingCost, string addressLine, string city, long stateId, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt)
@@ -40,7 +43,9 @@ public class Shipment : BaseEntity
         ShippedAt = shippedAt;
         DeliveredAt = deliveredAt;
     }
+    #endregion
 
+    #region Functions
     public static Shipment Create(long orderId, long? supplierId, long shipmentTypeId, string carrierName, string trackingCode, long shipmentStatusId, decimal shippingCost, string addressLine, string city, long stateId, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt)
     {
         BaseValidate.ValidatePositive(orderId, nameof(OrderId));
@@ -92,4 +97,5 @@ public class Shipment : BaseEntity
         BaseValidate.ValidatePositive(shipmentStatusId, nameof(ShipmentStatusId));
         ShipmentStatusId = shipmentStatusId;
     }
+    #endregion
 }

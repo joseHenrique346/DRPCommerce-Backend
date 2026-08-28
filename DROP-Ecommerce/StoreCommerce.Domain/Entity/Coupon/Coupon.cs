@@ -41,11 +41,6 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         ExpiresAt = expiresAt;
     }
 
-    public void SoftDelete()
-    {
-        IsDeleted = true;
-        DeletedAt = DateTime.UtcNow;
-    }
     #endregion
 
     #region Functions
@@ -85,6 +80,12 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         IsSingleUse = isSingleUse;
         StartsAt = startsAt;
         ExpiresAt = expiresAt;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
     #endregion
 }
