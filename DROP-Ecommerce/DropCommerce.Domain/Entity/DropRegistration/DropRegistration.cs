@@ -1,15 +1,28 @@
+using DropCommerce.Domain.StaticEntity;
+using DropCommerce.Domain.Interfaces;
+
 namespace DropCommerce.Domain.Entity;
 
-public class DropRegistration : BaseEntity
+public class DropRegistration : BaseEntity, ISoftDeletable
 {
     #region Properties
+
     public long DropEventId { get; private set; }
     public long CustomerId { get; private set; }
-    public long StatusId { get; private set; }
+    public long DropRegistrationStatusId { get; private set; }
     public bool IsEligible { get; private set; }
     public string EligibilityReason { get; private set; }
     public DateTime RegisteredAt { get; private set; }
     public DateTime? EligibilityCheckedAt { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public DropRegistrationStatus DropRegistrationStatus { get; private set; }
+
+    #endregion
 
     #endregion
 
@@ -17,11 +30,11 @@ public class DropRegistration : BaseEntity
 
     protected DropRegistration() { }
 
-    private DropRegistration(long dropEventId, long customerId, long statusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
+    private DropRegistration(long dropEventId, long customerId, long dropRegistrationStatusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
     {
         DropEventId = dropEventId;
         CustomerId = customerId;
-        StatusId = statusId;
+        DropRegistrationStatusId = dropRegistrationStatusId;
         IsEligible = isEligible;
         EligibilityReason = eligibilityReason;
         RegisteredAt = registeredAt;
@@ -30,26 +43,40 @@ public class DropRegistration : BaseEntity
 
     #endregion
 
-    #region Properties
+    #region Functions
 
-    public static DropRegistration Create(long dropEventId, long customerId, long statusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
+    public static DropRegistration Create(long dropEventId, long customerId, long dropRegistrationStatusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropRegistrationStatusId, nameof(dropRegistrationStatusId));
+        BaseValidate.ValidateString(eligibilityReason, nameof(eligibilityReason));
+        BaseValidate.ValidateDate(registeredAt, nameof(registeredAt));
 
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
+        return new DropRegistration(dropEventId, customerId, dropRegistrationStatusId, isEligible, eligibilityReason, registeredAt, eligibilityCheckedAt);
+    }
 
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
+    public void Update(long dropEventId, long customerId, long dropRegistrationStatusId, bool isEligible, string eligibilityReason, DateTime registeredAt, DateTime? eligibilityCheckedAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateId(dropRegistrationStatusId, nameof(dropRegistrationStatusId));
+        BaseValidate.ValidateString(eligibilityReason, nameof(eligibilityReason));
+        BaseValidate.ValidateDate(registeredAt, nameof(registeredAt));
 
-        BaseValidate<bool>.ValidateNotNullValue(isEligible);
+        DropEventId = dropEventId;
+        CustomerId = customerId;
+        DropRegistrationStatusId = dropRegistrationStatusId;
+        IsEligible = isEligible;
+        EligibilityReason = eligibilityReason;
+        RegisteredAt = registeredAt;
+        EligibilityCheckedAt = eligibilityCheckedAt;
+    }
 
-        BaseValidate<string>.ValidateStringWhiteSpaceValue(eligibilityReason);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(registeredAt);
-
-        return new DropRegistration(dropEventId, customerId, statusId, isEligible, eligibilityReason, registeredAt, eligibilityCheckedAt);
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
     }
 
     #endregion

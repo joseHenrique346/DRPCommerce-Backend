@@ -1,10 +1,13 @@
 using FluentValidation;
 using MediatR;
+using DropCommerce.Application.Result;
+using System.Text.RegularExpressions;
 
 namespace DropCommerce.Application.Features;
 
 public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
+    where TResponse : IResult<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -15,26 +18,33 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        if (_validators.Any())
-        {
-            var context = new ValidationContext<TRequest>(request);
+        if (!_validators.Any())
+            return await next();
 
-            var failures = _validators
-                .Select(v => v.Validate(context))
-                .SelectMany(v => v.Errors)
-                .Where(f => f != null)
-                .ToList();
+        var context = new ValidationContext<TRequest>(request);
 
-            if (failures.Count > 0)
-            {
-                var errorMessages = failures.Select(f => f.ErrorMessage).ToList();
+        var failures = (await Task.WhenAll(
+                _validators.Select(v => v.ValidateAsync(context, cancellationToken))))
+            .SelectMany(r => r.Errors)
+            .Where(f => f != null)
+            .ToList();
 
-                return (TResponse)typeof(TResponse)
-                    .GetMethod("FailureFromList")?
-                    .Invoke(null, new object[] { errorMessages })!;
-            }
-        }
+        if (failures.Count == 0)
+            return await next();
 
-        return await next();
+        var errors = failures.Select(failure => Error.Validation(
+            CreateErrorCode(failure.PropertyName),
+            failure.ErrorMessage));
+
+        return TResponse.Validation(errors);
+    }
+
+    private static string CreateErrorCode(string? propertyName)
+    {
+        var stablePropertyName = string.IsNullOrWhiteSpace(propertyName)
+            ? "Request"
+            : Regex.Replace(propertyName, @"\[\d+\]", "[]");
+
+        return $"{typeof(TRequest).Name}.{stablePropertyName}";
     }
 }

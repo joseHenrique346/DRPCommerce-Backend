@@ -1,3 +1,5 @@
+using DropCommerce.Domain.StaticEntity;
+
 namespace DropCommerce.Domain.Entity;
 
 public class WaitlistEntry : BaseEntity
@@ -8,11 +10,19 @@ public class WaitlistEntry : BaseEntity
     public long? DropProductId { get; private set; }
     public long CustomerId { get; private set; }
     public int Position { get; private set; }
-    public long StatusId { get; private set; }
+    public long WaitlistEntryStatusId { get; private set; }
     public bool NotificationSent { get; private set; }
     public DateTime JoinedAt { get; private set; }
     public DateTime? NotifiedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
+
+    #region Navigation Properties
+
+    public DropEvent DropEvent { get; private set; }
+    public DropProduct? DropProduct { get; private set; }
+    public WaitlistEntryStatus WaitlistEntryStatus { get; private set; }
+
+    #endregion
 
     #endregion
 
@@ -20,13 +30,13 @@ public class WaitlistEntry : BaseEntity
 
     protected WaitlistEntry() { }
 
-    private WaitlistEntry(long dropEventId, long? dropProductId, long customerId, int position, long statusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
+    private WaitlistEntry(long dropEventId, long? dropProductId, long customerId, int position, long waitlistEntryStatusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
     {
         DropEventId = dropEventId;
         DropProductId = dropProductId;
         CustomerId = customerId;
         Position = position;
-        StatusId = statusId;
+        WaitlistEntryStatusId = waitlistEntryStatusId;
         NotificationSent = notificationSent;
         JoinedAt = joinedAt;
         NotifiedAt = notifiedAt;
@@ -37,28 +47,40 @@ public class WaitlistEntry : BaseEntity
 
     #region Functions
 
-    public static WaitlistEntry Create(long dropEventId, long? dropProductId, long customerId, int position, long statusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
+    public static WaitlistEntry Create(long dropEventId, long? dropProductId, long customerId, int position, long waitlistEntryStatusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
     {
-        BaseValidate<long>.ValidateNotNullValue(dropEventId);
-        BaseValidate<long>.ValidateIdValue(dropEventId);
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateIdNullable(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateMinimum(position, 1, nameof(position));
+        BaseValidate.ValidateId(waitlistEntryStatusId, nameof(waitlistEntryStatusId));
+        BaseValidate.ValidateDate(joinedAt, nameof(joinedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(joinedAt, expiresAt, nameof(joinedAt), nameof(expiresAt));
 
-        if (dropProductId.HasValue)
-            BaseValidate<long>.ValidateIdValue(dropProductId.Value);
+        return new WaitlistEntry(dropEventId, dropProductId, customerId, position, waitlistEntryStatusId, notificationSent, joinedAt, notifiedAt, expiresAt);
+    }
 
-        BaseValidate<long>.ValidateNotNullValue(customerId);
-        BaseValidate<long>.ValidateIdValue(customerId);
+    public void Update(long dropEventId, long? dropProductId, long customerId, int position, long waitlistEntryStatusId, bool notificationSent, DateTime joinedAt, DateTime? notifiedAt, DateTime expiresAt)
+    {
+        BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
+        BaseValidate.ValidateIdNullable(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateId(customerId, nameof(customerId));
+        BaseValidate.ValidateMinimum(position, 1, nameof(position));
+        BaseValidate.ValidateId(waitlistEntryStatusId, nameof(waitlistEntryStatusId));
+        BaseValidate.ValidateDate(joinedAt, nameof(joinedAt));
+        BaseValidate.ValidateDate(expiresAt, nameof(expiresAt));
+        BaseValidate.ValidateDateRange(joinedAt, expiresAt, nameof(joinedAt), nameof(expiresAt));
 
-        BaseValidate<int>.ValidateNotNullValue(position);
-
-        BaseValidate<bool>.ValidateNotNullValue(notificationSent);
-
-        BaseValidate<long>.ValidateNotNullValue(statusId);
-        BaseValidate<long>.ValidateIdValue(statusId);
-
-        BaseValidate<DateTime>.ValidateNotNullValue(joinedAt);
-        BaseValidate<DateTime>.ValidateNotNullValue(expiresAt);
-
-        return new WaitlistEntry(dropEventId, dropProductId, customerId, position, statusId, notificationSent, joinedAt, notifiedAt, expiresAt);
+        DropEventId = dropEventId;
+        DropProductId = dropProductId;
+        CustomerId = customerId;
+        Position = position;
+        WaitlistEntryStatusId = waitlistEntryStatusId;
+        NotificationSent = notificationSent;
+        JoinedAt = joinedAt;
+        NotifiedAt = notifiedAt;
+        ExpiresAt = expiresAt;
     }
 
     #endregion
