@@ -5,6 +5,6 @@ namespace DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
 
 public interface IStoreEnterpriseRefitApi
 {
-    [Get("/internal/v1/drop/enterprises/{enterpriseId}")]
+    [Get("/api/enterprises/get-by-id/{enterpriseId}")]
     Task<ApiResponse<StoreApiResponse<StoreEnterpriseResponse>>> GetByIdAsync(long enterpriseId, CancellationToken cancellationToken);
 }

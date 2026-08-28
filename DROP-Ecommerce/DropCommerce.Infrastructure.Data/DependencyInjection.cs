@@ -75,7 +75,39 @@ public static class DependencyInjection
                 options.CircuitBreaker.MinimumThroughput = 10;
             });
 
+        services.AddRefitClient<IStoreCustomerRefitApi>()
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = storeApiUri;
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(5);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2);
+                options.Retry.MaxRetryAttempts = 2;
+                options.Retry.DisableForUnsafeHttpMethods();
+                options.CircuitBreaker.MinimumThroughput = 10;
+            });
+
+        services.AddRefitClient<IStoreEmployeeRefitApi>()
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = storeApiUri;
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(5);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(2);
+                options.Retry.MaxRetryAttempts = 2;
+                options.Retry.DisableForUnsafeHttpMethods();
+                options.CircuitBreaker.MinimumThroughput = 10;
+            });
+
         services.AddScoped<IStoreProductReader, StoreProductReader>();
         services.AddScoped<IStoreEnterpriseReader, StoreEnterpriseReader>();
+        services.AddScoped<IStoreCustomerReader, StoreCustomerReader>();
+        services.AddScoped<IStoreEmployeeReader, StoreEmployeeReader>();
     }
 }
