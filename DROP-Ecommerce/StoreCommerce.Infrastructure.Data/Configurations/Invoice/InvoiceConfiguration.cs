@@ -21,21 +21,36 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(e => e.TotalAmount).HasPrecision(18, 2);
         builder.Property(e => e.TaxAmount).HasPrecision(18, 2);
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListInvoice)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Order>()
-            .WithMany()
+        builder.HasOne(e => e.Order)
+            .WithMany(e => e.ListInvoice)
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Customer>()
-            .WithMany()
+        builder.HasOne(e => e.Customer)
+            .WithMany(e => e.ListInvoice)
             .HasForeignKey(e => e.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.InvoiceType)
+            .WithMany()
+            .HasForeignKey(e => e.InvoiceTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.InvoiceStatus)
+            .WithMany()
+            .HasForeignKey(e => e.InvoiceStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.OrderId);
+        builder.HasIndex(e => e.CustomerId);
+        builder.HasIndex(e => e.InvoiceTypeId);
+        builder.HasIndex(e => e.InvoiceStatusId);
+        builder.HasIndex(e => e.Number);
     }
 }

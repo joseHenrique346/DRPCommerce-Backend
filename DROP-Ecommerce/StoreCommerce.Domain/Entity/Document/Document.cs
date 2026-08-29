@@ -1,5 +1,6 @@
 using StoreCommerce.Domain.Entity.Base;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -15,6 +16,13 @@ public class Document : BaseEntity, ITenantEntity
     public long DocumentStatusId { get; private set; }
     public DateTime IssuedAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public DocumentType DocumentType { get; private set; }
+    public DocumentStatus DocumentStatus { get; private set; }
+    #endregion
+
     #endregion
 
     #region Constructor

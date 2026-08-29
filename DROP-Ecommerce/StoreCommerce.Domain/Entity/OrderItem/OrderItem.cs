@@ -14,6 +14,13 @@ public class OrderItem : BaseEntity
     public decimal UnitPrice { get; private set; }
     public decimal DiscountAmount { get; private set; }
     public decimal TotalPrice { get; private set; }
+
+    #region Navigation Properties
+    public Order Order { get; private set; }
+    public Product? Product { get; private set; }
+    public Service? Service { get; private set; }
+    #endregion
+
     #endregion
 
     #region Constructor

@@ -1,4 +1,4 @@
-﻿using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Entity.Base;
 
 using StoreCommerce.Domain.Interfaces;
 
@@ -16,6 +16,14 @@ public class Service : BaseEntity, ITenantEntity, ISoftDeletable
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public Category Category { get; private set; }
+    private readonly List<OrderItem> _listOrderItem = [];
+    public IReadOnlyCollection<OrderItem> ListOrderItem => _listOrderItem.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor

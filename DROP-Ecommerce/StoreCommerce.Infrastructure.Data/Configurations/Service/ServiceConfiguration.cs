@@ -20,16 +20,23 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListService)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Category.Category>()
-            .WithMany()
+        builder.HasOne(e => e.Category)
+            .WithMany(e => e.ListService)
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListOrderItem)
+            .WithOne(e => e.Service)
+            .HasForeignKey(e => e.ServiceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.CategoryId);
+        builder.HasIndex(e => e.Name);
     }
 }

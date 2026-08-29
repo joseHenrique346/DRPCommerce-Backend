@@ -1,4 +1,5 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -20,6 +21,15 @@ public class Shipment : BaseEntity
     public DateTime EstimatedDelivery { get; private set; }
     public DateTime? ShippedAt { get; private set; }
     public DateTime? DeliveredAt { get; private set; }
+
+    #region Navigation Properties
+    public Order Order { get; private set; }
+    public Supplier? Supplier { get; private set; }
+    public ShipmentType ShipmentType { get; private set; }
+    public ShipmentStatus ShipmentStatus { get; private set; }
+    public State State { get; private set; }
+    #endregion
+
     #endregion
 
     #region Constructor

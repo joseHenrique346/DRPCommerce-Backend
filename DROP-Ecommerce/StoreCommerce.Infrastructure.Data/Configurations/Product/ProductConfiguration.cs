@@ -30,21 +30,30 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<StoreCommerce.Domain.Entity.Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListProduct)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Category.Category>()
-            .WithMany()
+        builder.HasOne(e => e.Category)
+            .WithMany(e => e.ListProduct)
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<StoreCommerce.Domain.Entity.Supplier>()
-            .WithMany()
+        builder.HasOne(e => e.Supplier)
+            .WithMany(e => e.ListProduct)
             .HasForeignKey(e => e.SupplierId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListOrderItem)
+            .WithOne(e => e.Product)
+            .HasForeignKey(e => e.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.CategoryId);
+        builder.HasIndex(e => e.SupplierId);
+        builder.HasIndex(e => e.Slug);
+        builder.HasIndex(e => e.SKU);
     }
 }

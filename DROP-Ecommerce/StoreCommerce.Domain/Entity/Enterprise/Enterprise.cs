@@ -15,6 +15,31 @@ public class Enterprise : BaseEntity
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
+
+    #region Navigation Properties
+    public StaticEntity.State State { get; private set; }
+    private readonly List<Category> _listCategory = [];
+    public IReadOnlyCollection<Category> ListCategory => _listCategory.AsReadOnly();
+    private readonly List<Coupon> _listCoupon = [];
+    public IReadOnlyCollection<Coupon> ListCoupon => _listCoupon.AsReadOnly();
+    private readonly List<Customer> _listCustomer = [];
+    public IReadOnlyCollection<Customer> ListCustomer => _listCustomer.AsReadOnly();
+    private readonly List<Document> _listDocument = [];
+    public IReadOnlyCollection<Document> ListDocument => _listDocument.AsReadOnly();
+    private readonly List<Employee> _listEmployee = [];
+    public IReadOnlyCollection<Employee> ListEmployee => _listEmployee.AsReadOnly();
+    private readonly List<Invoice> _listInvoice = [];
+    public IReadOnlyCollection<Invoice> ListInvoice => _listInvoice.AsReadOnly();
+    private readonly List<Order> _listOrder = [];
+    public IReadOnlyCollection<Order> ListOrder => _listOrder.AsReadOnly();
+    private readonly List<Product> _listProduct = [];
+    public IReadOnlyCollection<Product> ListProduct => _listProduct.AsReadOnly();
+    private readonly List<Service> _listService = [];
+    public IReadOnlyCollection<Service> ListService => _listService.AsReadOnly();
+    private readonly List<Supplier> _listSupplier = [];
+    public IReadOnlyCollection<Supplier> ListSupplier => _listSupplier.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor

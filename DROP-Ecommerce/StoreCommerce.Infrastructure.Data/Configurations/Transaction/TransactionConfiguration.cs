@@ -20,14 +20,39 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.Property(e => e.Amount).HasPrecision(18, 2);
         builder.Property(e => e.Fee).HasPrecision(18, 2);
 
-        builder.HasOne<Order>()
-            .WithMany()
+        builder.HasOne(e => e.Order)
+            .WithMany(e => e.ListTransaction)
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Customer>()
-            .WithMany()
+        builder.HasIndex(e => e.OrderId);
+
+        builder.HasOne(e => e.Customer)
+            .WithMany(e => e.ListTransaction)
             .HasForeignKey(e => e.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.CustomerId);
+
+        builder.HasOne(e => e.TransactionType)
+            .WithMany()
+            .HasForeignKey(e => e.TransactionTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.TransactionTypeId);
+
+        builder.HasOne(e => e.TransactionMethod)
+            .WithMany()
+            .HasForeignKey(e => e.TransactionMethodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.TransactionMethodId);
+
+        builder.HasOne(e => e.TransactionStatus)
+            .WithMany()
+            .HasForeignKey(e => e.TransactionStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.TransactionStatusId);
     }
 }

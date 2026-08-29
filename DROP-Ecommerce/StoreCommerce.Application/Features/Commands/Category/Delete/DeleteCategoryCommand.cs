@@ -1,6 +1,6 @@
 using MediatR;
 using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Entity.Category;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 

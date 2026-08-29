@@ -15,5 +15,12 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(500);
+
+        builder.HasMany(e => e.ListEmployee)
+            .WithOne(e => e.Role)
+            .HasForeignKey(e => e.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.Name);
     }
 }

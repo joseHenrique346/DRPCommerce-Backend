@@ -23,11 +23,42 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
-        builder.HasIndex(e => e.EnterpriseId);
+        builder.OwnsOne(e => e.Email, nav =>
+        {
+            nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
+        });
 
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.OwnsOne(e => e.Phone, nav =>
+        {
+            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(20).IsRequired();
+        });
+
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListCustomer)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.State)
+            .WithMany()
+            .HasForeignKey(e => e.StateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListOrder)
+            .WithOne(e => e.Customer)
+            .HasForeignKey(e => e.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListInvoice)
+            .WithOne(e => e.Customer)
+            .HasForeignKey(e => e.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListTransaction)
+            .WithOne(e => e.Customer)
+            .HasForeignKey(e => e.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.StateId);
     }
 }

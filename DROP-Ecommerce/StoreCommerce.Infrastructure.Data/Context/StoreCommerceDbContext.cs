@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Entity.Category;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
 
@@ -33,6 +33,21 @@ public class StoreCommerceDbContext : DbContext
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Department> Departments => Set<Department>();
+
+    // Static Entities
+    public DbSet<CouponType> CouponTypes => Set<CouponType>();
+    public DbSet<DocumentStatus> DocumentStatuses => Set<DocumentStatus>();
+    public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
+    public DbSet<InvoiceStatus> InvoiceStatuses => Set<InvoiceStatus>();
+    public DbSet<InvoiceType> InvoiceTypes => Set<InvoiceType>();
+    public DbSet<OrderPaymentStatus> OrderPaymentStatuses => Set<OrderPaymentStatus>();
+    public DbSet<OrderStatus> OrderStatuses => Set<OrderStatus>();
+    public DbSet<ShipmentStatus> ShipmentStatuses => Set<ShipmentStatus>();
+    public DbSet<ShipmentType> ShipmentTypes => Set<ShipmentType>();
+    public DbSet<State> States => Set<State>();
+    public DbSet<TransactionMethod> TransactionMethods => Set<TransactionMethod>();
+    public DbSet<TransactionStatus> TransactionStatuses => Set<TransactionStatus>();
+    public DbSet<TransactionType> TransactionTypes => Set<TransactionType>();
 
     #endregion
 

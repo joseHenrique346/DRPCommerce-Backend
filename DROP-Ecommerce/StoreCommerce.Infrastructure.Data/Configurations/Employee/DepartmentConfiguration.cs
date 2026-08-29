@@ -15,5 +15,12 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Description).HasMaxLength(500);
+
+        builder.HasMany(e => e.ListEmployee)
+            .WithOne(e => e.Department)
+            .HasForeignKey(e => e.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.Name);
     }
 }

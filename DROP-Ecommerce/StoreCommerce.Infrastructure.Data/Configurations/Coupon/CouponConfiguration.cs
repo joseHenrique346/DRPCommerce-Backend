@@ -21,11 +21,23 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListCoupon)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.CouponType)
+            .WithMany()
+            .HasForeignKey(e => e.CouponTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListOrder)
+            .WithOne(e => e.Coupon)
+            .HasForeignKey(e => e.CouponId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.CouponTypeId);
+        builder.HasIndex(e => e.Code);
     }
 }

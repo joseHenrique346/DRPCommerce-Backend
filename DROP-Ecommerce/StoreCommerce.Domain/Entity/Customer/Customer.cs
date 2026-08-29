@@ -8,6 +8,8 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #region Properties
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }
+    public CustomerEmail Email { get; private set; }
+    public CustomerPhone Phone { get; private set; }
     public string PasswordHash { get; private set; }
     public string AddressLine { get; private set; }
     public string City { get; private set; }
@@ -20,15 +22,31 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public StaticEntity.State State { get; private set; }
+    private readonly List<Order> _listOrder = [];
+    public IReadOnlyCollection<Order> ListOrder => _listOrder.AsReadOnly();
+    private readonly List<Invoice> _listInvoice = [];
+    public IReadOnlyCollection<Invoice> ListInvoice => _listInvoice.AsReadOnly();
+    private readonly List<Transaction> _listTransaction = [];
+    public IReadOnlyCollection<Transaction> ListTransaction => _listTransaction.AsReadOnly();
+    private readonly List<Document> _listDocument = [];
+    public IReadOnlyCollection<Document> ListDocument => _listDocument.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor
     protected Customer() { }
 
-    private Customer(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    private Customer(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         EnterpriseId = enterpriseId;
         FullName = fullName;
+        Email = email;
+        Phone = phone;
         PasswordHash = passwordHash;
         AddressLine = addressLine;
         City = city;
@@ -43,11 +61,13 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #endregion
 
     #region Functions
-    public static Customer Create(long enterpriseId, string fullName, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    public static Customer Create(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
         BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
+        BaseValidate.ValidateNotNull(email, nameof(Email));
+        BaseValidate.ValidateNotNull(phone, nameof(Phone));
         BaseValidate.ValidateNotNullOrEmpty(passwordHash, nameof(PasswordHash));
         BaseValidate.ValidateMaxLength(passwordHash, 500, nameof(PasswordHash));
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
@@ -58,17 +78,21 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
-        return new Customer(enterpriseId, fullName, passwordHash, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
+        return new Customer(enterpriseId, fullName, email, phone, passwordHash, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
     }
 
-    public void UpdatePersonalInfo(string fullName, string gender, DateTime dateOfBirth)
+    public void UpdatePersonalInfo(string fullName, CustomerEmail email, CustomerPhone phone, string gender, DateTime dateOfBirth)
     {
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
         BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
+        BaseValidate.ValidateNotNull(email, nameof(Email));
+        BaseValidate.ValidateNotNull(phone, nameof(Phone));
         BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
         FullName = fullName;
+        Email = email;
+        Phone = phone;
         Gender = gender;
         DateOfBirth = dateOfBirth;
     }

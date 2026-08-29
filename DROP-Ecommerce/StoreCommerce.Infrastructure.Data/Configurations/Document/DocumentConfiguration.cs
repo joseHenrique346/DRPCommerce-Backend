@@ -17,11 +17,24 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(e => e.Number).HasMaxLength(100);
         builder.Property(e => e.FileUrl).HasMaxLength(500);
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListDocument)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.DocumentType)
+            .WithMany()
+            .HasForeignKey(e => e.DocumentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.DocumentStatus)
+            .WithMany()
+            .HasForeignKey(e => e.DocumentStatusId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.DocumentTypeId);
+        builder.HasIndex(e => e.DocumentStatusId);
+        builder.HasIndex(e => new { e.ReferenceId, e.ReferenceType });
     }
 }
