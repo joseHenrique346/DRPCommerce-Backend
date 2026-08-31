@@ -32,7 +32,7 @@ internal class CategoryValidator : AbstractValidator<Category>
             .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.")
             .Matches(@"^[a-z0-9]+(?:-[a-z0-9]+)*$").WithMessage("{PropertyName} deve conter apenas letras minúsculas, números e hífens.");
 
-        RuleFor(c => c.Dscription)
+        RuleFor(c => c.Description)
             .MaximumLength(1000).When(c => !string.IsNullOrWhiteSpace(c.Dscription))
             .WithMessage("{PropertyName} não pode ter mais de 1000 caracteres.");
 
