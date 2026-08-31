@@ -12,6 +12,13 @@ public class DropOrderItem : BaseEntity
     public decimal UnitPrice { get; private set; }
     public decimal TotalPrice { get; private set; }
 
+    #region Navigation Properties
+
+    public DropOrder DropOrder { get; private set; }
+    public DropProduct DropProduct { get; private set; }
+
+    #endregion
+
     #endregion
 
     #region Constructors
@@ -44,6 +51,25 @@ public class DropOrderItem : BaseEntity
         BaseValidate.ValidateMinimumDecimal(totalPrice, 0.01m, nameof(totalPrice));
 
         return new DropOrderItem(dropOrderId, dropProductId, itemName, sku, quantity, unitPrice, totalPrice);
+    }
+
+    public void Update(long dropOrderId, long dropProductId, string itemName, string sku, int quantity, decimal unitPrice, decimal totalPrice)
+    {
+        BaseValidate.ValidateId(dropOrderId, nameof(dropOrderId));
+        BaseValidate.ValidateId(dropProductId, nameof(dropProductId));
+        BaseValidate.ValidateString(itemName, nameof(itemName));
+        BaseValidate.ValidateString(sku, nameof(sku));
+        BaseValidate.ValidateMinimum(quantity, 1, nameof(quantity));
+        BaseValidate.ValidateMinimumDecimal(unitPrice, 0.01m, nameof(unitPrice));
+        BaseValidate.ValidateMinimumDecimal(totalPrice, 0.01m, nameof(totalPrice));
+
+        DropOrderId = dropOrderId;
+        DropProductId = dropProductId;
+        ItemName = itemName;
+        SKU = sku;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        TotalPrice = totalPrice;
     }
 
     #endregion

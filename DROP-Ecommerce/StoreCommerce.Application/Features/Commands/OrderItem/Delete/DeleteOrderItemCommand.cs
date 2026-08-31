@@ -1,5 +1,7 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Domain.Entity;
 
-public class DeleteOrderItemCommand
-{
-}
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class DeleteOrderItemCommand(long id) : IRequest<Result<OrderItem>> { }

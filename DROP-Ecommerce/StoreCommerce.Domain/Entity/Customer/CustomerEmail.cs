@@ -9,7 +9,7 @@ public class CustomerEmail
     #endregion
 
     #region Constructor
-    protected CustomerEmail() { }
+    public CustomerEmail() { }
 
     private CustomerEmail(string value)
     {
