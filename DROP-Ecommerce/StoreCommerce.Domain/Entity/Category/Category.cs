@@ -11,7 +11,7 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     public long? ParentCategoryId { get; private set; }
     public string Name { get; private set; }
     public string Slug { get; private set; }
-    public string Dscription { get; private set; }
+    public string Description { get; private set; }
     public string ImageUrl { get; private set; }
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; }
@@ -22,13 +22,13 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     #region Constructor
     protected Category() { }
 
-    private Category(long enterpriseId, long? parentCategoryId, string name, string slug, string dscription, string imageUrl, int displayOrder, bool isActive)
+    private Category(long enterpriseId, long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder, bool isActive)
     {
         EnterpriseId = enterpriseId;
         ParentCategoryId = parentCategoryId;
         Name = name;
         Slug = slug;
-        Dscription = dscription;
+        Description = description;
         ImageUrl = imageUrl;
         DisplayOrder = displayOrder;
         IsActive = isActive;
@@ -36,7 +36,7 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Functions
-    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string slug, string dscription, string imageUrl, int displayOrder, bool isActive)
+    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
@@ -44,22 +44,22 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
         BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
         BaseValidate.ValidateMaxLength(slug, 255, nameof(Slug));
-        BaseValidate.ValidateMaxLength(dscription, 2000, nameof(Dscription));
+        BaseValidate.ValidateMaxLength(description, 2000, nameof(Description));
         BaseValidate.ValidateMaxLength(imageUrl, 1000, nameof(ImageUrl));
         BaseValidate.ValidateUrlFormat(imageUrl, nameof(ImageUrl));
         BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
 
-        return new Category(enterpriseId, parentCategoryId, name, slug, dscription, imageUrl, displayOrder, isActive);
+        return new Category(enterpriseId, parentCategoryId, name, slug, description, imageUrl, displayOrder, isActive);
     }
 
-    public void UpdateDetails(long? parentCategoryId, string name, string slug, string dscription, string imageUrl, int displayOrder)
+    public void UpdateDetails(long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder)
     {
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
         BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
         BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
         BaseValidate.ValidateMaxLength(slug, 255, nameof(Slug));
-        BaseValidate.ValidateMaxLength(dscription, 2000, nameof(Dscription));
+        BaseValidate.ValidateMaxLength(description, 2000, nameof(Description));
         BaseValidate.ValidateMaxLength(imageUrl, 1000, nameof(ImageUrl));
         BaseValidate.ValidateUrlFormat(imageUrl, nameof(ImageUrl));
         BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
@@ -67,7 +67,7 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         ParentCategoryId = parentCategoryId;
         Name = name;
         Slug = slug;
-        Dscription = dscription;
+        Description = description;
         ImageUrl = imageUrl;
         DisplayOrder = displayOrder;
     }

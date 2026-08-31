@@ -15,7 +15,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.Property(e => e.Name).HasMaxLength(200);
         builder.Property(e => e.Slug).HasMaxLength(100);
-        builder.Property(e => e.Dscription).HasMaxLength(500);
+        builder.Property(e => e.Description).HasMaxLength(500);
         builder.Property(e => e.ImageUrl).HasMaxLength(500);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
