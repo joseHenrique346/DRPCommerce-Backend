@@ -12,7 +12,7 @@ public static class DependencyInjection
     public static IServiceCollection AddStoreInfrastructure(this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<StoreCommerceDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();

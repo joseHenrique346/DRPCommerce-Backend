@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" PrivateAssets="all" />
     <PackageReference Include="Refit" Version="14.0.1" />
     <PackageReference Include="Refit.HttpClientFactory" Version="14.0.1" />
@@ -21,6 +21,10 @@
   <ItemGroup>
     <ProjectReference Include="..\DropCommerce.Application\DropCommerce.Application.csproj" />
     <ProjectReference Include="..\DropCommerce.Domain\DropCommerce.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>
