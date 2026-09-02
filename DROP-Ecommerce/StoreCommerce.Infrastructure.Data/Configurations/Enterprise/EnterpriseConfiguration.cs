@@ -79,6 +79,5 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(e => e.StateId);
-        builder.HasIndex(e => e.TradeName);
     }
 }

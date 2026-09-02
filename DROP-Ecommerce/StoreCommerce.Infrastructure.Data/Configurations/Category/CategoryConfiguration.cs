@@ -18,6 +18,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(e => e.Description).HasMaxLength(500);
         builder.Property(e => e.ImageUrl).HasMaxLength(500);
 
+        builder.Property(e => e.IsDeleted).HasDefaultValue(false);
+
         builder.HasOne(e => e.Enterprise)
             .WithMany(e => e.ListCategory)
             .HasForeignKey(e => e.EnterpriseId)
@@ -40,6 +42,5 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.ParentCategoryId);
-        builder.HasIndex(e => e.Slug);
     }
 }

@@ -53,7 +53,5 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.CategoryId);
         builder.HasIndex(e => e.SupplierId);
-        builder.HasIndex(e => e.Slug);
-        builder.HasIndex(e => e.SKU);
     }
 }

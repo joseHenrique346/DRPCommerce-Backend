@@ -37,6 +37,5 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.CategoryId);
-        builder.HasIndex(e => e.Name);
     }
 }

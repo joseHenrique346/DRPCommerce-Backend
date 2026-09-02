@@ -52,6 +52,5 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
         builder.HasIndex(e => e.ShipmentTypeId);
         builder.HasIndex(e => e.ShipmentStatusId);
         builder.HasIndex(e => e.StateId);
-        builder.HasIndex(e => e.TrackingCode);
     }
 }

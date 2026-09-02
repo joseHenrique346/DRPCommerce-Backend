@@ -35,6 +35,6 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.DocumentTypeId);
         builder.HasIndex(e => e.DocumentStatusId);
-        builder.HasIndex(e => new { e.ReferenceId, e.ReferenceType });
+        builder.HasIndex(e => e.ReferenceId);
     }
 }

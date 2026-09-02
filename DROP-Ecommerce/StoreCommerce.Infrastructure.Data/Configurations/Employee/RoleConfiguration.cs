@@ -20,7 +20,5 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .WithOne(e => e.Role)
             .HasForeignKey(e => e.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(e => e.Name);
     }
 }

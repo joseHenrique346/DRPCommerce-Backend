@@ -27,7 +27,7 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 
         builder.OwnsOne(e => e.Phone, nav =>
         {
-            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(20).IsRequired();
+            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired();
         });
 
         builder.HasOne(e => e.Enterprise)
@@ -52,6 +52,5 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.StateId);
-        builder.HasIndex(e => e.CompanyName);
     }
 }

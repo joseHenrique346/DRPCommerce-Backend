@@ -20,7 +20,5 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .WithOne(e => e.Department)
             .HasForeignKey(e => e.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(e => e.Name);
     }
 }

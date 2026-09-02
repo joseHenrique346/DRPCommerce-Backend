@@ -30,7 +30,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.OwnsOne(e => e.Phone, nav =>
         {
-            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(20).IsRequired();
+            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired();
         });
 
         builder.HasOne(e => e.Enterprise)

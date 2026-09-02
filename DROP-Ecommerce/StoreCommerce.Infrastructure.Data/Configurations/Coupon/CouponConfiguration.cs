@@ -38,6 +38,5 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.CouponTypeId);
-        builder.HasIndex(e => e.Code);
     }
 }
