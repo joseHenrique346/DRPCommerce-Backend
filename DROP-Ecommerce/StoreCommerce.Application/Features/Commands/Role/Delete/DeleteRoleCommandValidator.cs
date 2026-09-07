@@ -2,11 +2,11 @@ using FluentValidation;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class DeleteShipmentCommandValidator : AbstractValidator<DeleteShipmentCommand>
+public class DeleteRoleCommandValidator : AbstractValidator<DeleteRoleCommand>
 {
-    public DeleteShipmentCommandValidator()
+    public DeleteRoleCommandValidator()
     {
-        RuleFor(s => s.id)
+        RuleFor(r => r.id)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
     }
 }

@@ -1,5 +1,12 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using FluentValidation;
 
-public class DeleteCategoryCommandValidator
+namespace StoreCommerce.Application.Features.Commands;
+
+public class DeleteCategoryCommandValidator : AbstractValidator<DeleteCategoryCommand>
 {
+    public DeleteCategoryCommandValidator()
+    {
+        RuleFor(c => c.id)
+            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
+    }
 }
