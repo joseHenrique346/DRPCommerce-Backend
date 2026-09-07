@@ -1,12 +1,5 @@
-using FluentValidation;
+﻿namespace StoreCommerce.Application.Features.Commands;
 
-namespace StoreCommerce.Application.Features.Commands;
-
-public class DeleteServiceCommandValidator : AbstractValidator<DeleteServiceCommand>
+public class DeleteServiceCommandValidator
 {
-    public DeleteServiceCommandValidator()
-    {
-        RuleFor(s => s.id)
-            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
-    }
 }
