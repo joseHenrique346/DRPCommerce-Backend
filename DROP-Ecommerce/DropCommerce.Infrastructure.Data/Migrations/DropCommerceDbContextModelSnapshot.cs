@@ -3,8 +3,8 @@ using System;
 using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,9 +18,9 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropAuditLog", b =>
                 {
@@ -29,16 +29,16 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("action");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long?>("CustomerId")
@@ -60,37 +60,37 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("EntityName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("entity_name");
 
                     b.Property<string>("IpAddress")
                         .IsRequired()
                         .HasMaxLength(45)
-                        .HasColumnType("varchar(45)")
+                        .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<string>("NewValues")
                         .HasMaxLength(4000)
-                        .HasColumnType("varchar(4000)")
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("new_values");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("occurred_at");
 
                     b.Property<string>("OldValues")
                         .HasMaxLength(4000)
-                        .HasColumnType("varchar(4000)")
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("old_values");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UserAgent")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("user_agent");
 
                     b.HasKey("Id")
@@ -112,25 +112,25 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<decimal>("DiscountValue")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("discount_value");
 
                     b.Property<long>("DropCouponTypeId")
@@ -142,51 +142,51 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_event_id");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsExclusiveToRegistered")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_exclusive_to_registered");
 
                     b.Property<bool>("IsSingleUse")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_single_use");
 
                     b.Property<decimal>("MaxDiscountCap")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("max_discount_cap");
 
                     b.Property<int>("MaxUses")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("max_uses");
 
                     b.Property<decimal>("MinOrderValue")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("min_order_value");
 
                     b.Property<DateTime>("StartsAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("starts_at");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("UsedCount")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("used_count");
 
                     b.HasKey("Id")
@@ -211,36 +211,36 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("BannerImageUrl")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("banner_image_url");
 
                     b.Property<string>("CoverImageUrl")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("cover_image_url");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
                     b.Property<DateTime>("DropEndsAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("drop_ends_at");
 
                     b.Property<long>("DropEventStatusId")
@@ -248,7 +248,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_event_status_id");
 
                     b.Property<DateTime>("DropStartsAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("drop_starts_at");
 
                     b.Property<long>("EnterpriseId")
@@ -257,23 +257,23 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsPublic")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_public");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
                     b.Property<long>("ProductId")
@@ -281,41 +281,41 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("product_id");
 
                     b.Property<DateTime>("QueueOpensAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("queue_opens_at");
 
                     b.Property<DateTime>("RegistrationEndsAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("registration_ends_at");
 
                     b.Property<DateTime>("RegistrationStartsAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("registration_starts_at");
 
                     b.Property<bool>("RequiresRegistration")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("requires_registration");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("slug");
 
                     b.Property<int>("TotalUnitsAvailable")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("total_units_available");
 
                     b.Property<int>("UnitsReserved")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("units_reserved");
 
                     b.Property<int>("UnitsSold")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("units_sold");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -340,16 +340,16 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("varchar(4000)")
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("body");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -357,7 +357,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<long>("DropEventId")
@@ -378,26 +378,26 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<DateTime>("ScheduledAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("scheduled_at");
 
                     b.Property<DateTime?>("SentAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("sent_at");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("subject");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -428,10 +428,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -439,12 +439,12 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<decimal>("DiscountAmount")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("discount_amount");
 
                     b.Property<long?>("DropCouponId")
@@ -469,61 +469,61 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("notes");
 
                     b.Property<string>("ShippingAddressLine")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("shipping_address_line");
 
                     b.Property<string>("ShippingCity")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("shipping_city");
 
                     b.Property<decimal>("ShippingCost")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("shipping_cost");
 
                     b.Property<string>("ShippingState")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("shipping_state");
 
                     b.Property<string>("ShippingZipCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("shipping_zip_code");
 
                     b.Property<decimal>("SubTotal")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("sub_total");
 
                     b.Property<decimal>("TaxAmount")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("tax_amount");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_amount");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -557,10 +557,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("DropOrderId")
@@ -574,31 +574,31 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("ItemName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("item_name");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("quantity");
 
                     b.Property<string>("SKU")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("sku");
 
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_price");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("unit_price");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -620,14 +620,14 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<long>("DropEventId")
@@ -635,22 +635,22 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_event_id");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<int>("MaxPerCustomer")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("max_per_customer");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
                     b.Property<long>("ProductId")
@@ -660,19 +660,19 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("SKU")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("sku");
 
                     b.Property<int>("UnitsAllocated")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("units_allocated");
 
                     b.Property<int>("UnitsSold")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("units_sold");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -694,10 +694,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -705,7 +705,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<long>("DropEventId")
@@ -717,31 +717,31 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_registration_status_id");
 
                     b.Property<DateTime?>("EligibilityCheckedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("eligibility_checked_at");
 
                     b.Property<string>("EligibilityReason")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("eligibility_reason");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsEligible")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_eligible");
 
                     b.Property<DateTime>("RegisteredAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("registered_at");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -766,18 +766,18 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("CancelledAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("cancelled_at");
 
                     b.Property<DateTime?>("ConfirmedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("confirmed_at");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -785,7 +785,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
                     b.Property<long>("DropEventId")
@@ -801,23 +801,23 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_reservation_status_id");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
 
                     b.Property<string>("LockToken")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("lock_token");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("quantity");
 
                     b.Property<long>("QueueEntryId")
@@ -825,21 +825,21 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("queue_entry_id");
 
                     b.Property<DateTime>("ReservedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("reserved_at");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_amount");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("unit_price");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -870,15 +870,15 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("amount");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -903,37 +903,37 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.Property<decimal>("Fee")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("fee");
 
                     b.Property<string>("GatewayPayload")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("varchar(4000)")
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("gateway_payload");
 
                     b.Property<string>("GatewayProvider")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("gateway_provider");
 
                     b.Property<string>("GatewayReference")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("gateway_reference");
 
                     b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid_at");
 
                     b.Property<DateTime?>("RefundedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("refunded_at");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -964,10 +964,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -977,17 +977,17 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
                     b.Property<DateTime>("DetectedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("detected_at");
 
                     b.Property<string>("DeviceFingerprint")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("device_fingerprint");
 
                     b.Property<long>("DropEventId")
@@ -1005,11 +1005,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("IpAddress")
                         .IsRequired()
                         .HasMaxLength(45)
-                        .HasColumnType("varchar(45)")
+                        .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<bool>("IsConfirmed")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_confirmed");
 
                     b.Property<long>("QueueEntryId")
@@ -1017,15 +1017,15 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("queue_entry_id");
 
                     b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<bool>("WasBlocked")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("was_blocked");
 
                     b.HasKey("Id")
@@ -1056,18 +1056,18 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("CalledAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("called_at");
 
                     b.Property<DateTime?>("CheckedOutAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("checked_out_at");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -1077,7 +1077,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("DeviceFingerprint")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("device_fingerprint");
 
                     b.Property<long>("DropEventId")
@@ -1085,21 +1085,21 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_event_id");
 
                     b.Property<DateTime>("EnteredAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("entered_at");
 
                     b.Property<DateTime?>("ExpiredAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expired_at");
 
                     b.Property<string>("IpAddress")
                         .IsRequired()
                         .HasMaxLength(45)
-                        .HasColumnType("varchar(45)")
+                        .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<int>("Position")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("position");
 
                     b.Property<long>("QueueEntryStatusId")
@@ -1109,17 +1109,17 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("SessionToken")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("session_token");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UserAgent")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("user_agent");
 
                     b.HasKey("Id")
@@ -1144,10 +1144,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -1155,15 +1155,15 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("customer_id");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
                     b.Property<DateTime>("IssuedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("issued_at");
 
                     b.Property<DateTime>("LastHeartbeatAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_heartbeat_at");
 
                     b.Property<long>("QueueEntryId")
@@ -1177,11 +1177,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("token");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -1206,10 +1206,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<long>("CustomerId")
@@ -1225,27 +1225,27 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("drop_product_id");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
                     b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("joined_at");
 
                     b.Property<bool>("NotificationSent")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("notification_sent");
 
                     b.Property<DateTime?>("NotifiedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("notified_at");
 
                     b.Property<int>("Position")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("position");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<long>("WaitlistEntryStatusId")
@@ -1279,7 +1279,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1309,7 +1309,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1369,7 +1369,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1409,7 +1409,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1454,7 +1454,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1504,7 +1504,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1549,7 +1549,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1604,7 +1604,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1644,7 +1644,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1684,7 +1684,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1724,7 +1724,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1774,7 +1774,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1814,7 +1814,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1854,7 +1854,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1904,7 +1904,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1954,7 +1954,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -1989,7 +1989,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("description");
 
                     b.HasKey("Id")
@@ -2384,7 +2384,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasForeignKey("WaitlistEntryStatusId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_entrada_lista_espera_status_lista_espera_waitlist_entry_stat~");
+                        .HasConstraintName("fk_entrada_lista_espera_status_lista_espera_waitlist_entry_sta~");
 
                     b.Navigation("DropEvent");
 

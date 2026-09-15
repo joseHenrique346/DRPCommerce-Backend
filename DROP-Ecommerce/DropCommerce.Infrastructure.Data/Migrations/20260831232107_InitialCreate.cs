@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -14,281 +14,239 @@ namespace DropCommerce.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterDatabase()
-                .Annotation("MySql:CharSet", "utf8mb4");
-
             migrationBuilder.CreateTable(
                 name: "canal_notificacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_canal_notificacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "metodo_transacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_metodo_transacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "severidade_fraude",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_severidade_fraude", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_entrada_fila",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_entrada_fila", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_evento",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_evento", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_inscricao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_inscricao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_lista_espera",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_lista_espera", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_notificacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_notificacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_pagamento_pedido",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_pagamento_pedido", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_pedido",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_pedido", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_reserva",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_reserva", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_sessao_fila",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_sessao_fila", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "status_transacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_status_transacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "tipo_cupom",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_tipo_cupom", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "tipo_notificacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_tipo_notificacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "tipo_sinal_fraude",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_tipo_sinal_fraude", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "tipo_transacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    description = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_tipo_transacao", x => x.id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "evento",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     enterprise_id = table.Column<long>(type: "bigint", nullable: false),
                     product_id = table.Column<long>(type: "bigint", nullable: false),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    slug = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    cover_image_url = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    banner_image_url = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    slug = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    cover_image_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    banner_image_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     drop_event_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    total_units_available = table.Column<int>(type: "int", nullable: false),
-                    units_reserved = table.Column<int>(type: "int", nullable: false),
-                    units_sold = table.Column<int>(type: "int", nullable: false),
-                    price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    requires_registration = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    is_public = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    registration_starts_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    registration_ends_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    queue_opens_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    drop_starts_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    drop_ends_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    total_units_available = table.Column<int>(type: "integer", nullable: false),
+                    units_reserved = table.Column<int>(type: "integer", nullable: false),
+                    units_sold = table.Column<int>(type: "integer", nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    requires_registration = table.Column<bool>(type: "boolean", nullable: false),
+                    is_public = table.Column<bool>(type: "boolean", nullable: false),
+                    registration_starts_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    registration_ends_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    queue_opens_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    drop_starts_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    drop_ends_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -299,33 +257,31 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_evento",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "cupom",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
-                    code = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    code = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     drop_coupon_type_id = table.Column<long>(type: "bigint", nullable: false),
-                    discount_value = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    min_order_value = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    max_discount_cap = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    max_uses = table.Column<int>(type: "int", nullable: false),
-                    used_count = table.Column<int>(type: "int", nullable: false),
-                    is_active = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    is_single_use = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    is_exclusive_to_registered = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    starts_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    discount_value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    min_order_value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    max_discount_cap = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    max_uses = table.Column<int>(type: "integer", nullable: false),
+                    used_count = table.Column<int>(type: "integer", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    is_single_use = table.Column<bool>(type: "boolean", nullable: false),
+                    is_exclusive_to_registered = table.Column<bool>(type: "boolean", nullable: false),
+                    starts_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -342,33 +298,28 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "tipo_cupom",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "entrada_fila",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
-                    session_token = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    position = table.Column<int>(type: "int", nullable: false),
+                    session_token = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    position = table.Column<int>(type: "integer", nullable: false),
                     queue_entry_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    device_fingerprint = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ip_address = table.Column<string>(type: "varchar(45)", maxLength: 45, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    user_agent = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    entered_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    called_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    expired_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    checked_out_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    device_fingerprint = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
+                    user_agent = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    entered_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    called_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expired_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    checked_out_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -385,27 +336,25 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_entrada_fila",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "inscricao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_registration_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    is_eligible = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    eligibility_reason = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    registered_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    eligibility_checked_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    is_eligible = table.Column<bool>(type: "boolean", nullable: false),
+                    eligibility_reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    registered_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    eligibility_checked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -422,34 +371,27 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_inscricao",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "log_auditoria",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: true),
                     employee_id = table.Column<long>(type: "bigint", nullable: true),
-                    action = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    entity_name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    action = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    entity_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     entity_id = table.Column<long>(type: "bigint", nullable: false),
-                    old_values = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    new_values = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ip_address = table.Column<string>(type: "varchar(45)", maxLength: 45, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    user_agent = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    occurred_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    old_values = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    new_values = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
+                    user_agent = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    occurred_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -460,30 +402,27 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "evento",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "notificacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_notification_channel_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_notification_type_id = table.Column<long>(type: "bigint", nullable: false),
-                    subject = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    body = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    subject = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    body = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
                     drop_notification_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    scheduled_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    sent_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    scheduled_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    sent_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -512,28 +451,26 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "tipo_notificacao",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "produto",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     product_id = table.Column<long>(type: "bigint", nullable: false),
-                    sku = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    units_allocated = table.Column<int>(type: "int", nullable: false),
-                    units_sold = table.Column<int>(type: "int", nullable: false),
-                    max_per_customer = table.Column<int>(type: "int", nullable: false),
-                    price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    is_active = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    sku = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    units_allocated = table.Column<int>(type: "integer", nullable: false),
+                    units_sold = table.Column<int>(type: "integer", nullable: false),
+                    max_per_customer = table.Column<int>(type: "integer", nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -544,25 +481,23 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "evento",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "sessao_fila",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     queue_entry_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
-                    token = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    token = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     queue_session_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    issued_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    last_heartbeat_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    issued_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    last_heartbeat_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -579,32 +514,28 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_sessao_fila",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "sinal_fraude",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     queue_entry_id = table.Column<long>(type: "bigint", nullable: false),
                     fraud_signal_type_id = table.Column<long>(type: "bigint", nullable: false),
                     fraud_severity_id = table.Column<long>(type: "bigint", nullable: false),
-                    description = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ip_address = table.Column<string>(type: "varchar(45)", maxLength: 45, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    device_fingerprint = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    is_confirmed = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    was_blocked = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    detected_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    reviewed_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false),
+                    device_fingerprint = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    is_confirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    was_blocked = table.Column<bool>(type: "boolean", nullable: false),
+                    detected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    reviewed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -633,26 +564,25 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "tipo_sinal_fraude",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "entrada_lista_espera",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_product_id = table.Column<long>(type: "bigint", nullable: true),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
-                    position = table.Column<int>(type: "int", nullable: false),
+                    position = table.Column<int>(type: "integer", nullable: false),
                     waitlist_entry_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    notification_sent = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    joined_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    notified_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    expires_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    notification_sent = table.Column<bool>(type: "boolean", nullable: false),
+                    joined_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    notified_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -670,38 +600,36 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "fk_entrada_lista_espera_status_lista_espera_waitlist_entry_stat~",
+                        name: "fk_entrada_lista_espera_status_lista_espera_waitlist_entry_sta~",
                         column: x => x.waitlist_entry_status_id,
                         principalTable: "status_lista_espera",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "reserva",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_product_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     queue_entry_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_reservation_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    quantity = table.Column<int>(type: "int", nullable: false),
-                    unit_price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    total_amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    lock_token = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    reserved_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    confirmed_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    cancelled_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    quantity = table.Column<int>(type: "integer", nullable: false),
+                    unit_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    total_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    lock_token = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    reserved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    confirmed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    cancelled_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -730,40 +658,34 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_reserva",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "pedido",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_event_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_reservation_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_coupon_id = table.Column<long>(type: "bigint", nullable: true),
                     drop_order_status_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_order_payment_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    sub_total = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    discount_amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    shipping_cost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    tax_amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    total_amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    shipping_address_line = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    shipping_city = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    shipping_state = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    shipping_zip_code = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    notes = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    is_deleted = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    sub_total = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    discount_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    shipping_cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    tax_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    total_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    shipping_address_line = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    shipping_city = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    shipping_state = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    shipping_zip_code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    deleted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -798,26 +720,23 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "status_pedido",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "item_pedido",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_order_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_product_id = table.Column<long>(type: "bigint", nullable: false),
-                    item_name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    sku = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    quantity = table.Column<int>(type: "int", nullable: false),
-                    unit_price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    total_price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    item_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    sku = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    quantity = table.Column<int>(type: "integer", nullable: false),
+                    unit_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    total_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -834,32 +753,28 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "produto",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "transacao",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     drop_order_id = table.Column<long>(type: "bigint", nullable: false),
                     customer_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_transaction_type_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_transaction_method_id = table.Column<long>(type: "bigint", nullable: false),
                     drop_transaction_status_id = table.Column<long>(type: "bigint", nullable: false),
-                    amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    fee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    gateway_reference = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    gateway_provider = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    gateway_payload = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    paid_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    refunded_at = table.Column<DateTime>(type: "datetime(6)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    fee = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    gateway_reference = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    gateway_provider = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    gateway_payload = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    paid_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    refunded_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -888,8 +803,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         principalTable: "tipo_transacao",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.InsertData(
                 table: "canal_notificacao",

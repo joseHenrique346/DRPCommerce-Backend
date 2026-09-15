@@ -20,7 +20,7 @@ public static class DependencyInjection
     public static IServiceCollection AddDropInfrastructure(this IServiceCollection services, string connectionString, string? storeApiBaseUrl)
     {
         services.AddDbContext<DropCommerceDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
