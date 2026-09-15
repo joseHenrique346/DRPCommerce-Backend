@@ -7,6 +7,12 @@ public class Department : BaseEntity
     #region Properties
     public string Name { get; private set; }
     public string Description { get; private set; }
+
+    #region Navigation Properties
+    private readonly List<Employee> _listEmployee = [];
+    public IReadOnlyCollection<Employee> ListEmployee => _listEmployee.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor

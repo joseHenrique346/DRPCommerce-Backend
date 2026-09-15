@@ -21,21 +21,23 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
         });
 
-        builder.HasIndex(e => e.EnterpriseId);
-
-        builder.HasOne<Enterprise>()
-            .WithMany()
+        builder.HasOne(e => e.Enterprise)
+            .WithMany(e => e.ListEmployee)
             .HasForeignKey(e => e.EnterpriseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.RoleId)
-            .WithMany()
-            .HasForeignKey("RoleId")
+        builder.HasOne(e => e.Role)
+            .WithMany(e => e.ListEmployee)
+            .HasForeignKey(e => e.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.DepartmentId)
-            .WithMany()
-            .HasForeignKey("DepartmentId")
+        builder.HasOne(e => e.Department)
+            .WithMany(e => e.ListEmployee)
+            .HasForeignKey(e => e.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.EnterpriseId);
+        builder.HasIndex(e => e.RoleId);
+        builder.HasIndex(e => e.DepartmentId);
     }
 }

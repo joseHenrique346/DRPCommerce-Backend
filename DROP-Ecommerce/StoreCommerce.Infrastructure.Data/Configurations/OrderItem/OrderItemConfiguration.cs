@@ -20,19 +20,23 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(e => e.DiscountAmount).HasPrecision(18, 2);
         builder.Property(e => e.TotalPrice).HasPrecision(18, 2);
 
-        builder.HasOne<Order>()
-            .WithMany()
+        builder.HasOne(e => e.Order)
+            .WithMany(e => e.ListOrderItem)
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Product>()
-            .WithMany()
+        builder.HasOne(e => e.Product)
+            .WithMany(e => e.ListOrderItem)
             .HasForeignKey(e => e.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Service>()
-            .WithMany()
+        builder.HasOne(e => e.Service)
+            .WithMany(e => e.ListOrderItem)
             .HasForeignKey(e => e.ServiceId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(e => e.OrderId);
+        builder.HasIndex(e => e.ProductId);
+        builder.HasIndex(e => e.ServiceId);
     }
 }

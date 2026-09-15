@@ -1,5 +1,6 @@
 using StoreCommerce.Domain.Entity.Base;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -23,6 +24,24 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public string Notes { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public Customer Customer { get; private set; }
+    public Coupon? Coupon { get; private set; }
+    public OrderStatus OrderStatus { get; private set; }
+    public OrderPaymentStatus OrderPaymentStatus { get; private set; }
+    public State ShippingState { get; private set; }
+    private readonly List<Invoice> _listInvoice = [];
+    public IReadOnlyCollection<Invoice> ListInvoice => _listInvoice.AsReadOnly();
+    private readonly List<OrderItem> _listOrderItem = [];
+    public IReadOnlyCollection<OrderItem> ListOrderItem => _listOrderItem.AsReadOnly();
+    private readonly List<Shipment> _listShipment = [];
+    public IReadOnlyCollection<Shipment> ListShipment => _listShipment.AsReadOnly();
+    private readonly List<Transaction> _listTransaction = [];
+    public IReadOnlyCollection<Transaction> ListTransaction => _listTransaction.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor

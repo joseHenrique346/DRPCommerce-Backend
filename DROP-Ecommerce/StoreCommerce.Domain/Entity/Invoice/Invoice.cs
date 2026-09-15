@@ -1,5 +1,6 @@
 using StoreCommerce.Domain.Entity.Base;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -18,6 +19,15 @@ public class Invoice : BaseEntity, ITenantEntity
     public decimal TaxAmount { get; private set; }
     public string FileUrl { get; private set; }
     public DateTime? IssuedAt { get; private set; }
+
+    #region Navigation Properties
+    public Order Order { get; private set; }
+    public Customer Customer { get; private set; }
+    public Enterprise Enterprise { get; private set; }
+    public InvoiceType InvoiceType { get; private set; }
+    public InvoiceStatus InvoiceStatus { get; private set; }
+    #endregion
+
     #endregion
 
     #region Constructor

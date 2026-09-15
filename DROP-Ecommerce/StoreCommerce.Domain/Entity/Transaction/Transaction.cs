@@ -1,4 +1,5 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -17,6 +18,15 @@ public class Transaction : BaseEntity
     public string GatewayPayload { get; private set; }
     public DateTime? PaidAt { get; private set; }
     public DateTime? RefundedAt { get; private set; }
+
+    #region Navigation Properties
+    public Order Order { get; private set; }
+    public Customer Customer { get; private set; }
+    public TransactionType TransactionType { get; private set; }
+    public TransactionMethod TransactionMethod { get; private set; }
+    public TransactionStatus TransactionStatus { get; private set; }
+    #endregion
+
     #endregion
 
     #region Constructor

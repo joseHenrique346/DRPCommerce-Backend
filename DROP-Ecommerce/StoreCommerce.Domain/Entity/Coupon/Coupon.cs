@@ -1,5 +1,6 @@
 using StoreCommerce.Domain.Entity.Base;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -8,7 +9,7 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     #region Properties
     public long EnterpriseId { get; private set; }
     public string Code { get; private set; }
-    public long TypeId { get; private set; }
+    public long CouponTypeId { get; private set; }
     public decimal DiscountValue { get; private set; }
     public decimal MinOrderValue { get; private set; }
     public decimal MaxDiscountCap { get; private set; }
@@ -20,16 +21,24 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     public DateTime ExpiresAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public CouponType CouponType { get; private set; }
+    private readonly List<Order> _listOrder = [];
+    public IReadOnlyCollection<Order> ListOrder => _listOrder.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor
     protected Coupon() { }
 
-    private Coupon(long enterpriseId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+    private Coupon(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
         EnterpriseId = enterpriseId;
         Code = code;
-        TypeId = typeId;
+        CouponTypeId = couponTypeId;
         DiscountValue = discountValue;
         MinOrderValue = minOrderValue;
         MaxDiscountCap = maxDiscountCap;
@@ -44,12 +53,12 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Functions
-    public static Coupon Create(long enterpriseId, string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+    public static Coupon Create(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(code, nameof(Code));
         BaseValidate.ValidateLength(code, 3, 50, nameof(Code));
-        BaseValidate.ValidatePositive(typeId, nameof(TypeId));
+        BaseValidate.ValidatePositive(couponTypeId, nameof(CouponTypeId));
         BaseValidate.ValidatePositive(discountValue, nameof(DiscountValue));
         BaseValidate.ValidatePositiveOrZero(minOrderValue, nameof(MinOrderValue));
         BaseValidate.ValidatePositiveOrZero(maxDiscountCap, nameof(MaxDiscountCap));
@@ -57,14 +66,14 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidatePositiveOrZero(usedCount, nameof(UsedCount));
         BaseValidate.ValidateGreaterThan(expiresAt, startsAt, nameof(ExpiresAt));
 
-        return new Coupon(enterpriseId, code, typeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, startsAt, expiresAt);
+        return new Coupon(enterpriseId, code, couponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, startsAt, expiresAt);
     }
 
-    public void UpdateDetails(string code, long typeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+    public void UpdateDetails(string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
         BaseValidate.ValidateNotNullOrEmpty(code, nameof(Code));
         BaseValidate.ValidateLength(code, 3, 50, nameof(Code));
-        BaseValidate.ValidatePositive(typeId, nameof(TypeId));
+        BaseValidate.ValidatePositive(couponTypeId, nameof(CouponTypeId));
         BaseValidate.ValidatePositive(discountValue, nameof(DiscountValue));
         BaseValidate.ValidatePositiveOrZero(minOrderValue, nameof(MinOrderValue));
         BaseValidate.ValidatePositiveOrZero(maxDiscountCap, nameof(MaxDiscountCap));
@@ -72,7 +81,7 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidateGreaterThan(expiresAt, startsAt, nameof(ExpiresAt));
 
         Code = code;
-        TypeId = typeId;
+        CouponTypeId = couponTypeId;
         DiscountValue = discountValue;
         MinOrderValue = minOrderValue;
         MaxDiscountCap = maxDiscountCap;

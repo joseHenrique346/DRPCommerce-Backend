@@ -26,6 +26,15 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
     public bool IsDigital { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public Category Category { get; private set; }
+    public Supplier? Supplier { get; private set; }
+    private readonly List<OrderItem> _listOrderItem = [];
+    public IReadOnlyCollection<OrderItem> ListOrderItem => _listOrderItem.AsReadOnly();
+    #endregion
+
     #endregion
 
     #region Constructor
