@@ -1,5 +1,3 @@
 ﻿namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateCategoryCommandHandler
-{
-}
+public class CreateCategoryCommandHandler { }

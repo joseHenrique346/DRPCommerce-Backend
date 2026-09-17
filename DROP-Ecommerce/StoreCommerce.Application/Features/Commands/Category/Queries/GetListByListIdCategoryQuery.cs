@@ -1,5 +1,7 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Domain.Entity.Category;
 
-public class GetListByListIdCategoryQuery
-{
-}
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class GetListByListIdCategoryQuery(List<long> listId) : IRequest<Result<List<Category>>> { }
