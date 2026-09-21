@@ -1,5 +1,7 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Domain.Entity;
 
-public class GetListByListIdTransactionQuery
-{
-}
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class GetListByListIdTransactionQuery(List<long> listId) : IRequest<Result<List<Transaction>>> { }

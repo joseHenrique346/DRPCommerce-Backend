@@ -1,5 +1,7 @@
-﻿namespace StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Domain.Entity;
 
-public class GetAllServiceQuery
-{
-}
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class GetAllServiceQuery : IRequest<Result<List<Service>>> { }

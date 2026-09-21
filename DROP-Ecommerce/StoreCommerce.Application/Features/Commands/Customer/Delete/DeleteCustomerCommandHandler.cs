@@ -1,5 +1,3 @@
 ﻿namespace StoreCommerce.Application.Features.Commands;
 
-public class DeleteCustomerCommandHandler
-{
-}
+public class DeleteCustomerCommandHandler { }

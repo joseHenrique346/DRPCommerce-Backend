@@ -20,6 +20,9 @@ public class UpdateSupplierCommandValidator : AbstractValidator<UpdateSupplierCo
             .MaximumLength(150).When(supplier => !string.IsNullOrWhiteSpace(supplier.contactName))
             .WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
 
+        RuleFor(supplier => supplier.email).NotNull();
+        RuleFor(supplier => supplier.phone).NotNull();
+
         RuleFor(supplier => supplier.addressLine)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
             .MaximumLength(300).WithMessage("{PropertyName} não pode ter mais de 300 caracteres.");
@@ -28,9 +31,8 @@ public class UpdateSupplierCommandValidator : AbstractValidator<UpdateSupplierCo
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
             .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
 
-        RuleFor(supplier => supplier.state)
-            .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(100).WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+        RuleFor(supplier => supplier.stateId)
+            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
         RuleFor(supplier => supplier.zipCode)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
