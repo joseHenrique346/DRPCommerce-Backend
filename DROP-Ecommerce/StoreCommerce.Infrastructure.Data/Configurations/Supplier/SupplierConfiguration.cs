@@ -22,11 +22,13 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 
         builder.OwnsOne(e => e.Email, nav =>
         {
+            nav.Property<long>("SupplierId").HasColumnName("id");
             nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
         });
 
         builder.OwnsOne(e => e.Phone, nav =>
         {
+            nav.Property<long>("SupplierId").HasColumnName("id");
             nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired();
         });
 

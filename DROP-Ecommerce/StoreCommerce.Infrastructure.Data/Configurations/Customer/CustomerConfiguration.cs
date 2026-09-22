@@ -25,11 +25,13 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.OwnsOne(e => e.Email, nav =>
         {
+            nav.Property<long>("CustomerId").HasColumnName("id");
             nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
         });
 
         builder.OwnsOne(e => e.Phone, nav =>
         {
+            nav.Property<long>("CustomerId").HasColumnName("id");
             nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired();
         });
 

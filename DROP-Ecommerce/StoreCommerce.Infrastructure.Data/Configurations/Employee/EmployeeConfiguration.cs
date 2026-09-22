@@ -18,6 +18,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 
         builder.OwnsOne(e => e.Email, nav =>
         {
+            nav.Property<long>("EmployeeId").HasColumnName("id");
             nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
         });
 

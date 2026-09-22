@@ -20,8 +20,16 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
         builder.Property(e => e.ZipCode).HasMaxLength(20);
         builder.Property(e => e.Country).HasMaxLength(100);
 
-        builder.OwnsOne(e => e.Email, nav => { nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired(); });
-        builder.OwnsOne(e => e.Phone, nav => { nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired(); });
+        builder.OwnsOne(e => e.Email, nav =>
+        {
+            nav.Property<long>("EnterpriseId").HasColumnName("id");
+            nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
+        });
+        builder.OwnsOne(e => e.Phone, nav =>
+        {
+            nav.Property<long>("EnterpriseId").HasColumnName("id");
+            nav.Property(p => p.Value).HasColumnName("Phone").HasMaxLength(200).IsRequired();
+        });
 
         builder.HasOne(e => e.State)
             .WithMany()

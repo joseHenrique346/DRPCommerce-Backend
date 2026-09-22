@@ -93,6 +93,14 @@ public class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<Invoice>(modelBuilder);
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);
+
+        // Dependents of filtered aggregates must use the same visibility rules.
+        modelBuilder.Entity<OrderItem>().HasQueryFilter(e =>
+            e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
+        modelBuilder.Entity<Shipment>().HasQueryFilter(e =>
+            e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
+        modelBuilder.Entity<Transaction>().HasQueryFilter(e =>
+            e.Customer.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Customer.IsDeleted);
     }
 
     private void ApplyTenantAndSoftDeleteFilter<T>(ModelBuilder modelBuilder)
