@@ -13,6 +13,6 @@ public class UpdateListDepartmentCommandHandler(IRepository<Department> reposito
 
     protected override void ApplyChanges(Department entity, UpdateDepartmentCommand command)
     {
-        entity.UpdateDetails(command.name, command.description);
+        entity.UpdateDetails(command.name, command.description, command.isActive);
     }
 }

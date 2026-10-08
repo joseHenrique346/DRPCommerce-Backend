@@ -10,5 +10,5 @@ public class CreateListCustomerCommandHandler(IRepository<Customer> repository, 
     protected override IReadOnlyCollection<CreateCustomerCommand> GetCommandList(CreateListCustomerCommand request) => request.commands;
 
     protected override Customer CreateEntity(CreateCustomerCommand command) =>
-        Customer.Create(command.enterpriseId, command.fullName, command.email, command.phone, command.passwordHash, command.addressLine, command.city, command.stateId, command.zipCode, command.country, command.gender, command.dateOfBirth, command.isVerified, command.isActive);
+        Customer.Create(command.enterpriseId, command.fullName, CustomerEmail.Create(command.email), CustomerPhone.Create(command.phone), command.addressLine, command.city, command.stateId, command.zipCode, command.country, command.gender, command.dateOfBirth, command.isVerified, command.isActive);
 }

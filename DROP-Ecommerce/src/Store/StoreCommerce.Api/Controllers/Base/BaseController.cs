@@ -88,7 +88,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
-    protected IActionResult HandleResult<T>(Result<T> result)
+    protected virtual IActionResult HandleResult<T>(Result<T> result)
     {
         return this.ToActionResult(result);
     }

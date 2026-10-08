@@ -13,7 +13,6 @@ public class UpdateListEmployeeCommandHandler(IRepository<Employee> repository, 
 
     protected override void ApplyChanges(Employee entity, UpdateEmployeeCommand command)
     {
-        entity.UpdatePersonalInfo(command.fullName, command.email, command.roleId, command.departmentId);
-        entity.UpdatePasswordHash(command.passwordHash);
+        entity.UpdateDetails(command.fullName, command.positionId, command.departmentId, command.isActive, command.hiredAt);
     }
 }

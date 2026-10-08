@@ -1,4 +1,5 @@
 using StoreCommerce.Api.Controllers.Base;
+using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
@@ -8,11 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace StoreCommerce.Api.Controllers;
 
 [Route("api/departments")]
-public class DepartmentController : BaseController<Department, CreateDepartmentCommand, CreateListDepartmentCommand, UpdateDepartmentCommand, UpdateListDepartmentCommand>
+public class DepartmentController : MappedCrudController<Department, DepartmentResponse, CreateDepartmentCommand, CreateListDepartmentCommand, UpdateDepartmentCommand, UpdateListDepartmentCommand>
 {
     public DepartmentController(IMediator mediator) : base(mediator)
     {
     }
+
+    protected override DepartmentResponse MapEntity(Department entity) => new(entity.Id, entity.EnterpriseId, entity.Name, entity.Description, entity.IsActive);
 
     protected override CreateListDepartmentCommand WrapCreateInRange(CreateDepartmentCommand command)
     {

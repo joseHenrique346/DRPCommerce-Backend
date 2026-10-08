@@ -9,36 +9,23 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     public void Configure(EntityTypeBuilder<Employee> builder)
     {
         builder.ToTable("funcionario");
-
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-
-        builder.Property(e => e.FullName).HasMaxLength(200);
-        builder.Property(e => e.PasswordHash).HasMaxLength(500);
-
-        builder.OwnsOne(e => e.Email, nav =>
-        {
-            nav.Property<long>("EmployeeId").HasColumnName("id");
-            nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
-        });
-
-        builder.HasOne(e => e.Enterprise)
-            .WithMany(e => e.ListEmployee)
-            .HasForeignKey(e => e.EnterpriseId)
+        builder.Property(e => e.FullName).IsRequired().HasMaxLength(255);
+        builder.HasOne(e => e.Enterprise).WithMany(e => e.ListEmployee)
+            .HasForeignKey(e => e.EnterpriseId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(e => e.EnterpriseMembership).WithOne(e => e.Employee)
+            .HasForeignKey<Employee>(e => new { e.EnterpriseId, e.EnterpriseMembershipId })
+            .HasPrincipalKey<EnterpriseMembership>(e => new { e.EnterpriseId, e.Id })
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(e => e.Role)
-            .WithMany(e => e.ListEmployee)
-            .HasForeignKey(e => e.RoleId)
+        builder.HasOne(e => e.Position).WithMany(e => e.ListEmployee)
+            .HasForeignKey(e => new { e.EnterpriseId, e.PositionId })
+            .HasPrincipalKey(e => new { e.EnterpriseId, e.Id })
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(e => e.Department)
-            .WithMany(e => e.ListEmployee)
-            .HasForeignKey(e => e.DepartmentId)
+        builder.HasOne(e => e.Department).WithMany(e => e.ListEmployee)
+            .HasForeignKey(e => new { e.EnterpriseId, e.DepartmentId })
+            .HasPrincipalKey(e => new { e.EnterpriseId, e.Id })
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(e => e.EnterpriseId);
-        builder.HasIndex(e => e.RoleId);
-        builder.HasIndex(e => e.DepartmentId);
+        builder.HasIndex(e => e.EnterpriseMembershipId).IsUnique();
     }
 }

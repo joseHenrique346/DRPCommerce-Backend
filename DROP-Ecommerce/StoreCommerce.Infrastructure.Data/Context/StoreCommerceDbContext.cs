@@ -31,8 +31,16 @@ public class StoreCommerceDbContext : DbContext
     public DbSet<Enterprise> Enterprises => Set<Enterprise>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
-    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<EmployeePosition> EmployeePositions => Set<EmployeePosition>();
     public DbSet<Department> Departments => Set<Department>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<EnterpriseMembership> EnterpriseMemberships => Set<EnterpriseMembership>();
+    public DbSet<EnterpriseDomain> EnterpriseDomains => Set<EnterpriseDomain>();
+    public DbSet<AccessRole> AccessRoles => Set<AccessRole>();
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<AccessRolePermission> AccessRolePermissions => Set<AccessRolePermission>();
+    public DbSet<MembershipAccessRole> MembershipAccessRoles => Set<MembershipAccessRole>();
+    public DbSet<EnterpriseMembershipKind> EnterpriseMembershipKinds => Set<EnterpriseMembershipKind>();
 
     // Static Entities
     public DbSet<CouponType> CouponTypes => Set<CouponType>();
@@ -90,6 +98,13 @@ public class StoreCommerceDbContext : DbContext
 
         // Entities with ITenantEntity ONLY
         ApplyTenantFilter<Employee>(modelBuilder);
+        ApplyTenantFilter<EmployeePosition>(modelBuilder);
+        ApplyTenantFilter<Department>(modelBuilder);
+        ApplyTenantFilter<EnterpriseMembership>(modelBuilder);
+        ApplyTenantFilter<EnterpriseDomain>(modelBuilder);
+        ApplyTenantFilter<AccessRole>(modelBuilder);
+        modelBuilder.Entity<AccessRolePermission>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<MembershipAccessRole>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantFilter<Invoice>(modelBuilder);
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);

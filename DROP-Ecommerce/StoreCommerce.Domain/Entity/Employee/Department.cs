@@ -1,48 +1,39 @@
 using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class Department : BaseEntity
+public class Department : BaseEntity, ITenantEntity
 {
-    #region Properties
-    public string Name { get; private set; }
-    public string Description { get; private set; }
+    public long EnterpriseId { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string NormalizedName { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
+    public bool IsActive { get; private set; }
+    public Enterprise Enterprise { get; private set; } = null!;
 
-    #region Navigation Properties
     private readonly List<Employee> _listEmployee = [];
     public IReadOnlyCollection<Employee> ListEmployee => _listEmployee.AsReadOnly();
-    #endregion
 
-    #endregion
-
-    #region Constructor
     protected Department() { }
-
-    private Department(string name, string description)
+    private Department(long enterpriseId, string name, string description, bool isActive)
     {
-        Name = name;
-        Description = description;
-    }
-    #endregion
-
-    #region Functions
-    public static Department Create(string name, string description)
-    {
-        BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateMaxLength(description, 1000, nameof(Description));
-
-        return new Department(name, description);
+        BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
+        EnterpriseId = enterpriseId;
+        UpdateDetails(name, description, isActive);
     }
 
-    public void UpdateDetails(string name, string description)
+    public static Department Create(long enterpriseId, string name, string description, bool isActive) =>
+        new(enterpriseId, name, description, isActive);
+
+    public void UpdateDetails(string name, string description, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
         BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
         BaseValidate.ValidateMaxLength(description, 1000, nameof(Description));
-
         Name = name;
+        NormalizedName = name.Trim().ToUpperInvariant();
         Description = description;
+        IsActive = isActive;
     }
-    #endregion
 }
