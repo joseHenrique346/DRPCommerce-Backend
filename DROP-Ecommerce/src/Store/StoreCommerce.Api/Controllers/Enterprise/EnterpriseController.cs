@@ -1,46 +1,58 @@
-using StoreCommerce.Api.Controllers.Base;
-using StoreCommerce.Application.Features.Commands;
-using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Entity;
 using MediatR;
+using StoreCommerce.Api.Extensions;
+using StoreCommerce.Application.Features.Commands;
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 
+[ApiController]
 [Route("api/enterprises")]
-public class EnterpriseController : BaseController<Enterprise, CreateEnterpriseCommand, CreateListEnterpriseCommand, UpdateEnterpriseCommand, UpdateListEnterpriseCommand>
+[Authorize(Policy = SecurityNames.GlobalUser)]
+public sealed class EnterpriseController(IMediator mediator) : ControllerBase
 {
-    public EnterpriseController(IMediator mediator) : base(mediator)
+    /// <summary>
+    /// Lista as lojas vinculadas ao usuário.
+    /// </summary>
+    [HttpGet("mine")]
+    public async Task<IActionResult> Mine(CancellationToken ct)
     {
+        return this.ToIdentityActionResult(await mediator.Send(new ListEnterprisesQuery(), ct));
     }
 
-    protected override CreateListEnterpriseCommand WrapCreateInRange(CreateEnterpriseCommand command)
+    /// <summary>
+    /// Cadastra uma loja com seu dono principal e subdomínio.
+    /// </summary>
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(EnterpriseRegistrationRequest request, CancellationToken ct)
     {
-        return new CreateListEnterpriseCommand(new List<CreateEnterpriseCommand> { command });
+        return this.ToIdentityActionResult(await mediator.Send(new RegisterEnterpriseCommand(request), ct));
     }
 
-    protected override UpdateListEnterpriseCommand WrapUpdateInRange(UpdateEnterpriseCommand command)
+    /// <summary>
+    /// Atualiza os dados da loja selecionada.
+    /// </summary>
+    [HttpPut("current")]
+
+    [Authorize(Policy = SecurityNames.PrimaryOwner)]
+    public async Task<IActionResult> Update(EnterpriseUpdateRequest request, CancellationToken ct)
     {
-        return new UpdateListEnterpriseCommand(new List<UpdateEnterpriseCommand> { command });
+        return this.ToIdentityActionResult(await mediator.Send(new UpdateCurrentEnterpriseCommand(request), ct));
     }
 
-    protected override IRequest<Result<bool>> DeleteRangeCommand(List<long> ids)
+    /// <summary>
+    /// Ativa ou desativa uma loja do dono principal.
+    /// </summary>
+    [HttpPut("{id:long}/activation")]
+    public async Task<IActionResult> Activation(long id, [FromBody] bool active, CancellationToken ct)
     {
-        return new DeleteListEnterpriseCommand(ids);
-    }
+        var result = await mediator.Send(new SetEnterpriseActiveCommand(id, active), ct);
 
-    protected override IRequest<Result<List<Enterprise>>> GetAllQuery()
-    {
-        return new GetAllEnterpriseQuery();
-    }
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
 
-    protected override IRequest<Result<Enterprise>> GetByIdQuery(long id)
-    {
-        return new GetByIdEnterpriseQuery(id);
-    }
-
-    protected override IRequest<Result<List<Enterprise>>> GetListByListIdQuery(List<long> ids)
-    {
-        return new GetListByListIdEnterpriseQuery(ids);
+        return NoContent();
     }
 }

@@ -25,6 +25,12 @@ Documentos compartilhados:
 
 - [Infraestrutura](Shared/Infrastructure.md)
 - [Startup do projeto](Shared/StartupProject.md)
+- [Organização dos projetos Security](Shared/Security.md)
+
+Identidade e autorização:
+
+- [Modelo de usuários e lojas](Store/Domain/Identity.md)
+- [Autenticação, contratos HTTP e configuração](Store/Api/Authentication.md)
 
 Documentação da integração Store → Drop:
 

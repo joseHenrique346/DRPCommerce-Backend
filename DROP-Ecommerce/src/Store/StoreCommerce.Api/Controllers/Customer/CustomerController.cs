@@ -1,4 +1,5 @@
 using StoreCommerce.Api.Controllers.Base;
+using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
@@ -8,11 +9,18 @@ using Microsoft.AspNetCore.Mvc;
 namespace StoreCommerce.Api.Controllers;
 
 [Route("api/customers")]
-public class CustomerController : BaseController<Customer, CreateCustomerCommand, CreateListCustomerCommand, UpdateCustomerCommand, UpdateListCustomerCommand>
+public class CustomerController : MappedCrudController<Customer, CustomerResponse, CreateCustomerCommand, CreateListCustomerCommand, UpdateCustomerCommand, UpdateListCustomerCommand>
 {
     public CustomerController(IMediator mediator) : base(mediator)
     {
     }
+
+    protected override CustomerResponse MapEntity(Customer entity) => new(
+        entity.Id, entity.EnterpriseId, entity.FullName, entity.Email.Value,
+        entity.Phone.Value, entity.NormalizedEmail, entity.EmailConfirmed,
+        entity.AddressLine, entity.City, entity.StateId, entity.ZipCode,
+        entity.Country, entity.Gender, entity.DateOfBirth, entity.IsVerified,
+        entity.IsActive, entity.IsDeleted, entity.DeletedAt, entity.CreatedAt, entity.UpdatedAt);
 
     protected override CreateListCustomerCommand WrapCreateInRange(CreateCustomerCommand command)
     {

@@ -22,6 +22,90 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_papel_acesso");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_papel_acesso_enterprise_id_id");
+
+                    b.HasIndex("EnterpriseId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_papel_acesso_enterprise_id_normalized_name");
+
+                    b.ToTable("papel_acesso", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRolePermission", b =>
+                {
+                    b.Property<long>("AccessRoleId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("access_role_id");
+
+                    b.Property<long>("PermissionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("permission_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.HasKey("AccessRoleId", "PermissionId")
+                        .HasName("pk_papel_acesso_permissao");
+
+                    b.HasIndex("PermissionId")
+                        .HasDatabaseName("ix_papel_acesso_permissao_permission_id");
+
+                    b.HasIndex("EnterpriseId", "AccessRoleId")
+                        .HasDatabaseName("ix_papel_acesso_permissao_enterprise_id_access_role_id");
+
+                    b.ToTable("papel_acesso_permissao", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
                 {
                     b.Property<long>("Id")
@@ -232,9 +316,17 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_confirmed");
+
                     b.Property<long>("EnterpriseId")
                         .HasColumnType("bigint")
                         .HasColumnName("enterprise_id");
+
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_login_count");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -262,11 +354,35 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_verified");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<DateTime?>("LastFailedLoginAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_failed_login_at");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_login_at");
+
+                    b.Property<DateTime?>("LockoutUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_until");
+
+                    b.Property<string>("NormalizedEmail")
                         .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
+
+                    b.Property<long>("SecurityVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("security_version");
 
                     b.Property<long>("StateId")
                         .HasColumnType("bigint")
@@ -285,13 +401,171 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_cliente");
 
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_cliente_enterprise_id_id");
+
                     b.HasIndex("EnterpriseId")
                         .HasDatabaseName("ix_cliente_enterprise_id");
 
                     b.HasIndex("StateId")
                         .HasDatabaseName("ix_cliente_state_id");
 
+                    b.HasIndex("EnterpriseId", "NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cliente_enterprise_id_normalized_email");
+
                     b.ToTable("cliente", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerActionToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("integer")
+                        .HasColumnName("purpose");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("SecurityVersionAtIssue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("security_version_at_issue");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cliente_token_acao");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cliente_token_acao_token_hash");
+
+                    b.HasIndex("CustomerId", "ExpiresAt")
+                        .HasDatabaseName("ix_cliente_token_acao_customer_id_expires_at");
+
+                    b.HasIndex("EnterpriseId", "CustomerId")
+                        .HasDatabaseName("ix_cliente_token_acao_enterprise_id_customer_id");
+
+                    b.ToTable("cliente_token_acao", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerRefreshToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTime>("FamilyExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("family_expires_at");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("family_id");
+
+                    b.Property<long?>("ReplacedByTokenId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("replaced_by_token_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("SecurityVersionAtIssue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("security_version_at_issue");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cliente_refresh_token");
+
+                    b.HasIndex("FamilyExpiresAt")
+                        .HasDatabaseName("ix_cliente_refresh_token_family_expires_at");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cliente_refresh_token_token_hash");
+
+                    b.HasIndex("CustomerId", "FamilyId")
+                        .HasDatabaseName("ix_cliente_refresh_token_customer_id_family_id");
+
+                    b.HasIndex("EnterpriseId", "CustomerId")
+                        .HasDatabaseName("ix_cliente_refresh_token_enterprise_id_customer_id");
+
+                    b.ToTable("cliente_refresh_token", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Department", b =>
@@ -304,20 +578,36 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("normalized_name");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -325,6 +615,13 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_departamento");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_departamento_enterprise_id_id");
+
+                    b.HasIndex("EnterpriseId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_departamento_enterprise_id_normalized_name");
 
                     b.ToTable("departamento", (string)null);
                 });
@@ -434,10 +731,14 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("enterprise_id");
 
+                    b.Property<long>("EnterpriseMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_membership_id");
+
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("full_name");
 
                     b.Property<DateTime>("HiredAt")
@@ -448,15 +749,9 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("password_hash");
-
-                    b.Property<long>("RoleId")
+                    b.Property<long>("PositionId")
                         .HasColumnType("bigint")
-                        .HasColumnName("role_id");
+                        .HasColumnName("position_id");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -465,16 +760,79 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_funcionario");
 
-                    b.HasIndex("DepartmentId")
-                        .HasDatabaseName("ix_funcionario_department_id");
+                    b.HasIndex("EnterpriseMembershipId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_funcionario_enterprise_membership_id");
 
-                    b.HasIndex("EnterpriseId")
-                        .HasDatabaseName("ix_funcionario_enterprise_id");
+                    b.HasIndex("EnterpriseId", "DepartmentId")
+                        .HasDatabaseName("ix_funcionario_enterprise_id_department_id");
 
-                    b.HasIndex("RoleId")
-                        .HasDatabaseName("ix_funcionario_role_id");
+                    b.HasIndex("EnterpriseId", "EnterpriseMembershipId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_funcionario_enterprise_id_enterprise_membership_id");
+
+                    b.HasIndex("EnterpriseId", "PositionId")
+                        .HasDatabaseName("ix_funcionario_enterprise_id_position_id");
 
                     b.ToTable("funcionario", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EmployeePosition", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cargo");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_cargo_enterprise_id_id");
+
+                    b.HasIndex("EnterpriseId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cargo_enterprise_id_normalized_name");
+
+                    b.ToTable("cargo", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Enterprise", b =>
@@ -545,6 +903,247 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_empresa_state_id");
 
                     b.ToTable("empresa", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseDomain", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("host");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified");
+
+                    b.Property<string>("NormalizedHost")
+                        .IsRequired()
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("normalized_host");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("VerificationTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("verification_token_hash");
+
+                    b.HasKey("Id")
+                        .HasName("pk_dominio_empresa");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_dominio_empresa_primario")
+                        .HasFilter("is_primary = TRUE");
+
+                    b.HasIndex("NormalizedHost")
+                        .IsUnique()
+                        .HasDatabaseName("ix_dominio_empresa_normalized_host");
+
+                    b.ToTable("dominio_empresa", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseInvitation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<long>("InvitedKindId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("invited_kind_id");
+
+                    b.Property<string>("InvitedNormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("invited_normalized_email");
+
+                    b.Property<long>("IssuedByMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("issued_by_membership_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_convite_empresa");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_convite_empresa_enterprise_id_id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_convite_empresa_expires_at");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_convite_empresa_token_hash");
+
+                    b.HasIndex("EnterpriseId", "InvitedNormalizedEmail")
+                        .HasDatabaseName("ix_convite_empresa_enterprise_id_invited_normalized_email");
+
+                    b.HasIndex("EnterpriseId", "IssuedByMembershipId")
+                        .HasDatabaseName("ix_convite_empresa_enterprise_id_issued_by_membership_id");
+
+                    b.ToTable("convite_empresa", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseMembership", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccessVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("access_version");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<long>("KindId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("kind_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_membro_empresa");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_membro_empresa_enterprise_id_id");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_membro_empresa_dono_principal_ativo")
+                        .HasFilter("kind_id = 1 AND is_active = TRUE");
+
+                    b.HasIndex("KindId")
+                        .HasDatabaseName("ix_membro_empresa_kind_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_membro_empresa_user_id");
+
+                    b.HasIndex("EnterpriseId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_membro_empresa_enterprise_id_user_id");
+
+                    b.ToTable("membro_empresa", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.InvitationAccessRole", b =>
+                {
+                    b.Property<long>("EnterpriseInvitationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_invitation_id");
+
+                    b.Property<long>("AccessRoleId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("access_role_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.HasKey("EnterpriseInvitationId", "AccessRoleId")
+                        .HasName("pk_convite_empresa_papel_acesso");
+
+                    b.HasIndex("EnterpriseId", "AccessRoleId")
+                        .HasDatabaseName("ix_convite_empresa_papel_acesso_enterprise_id_access_role_id");
+
+                    b.HasIndex("EnterpriseId", "EnterpriseInvitationId")
+                        .HasDatabaseName("ix_convite_empresa_papel_acesso_enterprise_id_enterprise_invit~");
+
+                    b.ToTable("convite_empresa_papel_acesso", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Invoice", b =>
@@ -641,6 +1240,32 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_nota_fiscal_order_id");
 
                     b.ToTable("nota_fiscal", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.MembershipAccessRole", b =>
+                {
+                    b.Property<long>("EnterpriseMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_membership_id");
+
+                    b.Property<long>("AccessRoleId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("access_role_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.HasKey("EnterpriseMembershipId", "AccessRoleId")
+                        .HasName("pk_membro_empresa_papel_acesso");
+
+                    b.HasIndex("EnterpriseId", "AccessRoleId")
+                        .HasDatabaseName("ix_membro_empresa_papel_acesso_enterprise_id_access_role_id");
+
+                    b.HasIndex("EnterpriseId", "EnterpriseMembershipId")
+                        .HasDatabaseName("ix_membro_empresa_papel_acesso_enterprise_id_enterprise_member~");
+
+                    b.ToTable("membro_empresa_papel_acesso", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Order", b =>
@@ -842,6 +1467,249 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("item_pedido", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.OwnershipTransfer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<long>("IssuedByMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("issued_by_membership_id");
+
+                    b.Property<long>("RecipientMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("recipient_membership_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_transferencia_propriedade");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencia_propriedade_token_hash");
+
+                    b.HasIndex("EnterpriseId", "ExpiresAt")
+                        .HasDatabaseName("ix_transferencia_propriedade_enterprise_id_expires_at");
+
+                    b.HasIndex("EnterpriseId", "IssuedByMembershipId")
+                        .HasDatabaseName("ix_transferencia_propriedade_enterprise_id_issued_by_membershi~");
+
+                    b.HasIndex("EnterpriseId", "RecipientMembershipId")
+                        .HasDatabaseName("ix_transferencia_propriedade_enterprise_id_recipient_membershi~");
+
+                    b.ToTable("transferencia_propriedade", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("module");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_permissao");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_permissao_code");
+
+                    b.ToTable("permissao", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "products.view",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar produtos",
+                            IsActive = true,
+                            Module = "Products",
+                            Name = "Consultar produtos"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "products.create",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Cadastrar produtos",
+                            IsActive = true,
+                            Module = "Products",
+                            Name = "Cadastrar produtos"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Code = "products.edit",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Editar produtos",
+                            IsActive = true,
+                            Module = "Products",
+                            Name = "Editar produtos"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Code = "products.change_price",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Alterar precos",
+                            IsActive = true,
+                            Module = "Products",
+                            Name = "Alterar precos"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Code = "products.delete",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Excluir produtos",
+                            IsActive = true,
+                            Module = "Products",
+                            Name = "Excluir produtos"
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            Code = "orders.view",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar pedidos",
+                            IsActive = true,
+                            Module = "Orders",
+                            Name = "Consultar pedidos"
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            Code = "orders.manage",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar pedidos",
+                            IsActive = true,
+                            Module = "Orders",
+                            Name = "Gerenciar pedidos"
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            Code = "customers.view",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar clientes",
+                            IsActive = true,
+                            Module = "Customers",
+                            Name = "Consultar clientes"
+                        },
+                        new
+                        {
+                            Id = 9L,
+                            Code = "customers.manage",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar clientes",
+                            IsActive = true,
+                            Module = "Customers",
+                            Name = "Gerenciar clientes"
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            Code = "employees.manage",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar perfis funcionais",
+                            IsActive = true,
+                            Module = "Employees",
+                            Name = "Gerenciar perfis funcionais"
+                        },
+                        new
+                        {
+                            Id = 11L,
+                            Code = "drop.events.view",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar drops",
+                            IsActive = true,
+                            Module = "Drop",
+                            Name = "Consultar drops"
+                        },
+                        new
+                        {
+                            Id = 12L,
+                            Code = "drop.events.manage",
+                            CreatedAt = new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar drops",
+                            IsActive = true,
+                            Module = "Drop",
+                            Name = "Gerenciar drops"
+                        });
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
                 {
                     b.Property<long>("Id")
@@ -974,41 +1842,6 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_produto_supplier_id");
 
                     b.ToTable("produto", (string)null);
-                });
-
-            modelBuilder.Entity("StoreCommerce.Domain.Entity.Role", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_cargo");
-
-                    b.ToTable("cargo", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>
@@ -1365,6 +2198,224 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("transacao", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.User", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_confirmed");
+
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_login_count");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("full_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("LastFailedLoginAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_failed_login_at");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_login_at");
+
+                    b.Property<DateTime?>("LockoutUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockout_until");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("password_hash");
+
+                    b.Property<long>("SecurityVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("security_version");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_usuario");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuario_normalized_email");
+
+                    b.ToTable("usuario", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.UserActionToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("integer")
+                        .HasColumnName("purpose");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("SecurityVersionAtIssue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("security_version_at_issue");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_usuario_token_acao");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuario_token_acao_token_hash");
+
+                    b.HasIndex("UserId", "ExpiresAt")
+                        .HasDatabaseName("ix_usuario_token_acao_user_id_expires_at");
+
+                    b.ToTable("usuario_token_acao", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.UserRefreshToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long?>("EnterpriseMembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_membership_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTime>("FamilyExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("family_expires_at");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("family_id");
+
+                    b.Property<long?>("ReplacedByTokenId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("replaced_by_token_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<long>("SecurityVersionAtIssue")
+                        .HasColumnType("bigint")
+                        .HasColumnName("security_version_at_issue");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_usuario_refresh_token");
+
+                    b.HasIndex("FamilyExpiresAt")
+                        .HasDatabaseName("ix_usuario_refresh_token_family_expires_at");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuario_refresh_token_token_hash");
+
+                    b.HasIndex("UserId", "FamilyId")
+                        .HasDatabaseName("ix_usuario_refresh_token_user_id_family_id");
+
+                    b.ToTable("usuario_refresh_token", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.CouponType", b =>
                 {
                     b.Property<long>("Id")
@@ -1477,6 +2528,41 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         {
                             Id = 4L,
                             Description = "CNH"
+                        });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterpriseMembershipKind", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tipo_membro_empresa");
+
+                    b.ToTable("tipo_membro_empresa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Description = "Dono principal"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Description = "Socio-proprietario"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Description = "Funcionario"
                         });
                 });
 
@@ -2035,6 +3121,40 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany("ListAccessRole")
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_papel_acesso_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRolePermission", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Permission", "Permission")
+                        .WithMany("ListAccessRolePermission")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_papel_acesso_permissao_permissao_permission_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.AccessRole", "AccessRole")
+                        .WithMany("ListAccessRolePermission")
+                        .HasForeignKey("EnterpriseId", "AccessRoleId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_papel_acesso_permissao_papel_acesso_enterprise_id_access_ro~");
+
+                    b.Navigation("AccessRole");
+
+                    b.Navigation("Permission");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
@@ -2100,8 +3220,8 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
                                 .HasColumnName("email");
 
                             b1.HasKey("CustomerId")
@@ -2147,6 +3267,44 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("State");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerActionToken", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "CustomerId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cliente_token_acao_cliente_enterprise_id_customer_id");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerRefreshToken", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "CustomerId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cliente_refresh_token_cliente_enterprise_id_customer_id");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Department", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany("ListDepartment")
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_departamento_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Document", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Customer", null)
@@ -2184,13 +3342,6 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Employee", b =>
                 {
-                    b.HasOne("StoreCommerce.Domain.Entity.Department", "Department")
-                        .WithMany("ListEmployee")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_funcionario_departamento_department_id");
-
                     b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
                         .WithMany("ListEmployee")
                         .HasForeignKey("EnterpriseId")
@@ -2198,43 +3349,49 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_funcionario_empresa_enterprise_id");
 
-                    b.HasOne("StoreCommerce.Domain.Entity.Role", "Role")
+                    b.HasOne("StoreCommerce.Domain.Entity.Department", "Department")
                         .WithMany("ListEmployee")
-                        .HasForeignKey("RoleId")
+                        .HasForeignKey("EnterpriseId", "DepartmentId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_funcionario_cargo_role_id");
+                        .HasConstraintName("fk_funcionario_departamento_enterprise_id_department_id");
 
-                    b.OwnsOne("StoreCommerce.Domain.Entity.EmployeeEmail", "Email", b1 =>
-                        {
-                            b1.Property<long>("EmployeeId")
-                                .HasColumnType("bigint")
-                                .HasColumnName("id");
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseMembership", "EnterpriseMembership")
+                        .WithOne("Employee")
+                        .HasForeignKey("StoreCommerce.Domain.Entity.Employee", "EnterpriseId", "EnterpriseMembershipId")
+                        .HasPrincipalKey("StoreCommerce.Domain.Entity.EnterpriseMembership", "EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_funcionario_membro_empresa_enterprise_id_enterprise_members~");
 
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("email");
-
-                            b1.HasKey("EmployeeId")
-                                .HasName("pk_funcionario");
-
-                            b1.ToTable("funcionario");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EmployeeId")
-                                .HasConstraintName("fk_funcionario_funcionario_id");
-                        });
+                    b.HasOne("StoreCommerce.Domain.Entity.EmployeePosition", "Position")
+                        .WithMany("ListEmployee")
+                        .HasForeignKey("EnterpriseId", "PositionId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_funcionario_cargo_enterprise_id_position_id");
 
                     b.Navigation("Department");
 
-                    b.Navigation("Email")
-                        .IsRequired();
-
                     b.Navigation("Enterprise");
 
-                    b.Navigation("Role");
+                    b.Navigation("EnterpriseMembership");
+
+                    b.Navigation("Position");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EmployeePosition", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany("ListEmployeePosition")
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cargo_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Enterprise", b =>
@@ -2299,6 +3456,93 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("State");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseDomain", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany("ListEnterpriseDomain")
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_dominio_empresa_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseInvitation", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_convite_empresa_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseMembership", "IssuedByMembership")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "IssuedByMembershipId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_convite_empresa_membro_empresa_enterprise_id_issued_by_memb~");
+
+                    b.Navigation("Enterprise");
+
+                    b.Navigation("IssuedByMembership");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseMembership", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany("ListEnterpriseMembership")
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membro_empresa_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterpriseMembershipKind", "Kind")
+                        .WithMany()
+                        .HasForeignKey("KindId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membro_empresa_tipo_membro_empresa_kind_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.User", "User")
+                        .WithMany("ListEnterpriseMembership")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membro_empresa_usuario_user_id");
+
+                    b.Navigation("Enterprise");
+
+                    b.Navigation("Kind");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.InvitationAccessRole", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.AccessRole", "AccessRole")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "AccessRoleId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_convite_empresa_papel_acesso_papel_acesso_enterprise_id_acc~");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseInvitation", "EnterpriseInvitation")
+                        .WithMany("AccessRoles")
+                        .HasForeignKey("EnterpriseId", "EnterpriseInvitationId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_convite_empresa_papel_acesso_convite_empresa_enterprise_id_~");
+
+                    b.Navigation("AccessRole");
+
+                    b.Navigation("EnterpriseInvitation");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Invoice", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
@@ -2345,6 +3589,29 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("InvoiceType");
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.MembershipAccessRole", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.AccessRole", "AccessRole")
+                        .WithMany("ListMembershipAccessRole")
+                        .HasForeignKey("EnterpriseId", "AccessRoleId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membro_empresa_papel_acesso_papel_acesso_enterprise_id_acce~");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseMembership", "EnterpriseMembership")
+                        .WithMany("ListMembershipAccessRole")
+                        .HasForeignKey("EnterpriseId", "EnterpriseMembershipId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membro_empresa_papel_acesso_membro_empresa_enterprise_id_en~");
+
+                    b.Navigation("AccessRole");
+
+                    b.Navigation("EnterpriseMembership");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Order", b =>
@@ -2429,6 +3696,38 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.OwnershipTransfer", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencia_propriedade_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseMembership", "IssuedByMembership")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "IssuedByMembershipId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencia_propriedade_membro_empresa_enterprise_id_issu~");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseMembership", "RecipientMembership")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "RecipientMembershipId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencia_propriedade_membro_empresa_enterprise_id_reci~");
+
+                    b.Navigation("Enterprise");
+
+                    b.Navigation("IssuedByMembership");
+
+                    b.Navigation("RecipientMembership");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
@@ -2647,6 +3946,65 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("TransactionType");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.User", b =>
+                {
+                    b.OwnsOne("StoreCommerce.Domain.Entity.UserEmail", "Email", b1 =>
+                        {
+                            b1.Property<long>("UserId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("email");
+
+                            b1.HasKey("UserId")
+                                .HasName("pk_usuario");
+
+                            b1.ToTable("usuario");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId")
+                                .HasConstraintName("fk_usuario_usuario_id");
+                        });
+
+                    b.Navigation("Email")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.UserActionToken", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_usuario_token_acao_usuario_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.UserRefreshToken", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_usuario_refresh_token_usuario_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>
+                {
+                    b.Navigation("ListAccessRolePermission");
+
+                    b.Navigation("ListMembershipAccessRole");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
                 {
                     b.Navigation("ListCategory");
@@ -2677,17 +4035,32 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListEmployee");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EmployeePosition", b =>
+                {
+                    b.Navigation("ListEmployee");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Enterprise", b =>
                 {
+                    b.Navigation("ListAccessRole");
+
                     b.Navigation("ListCategory");
 
                     b.Navigation("ListCoupon");
 
                     b.Navigation("ListCustomer");
 
+                    b.Navigation("ListDepartment");
+
                     b.Navigation("ListDocument");
 
                     b.Navigation("ListEmployee");
+
+                    b.Navigation("ListEmployeePosition");
+
+                    b.Navigation("ListEnterpriseDomain");
+
+                    b.Navigation("ListEnterpriseMembership");
 
                     b.Navigation("ListInvoice");
 
@@ -2698,6 +4071,18 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListService");
 
                     b.Navigation("ListSupplier");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseInvitation", b =>
+                {
+                    b.Navigation("AccessRoles");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseMembership", b =>
+                {
+                    b.Navigation("Employee");
+
+                    b.Navigation("ListMembershipAccessRole");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Order", b =>
@@ -2711,14 +4096,14 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListTransaction");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>
+                {
+                    b.Navigation("ListAccessRolePermission");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
                 {
                     b.Navigation("ListOrderItem");
-                });
-
-            modelBuilder.Entity("StoreCommerce.Domain.Entity.Role", b =>
-                {
-                    b.Navigation("ListEmployee");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>
@@ -2731,6 +4116,11 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListProduct");
 
                     b.Navigation("ListShipment");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.User", b =>
+                {
+                    b.Navigation("ListEnterpriseMembership");
                 });
 #pragma warning restore 612, 618
         }

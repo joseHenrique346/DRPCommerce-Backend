@@ -16,12 +16,8 @@ public class UpdateCustomerCommandValidator : AbstractValidator<UpdateCustomerCo
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
             .MaximumLength(200).WithMessage("{PropertyName} não pode ter mais de 200 caracteres.");
 
-        RuleFor(customer => customer.email).NotNull();
-        RuleFor(customer => customer.phone).NotNull();
-
-        RuleFor(customer => customer.passwordHash)
-            .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(500).WithMessage("{PropertyName} não pode ter mais de 500 caracteres.");
+        RuleFor(customer => customer.email).NotEmpty().EmailAddress().MaximumLength(255);
+        RuleFor(customer => customer.phone).NotEmpty().MaximumLength(20);
 
         RuleFor(customer => customer.addressLine)
             .MaximumLength(300).When(customer => !string.IsNullOrWhiteSpace(customer.addressLine))

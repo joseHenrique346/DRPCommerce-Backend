@@ -1,4 +1,5 @@
 using StoreCommerce.Api.Configuration;
+using Commerce.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCommerceSecurity();
 
 app.MapControllers();
 

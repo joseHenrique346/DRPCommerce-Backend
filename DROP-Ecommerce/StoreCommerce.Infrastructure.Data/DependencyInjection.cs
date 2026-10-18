@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 using StoreCommerce.Infrastructure.Data.Providers;
@@ -15,8 +16,13 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<UnitOfWork>();
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());
+        services.AddScoped<IIdentityUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
+        services.AddScoped<IIdentityRepositories, IdentityRepositories>();
+        services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
@@ -24,6 +30,16 @@ public static class DependencyInjection
         services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IEnterpriseRepository, EnterpriseRepository>();
+        services.AddScoped<IEnterpriseMembershipRepository, EnterpriseMembershipRepository>();
+        services.AddScoped<IEnterpriseDomainRepository, EnterpriseDomainRepository>();
+        services.AddScoped<IAccessRoleRepository, AccessRoleRepository>();
+        services.AddScoped<IEmployeePositionRepository, EmployeePositionRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IAccessRolePermissionRepository, AccessRolePermissionRepository>();
+        services.AddScoped<IMembershipAccessRoleRepository, MembershipAccessRoleRepository>();
 
         return services;
     }

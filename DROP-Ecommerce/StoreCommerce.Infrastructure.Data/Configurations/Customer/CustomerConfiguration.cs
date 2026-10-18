@@ -15,6 +15,11 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 
         builder.Property(e => e.FullName).HasMaxLength(200);
         builder.Property(e => e.PasswordHash).HasMaxLength(500);
+        builder.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.SecurityVersion).HasDefaultValue(1L);
+        builder.Property(e => e.SecurityVersion).IsConcurrencyToken();
+        builder.HasAlternateKey(e => new { e.EnterpriseId, e.Id });
+        builder.HasIndex(e => new { e.EnterpriseId, e.NormalizedEmail }).IsUnique();
         builder.Property(e => e.AddressLine).HasMaxLength(200);
         builder.Property(e => e.City).HasMaxLength(100);
         builder.Property(e => e.ZipCode).HasMaxLength(20);
@@ -26,7 +31,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.OwnsOne(e => e.Email, nav =>
         {
             nav.Property<long>("CustomerId").HasColumnName("id");
-            nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
+            nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(255).IsRequired();
         });
 
         builder.OwnsOne(e => e.Phone, nav =>

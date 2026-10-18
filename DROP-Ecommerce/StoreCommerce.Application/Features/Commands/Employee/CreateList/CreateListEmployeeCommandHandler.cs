@@ -10,5 +10,5 @@ public class CreateListEmployeeCommandHandler(IRepository<Employee> repository, 
     protected override IReadOnlyCollection<CreateEmployeeCommand> GetCommandList(CreateListEmployeeCommand request) => request.commands;
 
     protected override Employee CreateEntity(CreateEmployeeCommand command) =>
-        Employee.Create(command.enterpriseId, command.fullName, command.email, command.passwordHash, command.roleId, command.departmentId, command.isActive, command.hiredAt);
+        Employee.Create(command.enterpriseId, command.enterpriseMembershipId, command.fullName, command.positionId, command.departmentId, command.isActive, command.hiredAt);
 }

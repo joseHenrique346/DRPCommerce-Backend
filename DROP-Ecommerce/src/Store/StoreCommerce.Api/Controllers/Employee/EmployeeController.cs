@@ -1,4 +1,5 @@
 using StoreCommerce.Api.Controllers.Base;
+using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
@@ -8,11 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace StoreCommerce.Api.Controllers;
 
 [Route("api/employees")]
-public class EmployeeController : BaseController<Employee, CreateEmployeeCommand, CreateListEmployeeCommand, UpdateEmployeeCommand, UpdateListEmployeeCommand>
+public class EmployeeController : MappedCrudController<Employee, EmployeeResponse, CreateEmployeeCommand, CreateListEmployeeCommand, UpdateEmployeeCommand, UpdateListEmployeeCommand>
 {
     public EmployeeController(IMediator mediator) : base(mediator)
     {
     }
+
+    protected override EmployeeResponse MapEntity(Employee entity) => new(entity.Id, entity.EnterpriseId, entity.EnterpriseMembershipId, entity.FullName, entity.PositionId, entity.DepartmentId, entity.IsActive, entity.HiredAt);
 
     protected override CreateListEmployeeCommand WrapCreateInRange(CreateEmployeeCommand command)
     {

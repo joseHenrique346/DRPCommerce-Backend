@@ -22,6 +22,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Cadastra um registro.
+    /// </summary>
     [HttpPost("add")]
     public async Task<IActionResult> AddAsync([FromBody] TCreateCommand command)
     {
@@ -29,6 +32,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return await AddRangeAsync(rangeCommand);
     }
 
+    /// <summary>
+    /// Cadastra vários registros.
+    /// </summary>
     [HttpPost("add-range")]
     public async Task<IActionResult> AddRangeAsync([FromBody] TCreateRangeCommand command)
     {
@@ -36,6 +42,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Atualiza um registro.
+    /// </summary>
     [HttpPut("update")]
     public async Task<IActionResult> UpdateAsync([FromBody] TUpdateCommand command)
     {
@@ -43,6 +52,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return await UpdateRangeAsync(rangeCommand);
     }
 
+    /// <summary>
+    /// Atualiza vários registros.
+    /// </summary>
     [HttpPut("update-range")]
     public async Task<IActionResult> UpdateRangeAsync([FromBody] TUpdateRangeCommand command)
     {
@@ -50,12 +62,18 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Exclui o registro informado.
+    /// </summary>
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(long id)
     {
         return await DeleteRangeAsync(new List<long> { id });
     }
 
+    /// <summary>
+    /// Exclui os registros informados.
+    /// </summary>
     [HttpDelete("delete-range")]
     public async Task<IActionResult> DeleteRangeAsync([FromBody] List<long> ids)
     {
@@ -64,6 +82,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Lista os registros disponíveis.
+    /// </summary>
     [HttpGet("get-all")]
     public async Task<IActionResult> GetAllAsync()
     {
@@ -72,6 +93,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Consulta um registro pelo identificador.
+    /// </summary>
     [HttpGet("get-by-id/{id}")]
     public async Task<IActionResult> GetByIdAsync(long id)
     {
@@ -80,6 +104,9 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
+    /// <summary>
+    /// Consulta os registros pelos identificadores informados.
+    /// </summary>
     [HttpPost("get-list-by-list-id")]
     public async Task<IActionResult> GetListByListIdAsync([FromBody] List<long> ids)
     {
@@ -88,7 +115,7 @@ public abstract class BaseController<TEntity, TCreateCommand, TCreateRangeComman
         return HandleResult(result);
     }
 
-    protected IActionResult HandleResult<T>(Result<T> result)
+    protected virtual IActionResult HandleResult<T>(Result<T> result)
     {
         return this.ToActionResult(result);
     }

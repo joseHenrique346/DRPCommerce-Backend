@@ -1,18 +1,24 @@
 using Microsoft.EntityFrameworkCore;
+using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
 
-public class StoreCommerceDbContext : DbContext
+public partial class StoreCommerceDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
+    private readonly IIdentityOperationScope _identityScope;
+    private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
 
-    public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider)
+    public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
+        IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor)
         : base(options)
     {
         _tenantProvider = tenantProvider;
+        _identityScope = identityScope;
+        _httpAccessor = httpAccessor;
     }
 
     #region DbSets
@@ -31,8 +37,16 @@ public class StoreCommerceDbContext : DbContext
     public DbSet<Enterprise> Enterprises => Set<Enterprise>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
-    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<EmployeePosition> EmployeePositions => Set<EmployeePosition>();
     public DbSet<Department> Departments => Set<Department>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<EnterpriseMembership> EnterpriseMemberships => Set<EnterpriseMembership>();
+    public DbSet<EnterpriseDomain> EnterpriseDomains => Set<EnterpriseDomain>();
+    public DbSet<AccessRole> AccessRoles => Set<AccessRole>();
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<AccessRolePermission> AccessRolePermissions => Set<AccessRolePermission>();
+    public DbSet<MembershipAccessRole> MembershipAccessRoles => Set<MembershipAccessRole>();
+    public DbSet<EnterpriseMembershipKind> EnterpriseMembershipKinds => Set<EnterpriseMembershipKind>();
 
     // Static Entities
     public DbSet<CouponType> CouponTypes => Set<CouponType>();
@@ -55,6 +69,7 @@ public class StoreCommerceDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StoreCommerceDbContext).Assembly);
+        ConfigureSecurityFilters(modelBuilder);
 
         // Convention: snake_case for all column names
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
@@ -90,6 +105,13 @@ public class StoreCommerceDbContext : DbContext
 
         // Entities with ITenantEntity ONLY
         ApplyTenantFilter<Employee>(modelBuilder);
+        ApplyTenantFilter<EmployeePosition>(modelBuilder);
+        ApplyTenantFilter<Department>(modelBuilder);
+        ApplyTenantFilter<EnterpriseMembership>(modelBuilder);
+        ApplyTenantFilter<EnterpriseDomain>(modelBuilder);
+        ApplyTenantFilter<AccessRole>(modelBuilder);
+        modelBuilder.Entity<AccessRolePermission>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<MembershipAccessRole>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantFilter<Invoice>(modelBuilder);
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);
@@ -117,15 +139,32 @@ public class StoreCommerceDbContext : DbContext
             e.EnterpriseId == _tenantProvider.GetEnterpriseId());
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override int SaveChanges() => SaveChanges(true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
+        UpdateChangedDates();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        SaveChangesAsync(true, cancellationToken);
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        await GuardWritesAsync(cancellationToken);
+        UpdateChangedDates();
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void UpdateChangedDates()
     {
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
             if (entry.State == EntityState.Modified)
                 entry.Entity.SetChangedDate();
         }
-
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     private static string ToSnakeCase(string name)

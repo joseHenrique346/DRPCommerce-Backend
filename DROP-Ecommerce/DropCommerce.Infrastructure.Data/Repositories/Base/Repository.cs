@@ -70,7 +70,9 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
         var entity = await GetByIdAsync(id, cancellationToken);
-        if (entity is null) return;
+
+        if (entity is null)
+            return;
 
         if (entity is ISoftDeletable softDeletable)
             softDeletable.SoftDelete();

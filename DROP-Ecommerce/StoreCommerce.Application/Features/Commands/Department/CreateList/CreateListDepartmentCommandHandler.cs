@@ -10,5 +10,5 @@ public class CreateListDepartmentCommandHandler(IRepository<Department> reposito
     protected override IReadOnlyCollection<CreateDepartmentCommand> GetCommandList(CreateListDepartmentCommand request) => request.commands;
 
     protected override Department CreateEntity(CreateDepartmentCommand command) =>
-        Department.Create(command.name, command.description);
+        Department.Create(command.enterpriseId, command.name, command.description, command.isActive);
 }

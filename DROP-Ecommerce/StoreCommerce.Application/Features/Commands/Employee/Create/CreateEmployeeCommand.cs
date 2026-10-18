@@ -4,4 +4,4 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class CreateEmployeeCommand(long enterpriseId, string fullName, EmployeeEmail email, string passwordHash, long roleId, long departmentId, bool isActive, DateTime hiredAt) : IRequest<Result<Employee>> { }
+public record class CreateEmployeeCommand(long enterpriseId, long enterpriseMembershipId, string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt) : IRequest<Result<Employee>> { }

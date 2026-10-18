@@ -17,6 +17,16 @@ public class Enterprise : BaseEntity
     public bool IsActive { get; private set; }
 
     #region Navigation Properties
+    private readonly List<EnterpriseMembership> _listEnterpriseMembership = [];
+    public IReadOnlyCollection<EnterpriseMembership> ListEnterpriseMembership => _listEnterpriseMembership.AsReadOnly();
+    private readonly List<EnterpriseDomain> _listEnterpriseDomain = [];
+    public IReadOnlyCollection<EnterpriseDomain> ListEnterpriseDomain => _listEnterpriseDomain.AsReadOnly();
+    private readonly List<AccessRole> _listAccessRole = [];
+    public IReadOnlyCollection<AccessRole> ListAccessRole => _listAccessRole.AsReadOnly();
+    private readonly List<EmployeePosition> _listEmployeePosition = [];
+    public IReadOnlyCollection<EmployeePosition> ListEmployeePosition => _listEmployeePosition.AsReadOnly();
+    private readonly List<Department> _listDepartment = [];
+    public IReadOnlyCollection<Department> ListDepartment => _listDepartment.AsReadOnly();
     public StaticEntity.State State { get; private set; }
     private readonly List<Category> _listCategory = [];
     public IReadOnlyCollection<Category> ListCategory => _listCategory.AsReadOnly();
@@ -61,6 +71,7 @@ public class Enterprise : BaseEntity
     #endregion
 
     #region Functions
+    public void SetActive(bool active) => IsActive = active;
     public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(tradeName, nameof(TradeName));

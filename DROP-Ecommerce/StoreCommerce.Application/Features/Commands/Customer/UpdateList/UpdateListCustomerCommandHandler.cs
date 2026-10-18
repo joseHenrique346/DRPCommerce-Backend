@@ -13,8 +13,7 @@ public class UpdateListCustomerCommandHandler(IRepository<Customer> repository, 
 
     protected override void ApplyChanges(Customer entity, UpdateCustomerCommand command)
     {
-        entity.UpdatePersonalInfo(command.fullName, command.email, command.phone, command.gender, command.dateOfBirth);
+        entity.UpdatePersonalInfo(command.fullName, CustomerEmail.Create(command.email), CustomerPhone.Create(command.phone), command.gender, command.dateOfBirth);
         entity.UpdateAddress(command.addressLine, command.city, command.stateId, command.zipCode, command.country);
-        entity.UpdatePasswordHash(command.passwordHash);
     }
 }

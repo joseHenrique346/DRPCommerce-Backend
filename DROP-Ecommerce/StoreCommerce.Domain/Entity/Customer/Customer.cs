@@ -3,14 +3,17 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
+public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }
     public CustomerEmail Email { get; private set; }
     public CustomerPhone Phone { get; private set; }
-    public string PasswordHash { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore] public string? PasswordHash { get; private set; }
+    public string NormalizedEmail { get; private set; } = string.Empty;
+    public bool EmailConfirmed { get; private set; }
+    public long SecurityVersion { get; private set; } = 1;
     public string AddressLine { get; private set; }
     public string City { get; private set; }
     public long StateId { get; private set; }
@@ -41,11 +44,12 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #region Constructor
     protected Customer() { }
 
-    private Customer(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    private Customer(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string? passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         EnterpriseId = enterpriseId;
         FullName = fullName;
         Email = email;
+        NormalizedEmail = email.Value.Trim().ToUpperInvariant();
         Phone = phone;
         PasswordHash = passwordHash;
         AddressLine = addressLine;
@@ -61,15 +65,13 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     #endregion
 
     #region Functions
-    public static Customer Create(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string passwordHash, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
+    public static Customer Create(long enterpriseId, string fullName, CustomerEmail email, CustomerPhone phone, string addressLine, string city, long stateId, string zipCode, string country, string gender, DateTime dateOfBirth, bool isVerified, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
         BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
         BaseValidate.ValidateNotNull(email, nameof(Email));
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
-        BaseValidate.ValidateNotNullOrEmpty(passwordHash, nameof(PasswordHash));
-        BaseValidate.ValidateMaxLength(passwordHash, 500, nameof(PasswordHash));
         BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
         BaseValidate.ValidateMaxLength(city, 255, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
@@ -78,7 +80,7 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
-        return new Customer(enterpriseId, fullName, email, phone, passwordHash, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
+        return new Customer(enterpriseId, fullName, email, phone, null, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
     }
 
     public void UpdatePersonalInfo(string fullName, CustomerEmail email, CustomerPhone phone, string gender, DateTime dateOfBirth)
@@ -91,7 +93,13 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
         FullName = fullName;
+        if (NormalizedEmail != email.Value.Trim().ToUpperInvariant())
+        {
+            EmailConfirmed = false;
+            InvalidateSessions();
+        }
         Email = email;
+        NormalizedEmail = email.Value.Trim().ToUpperInvariant();
         Phone = phone;
         Gender = gender;
         DateOfBirth = dateOfBirth;

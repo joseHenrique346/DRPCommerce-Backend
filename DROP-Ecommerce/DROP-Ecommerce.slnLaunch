@@ -4,15 +4,38 @@
     "Projects": [
       {
         "Path": "src\\Store\\StoreCommerce.Api\\StoreCommerce.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "http"
       },
       {
         "Path": "src\\Drop\\DropCommerce.Api\\DropCommerce.Api.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "http"
       },
       {
         "Path": "src\\Gateway\\Commerce.Gateway\\Commerce.Gateway.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  },
+  {
+    "Name": "HttpsDRP-Commerce",
+    "Projects": [
+      {
+        "Path": "src\\Store\\StoreCommerce.Api\\StoreCommerce.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "src\\Drop\\DropCommerce.Api\\DropCommerce.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "src\\Gateway\\Commerce.Gateway\\Commerce.Gateway.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   }

@@ -7,9 +7,16 @@ namespace StoreCommerce.Infrastructure.Data.Repositories;
 
 public class CustomerRepository : Repository<Customer>, ICustomerRepository
 {
-    public CustomerRepository(StoreCommerceDbContext context) : base(context) { }
+    public CustomerRepository(StoreCommerceDbContext context) : base(context)
+    {
+    }
 
     #region Queries
+
+    public Task LockAsync(long id, CancellationToken cancellationToken)
+    {
+        return Context.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM cliente WHERE id = {id} FOR UPDATE", cancellationToken);
+    }
 
     #region Get
 
