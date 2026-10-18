@@ -3,14 +3,14 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
+public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 {
     #region Properties
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }
     public CustomerEmail Email { get; private set; }
     public CustomerPhone Phone { get; private set; }
-    public string? PasswordHash { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore] public string? PasswordHash { get; private set; }
     public string NormalizedEmail { get; private set; } = string.Empty;
     public bool EmailConfirmed { get; private set; }
     public long SecurityVersion { get; private set; } = 1;
@@ -93,6 +93,11 @@ public class Customer : BaseEntity, ISoftDeletable, ITenantEntity
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
         FullName = fullName;
+        if (NormalizedEmail != email.Value.Trim().ToUpperInvariant())
+        {
+            EmailConfirmed = false;
+            InvalidateSessions();
+        }
         Email = email;
         NormalizedEmail = email.Value.Trim().ToUpperInvariant();
         Phone = phone;

@@ -419,3 +419,9 @@ FodyWeavers.xsd
 
 # Local development settings (connection strings, secrets)
 **/appsettings.Development.json
+
+# Local database backups before development migrations
+/.local/database-backups/
+
+# Temporary local identity verification script
+/automation/identity-smoke.ps1

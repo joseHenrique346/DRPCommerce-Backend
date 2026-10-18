@@ -2,7 +2,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Domain.Interfaces;
 
-public interface IRepository<T> where T : BaseEntity
+public interface IRepository<T> : IEntityRepository<T> where T : BaseEntity
 {
     Task<T?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
     Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);

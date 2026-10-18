@@ -45,7 +45,8 @@ public static class DependencyInjection
             || (storeApiUri.Scheme != Uri.UriSchemeHttp && storeApiUri.Scheme != Uri.UriSchemeHttps))
             throw new InvalidOperationException("A configuração StoreApi:BaseUrl deve conter uma URL absoluta válida.");
 
-        services.AddRefitClient<IStoreProductRefitApi>()
+        services.AddRefitGeneratedClient<IStoreProductRefitApi>(new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() })
+            .AddHttpMessageHandler<StoreAuthenticationHandler>()
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = storeApiUri;
@@ -60,7 +61,8 @@ public static class DependencyInjection
                 options.CircuitBreaker.MinimumThroughput = 10;
             });
 
-        services.AddRefitClient<IStoreEnterpriseRefitApi>()
+        services.AddRefitGeneratedClient<IStoreEnterpriseRefitApi>(new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() })
+            .AddHttpMessageHandler<StoreAuthenticationHandler>()
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = storeApiUri;
@@ -75,7 +77,8 @@ public static class DependencyInjection
                 options.CircuitBreaker.MinimumThroughput = 10;
             });
 
-        services.AddRefitClient<IStoreCustomerRefitApi>()
+        services.AddRefitGeneratedClient<IStoreCustomerRefitApi>(new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() })
+            .AddHttpMessageHandler<StoreAuthenticationHandler>()
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = storeApiUri;
@@ -90,7 +93,8 @@ public static class DependencyInjection
                 options.CircuitBreaker.MinimumThroughput = 10;
             });
 
-        services.AddRefitClient<IStoreEmployeeRefitApi>()
+        services.AddRefitGeneratedClient<IStoreEmployeeRefitApi>(new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() })
+            .AddHttpMessageHandler<StoreAuthenticationHandler>()
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = storeApiUri;

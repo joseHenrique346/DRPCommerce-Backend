@@ -1,128 +1,73 @@
-# Integração Store → Drop com Refit
+# Integração Store / Drop
 
-## Objetivo
+O Store é fonte canônica de identidade, clientes, funcionários, produtos, lojas e memberships. O Drop mantém banco próprio; IDs externos não são FKs entre bancos.
 
-O DropCommerce consulta dados canônicos de produtos e empresas mantidos pelo StoreCommerce. A comunicação é feita por HTTP usando Refit, sem compartilhar entidades, DbContexts ou repositórios entre os módulos.
-
-Cada módulo continua dono do seu banco de dados. O Drop mantém apenas os dados próprios e usa os identificadores recebidos do Store; não existe FK entre os bancos.
-
-## Responsabilidade de cada camada
-
-### Application do Drop
-
-As interfaces abaixo representam a necessidade do caso de uso, sem referência a HTTP ou Refit:
-
-- `IStoreProductReader`: consulta um produto por `ProductId` e valida o `EnterpriseId`.
-- `IStoreEnterpriseReader`: consulta uma empresa por `EnterpriseId`.
-
-Os contratos retornados são `StoreProductData` e `StoreEnterpriseData`.
-
-### Infrastructure do Drop
-
-- `IStoreProductRefitApi` e `IStoreEnterpriseRefitApi` descrevem as chamadas HTTP.
-- `StoreProductResponse` e `StoreEnterpriseResponse` são DTOs exclusivos da integração.
-- `StoreProductReader` e `StoreEnterpriseReader` adaptam os DTOs HTTP para os contratos da Application.
-- `StoreIntegrationResponseReader` centraliza a leitura do envelope `Result` retornado pelo Store.
-- `StoreIntegrationException` representa falhas de comunicação ou respostas inválidas.
-
-Essa separação permite que a Application conheça apenas readers e contratos de negócio, enquanto Refit fica restrito à Infrastructure.
-
-## Fluxo de chamada
+## Validação de sessão
 
 ```text
-Handler do Drop
-    ↓
-IStoreProductReader / IStoreEnterpriseReader
-    ↓
-StoreProductReader / StoreEnterpriseReader
-    ↓
-IStoreProductRefitApi / IStoreEnterpriseRefitApi
-    ↓
-HttpClientFactory + Refit
-    ↓
-StoreCommerce.Api
+Requisição ao Drop
+  → valida assinatura, emissor, audience e validade do JWT
+  → chama Store /api/internal/identity/validate com chave interna
+  → Store confere conta, família de sessão, versões, membership ou Customer e domínio
+  → Drop aplica tenant, propriedade do recurso e permissão operacional
 ```
 
-## Endpoints consumidos
+Não há cache de sessão nesta etapa. Revogações e alterações de acesso são observadas na próxima requisição protegida. Se o Store não puder ser consultado, o Drop falha fechado; a operação não é liberada.
 
-| Recurso | Método | Endpoint | Retorno da Application |
-|---|---|---|---|
-| Produto | `GET` | `/internal/v1/drop/products/{productId}?enterpriseId={enterpriseId}` | `StoreProductData?` |
-| Empresa | `GET` | `/internal/v1/drop/enterprises/{enterpriseId}` | `StoreEnterpriseData?` |
+O storefront resolve o Host consultando `/api/internal/tenants/resolve`. Domínio deve estar verificado/ativo e a loja ativa. CustomerId vem do JWT e não é um identificador selecionável pelo comprador.
 
-O prefixo `/internal/v1/drop` identifica endpoints destinados à comunicação entre os módulos. A implementação correspondente deve existir no StoreCommerce.Api.
+## Endpoints internos do Store
 
-## Envelope HTTP
+| Método | Endpoint | Contrato |
+|---|---|---|
+| POST | /api/internal/identity/validate | accessToken, host → isValid |
+| GET | /api/internal/tenants/resolve?host=... | enterpriseId |
+| GET | /api/internal/products/get-by-id/{id} | Produto canônico |
+| POST | /api/internal/products/get-list-by-list-id | Lista de IDs |
+| GET | /api/internal/customers/get-by-id/{id} | Cliente canônico |
+| POST | /api/internal/customers/get-list-by-list-id | Lista de IDs |
+| GET | /api/internal/employees/get-by-id/{id} | Funcionário canônico |
+| POST | /api/internal/employees/get-list-by-list-id | Lista de IDs |
+| GET | /api/internal/enterprises/get-by-id/{id} | Loja canônica |
 
-Os endpoints utilizam o envelope de resultado do Store:
+Todas exigem X-Service-Key. Recursos exigem contexto X-Enterprise-Id válido, colocado pelo serviço confiável. Consultas de recursos preservam o envelope Result do Store; validação de identidade e resolução de tenant usam DTOs diretos.
 
-```json
-{
-  "isSuccess": true,
-  "content": {
-    "productId": 10,
-    "enterpriseId": 2,
-    "name": "Produto exemplo",
-    "sku": "SKU-10",
-    "isActive": true
-  },
-  "listMessageErrors": []
-}
-```
+Essas rotas não substituem autenticação pública com um header de tenant. Não publique o prefixo interno no Gateway aberto à internet.
 
-O adapter converte somente os campos necessários:
+## Camadas e clients
 
-| DTO HTTP | Contrato da Application |
-|---|---|
-| `productId` | `StoreProductData.ProductId` |
-| `enterpriseId` | `StoreProductData.EnterpriseId` / `StoreEnterpriseData.EnterpriseId` |
-| `name` | `StoreProductData.Name` |
-| `sku` | `StoreProductData.SKU` |
-| `tradeName` | `StoreEnterpriseData.TradeName` |
-| `isActive` | `StoreProductData.IsActive` / `StoreEnterpriseData.IsActive` |
+Application define IStoreProductReader, IStoreEnterpriseReader, IStoreCustomerReader e IStoreEmployeeReader, com contratos próprios, sem depender de Refit.
 
-Se o produto retornado pertencer a outro `EnterpriseId`, o reader retorna `null` para evitar o uso de dados de outro tenant.
+Infrastructure contém os clients Refit, DTOs HTTP, adapters e StoreIntegrationResponseReader. DropCommerce.Security contém StoreServiceAuthenticationHandler, que injeta chave e tenant autenticado; lê o contexto da requisição por IHttpContextAccessor, evitando dependência de escopo incorreto no HttpClientFactory. Os clients dependem do contrato abstrato StoreAuthenticationHandler em Application, sem referenciar o projeto Security.
+
+StoreSessionValidator, DropTenantResolver e a implementação de IDropOperationScope também pertencem a DropCommerce.Security. A composição é feita pela API por AddDropSecurity. Veja [Organização dos projetos Security](../../Shared/Security.md).
+
+A versão Refit 14 instalada usa AddRefitGeneratedClient e SystemTextJsonContentSerializer explícito. Foram preservadas as interfaces/adapters existentes; não foi acrescentado Refit.Reflection.
+
+Consultas de recursos usam até 2 segundos por tentativa, 5 segundos totais e até 2 retries, desabilitados para POST. Há circuit breaker. Clientes de sessão/resolução têm timeout de 5 segundos. Cancelamento do chamador continua sendo propagado.
 
 ## Configuração
 
-No `DropCommerce.Api`, configure a URL do Store:
+Configure no Drop:
 
-```json
-{
-  "StoreApi": {
-    "BaseUrl": "http://localhost:5001"
-  }
-}
-```
+- STORECOMMERCE_API_BASE_URL: URL interna do Store.
+- Security__InternalServiceKey: mesmo segredo configurado no Store.
+- Security__SigningKey e Security__Issuer: iguais nos dois serviços.
+- Bancos separados via STORECOMMERCE_CONNECTION_STRING e DROPCOMMERCE_CONNECTION_STRING.
+- TrustedProxies: IPs explícitos do proxy, quando houver forwarding.
 
-Em ambiente de produção, a variável `STORECOMMERCE_API_BASE_URL` pode sobrescrever o valor do arquivo de configuração.
+A URL não fica fixa no client. Use HTTPS ou uma rede interna privada protegida; não remova validação TLS para contornar certificados inválidos.
 
-O registro dos clients acontece em `AddDropInfrastructure` por meio de `AddRefitClient`. A URL não fica fixa no código dos clients.
+## Isolamento e falhas
 
-## Timeout e resiliência
+- Readers rejeitam recurso canônico que não corresponde ao tenant esperado.
+- Proteções de escrita do Drop validam eventos, clientes/produtos canônicos e relações do mesmo tenant/evento/cliente.
+- Query filters protegem dependentes; quando o ator é Customer, recursos privados também exigem seu CustomerId.
+- Token de fila, sessão e lock de reserva não aparecem em respostas JSON.
+- Identidade inválida/revogada resulta em rejeição de autenticação.
+- Store indisponível ou resposta de integração inválida não concede acesso; serviços/controladores retornam falha.
+- Audit logs não têm escrita manual pública.
 
-As consultas são configuradas com `Microsoft.Extensions.Http.Resilience`:
+A validação integrada foi executada com bancos temporários e dados fictícios; o script temporário foi removido após a validação. Detalhes de configuração, endpoints do frontend e limites de produção: [Autenticação e segurança](../../Store/Api/Authentication.md).
 
-- até 2 segundos por tentativa;
-- até 5 segundos para a operação completa, incluindo retries;
-- até 2 retries para falhas transitórias;
-- retries desabilitados para métodos HTTP inseguros; esta integração possui apenas consultas `GET`;
-- circuit breaker para impedir chamadas repetidas quando o Store está indisponível.
-
-O `HttpClient` usa timeout infinito porque o timeout efetivo é controlado pela política de resiliência. O `CancellationToken` recebido pelo reader é encaminhado ao Refit.
-
-## Tratamento de respostas
-
-- `404`: o reader retorna `null`, indicando que o recurso não foi encontrado.
-- `401`, `403`, `5xx` e demais status HTTP não bem-sucedidos: lançam `StoreIntegrationException`.
-- Resposta sem conteúdo ou com falha de desserialização: lançam `StoreIntegrationException`.
-- `IsSuccess = false` no envelope: a mensagem do Store é preservada na exceção.
-- Timeout da política ou da requisição: é convertido em erro de integração.
-- Cancelamento solicitado pelo consumidor: o cancelamento continua sendo propagado.
-
-## Execução local
-
-1. Inicie o StoreCommerce.Api na porta `5001`.
-2. Inicie o DropCommerce.Api na porta `5002`.
-3. Confirme `StoreApi:BaseUrl` no appsettings do Drop.
-4. Use os casos de uso do Drop que dependem de `IStoreProductReader` ou `IStoreEnterpriseReader`.
+Referência da biblioteca: [Refit](https://github.com/reactiveui/refit).

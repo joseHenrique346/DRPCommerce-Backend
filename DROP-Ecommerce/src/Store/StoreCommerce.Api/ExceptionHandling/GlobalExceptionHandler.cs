@@ -5,7 +5,6 @@ namespace StoreCommerce.Api.ExceptionHandling;
 
 public sealed class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
-    IHostEnvironment environment,
     ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
@@ -13,7 +12,17 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "Erro inesperado ao processar a requisição.");
+        if (Commerce.Security.SecurityErrors.Classify(exception) is { } expected)
+        {
+            httpContext.Response.StatusCode = expected.Status;
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = new ProblemDetails { Status = expected.Status, Title = expected.Message,
+                    Extensions = { ["code"] = expected.Code, ["traceId"] = httpContext.TraceIdentifier } }
+            });
+        }
+        logger.LogError("Erro inesperado do tipo {ExceptionType}. Trace {TraceId}.", exception.GetType().Name, httpContext.TraceIdentifier);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
@@ -21,9 +30,7 @@ public sealed class GlobalExceptionHandler(
         {
             Status = StatusCodes.Status500InternalServerError,
             Title = "Erro interno do servidor",
-            Detail = environment.IsDevelopment()
-                ? exception.Message
-                : "Ocorreu um erro inesperado ao processar a solicitação.",
+            Detail = "Ocorreu um erro inesperado ao processar a solicitação.",
             Type = "https://httpstatuses.com/500"
         };
 

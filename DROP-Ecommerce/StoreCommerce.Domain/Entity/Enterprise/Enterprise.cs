@@ -71,6 +71,7 @@ public class Enterprise : BaseEntity
     #endregion
 
     #region Functions
+    public void SetActive(bool active) => IsActive = active;
     public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(tradeName, nameof(TradeName));

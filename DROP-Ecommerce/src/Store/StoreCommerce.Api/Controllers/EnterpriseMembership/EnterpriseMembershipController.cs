@@ -1,22 +1,47 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Api.Controllers.Base;
-using StoreCommerce.Application.Contracts.Identity;
+using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
-using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Entity;
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 
+[ApiController]
 [Route("api/enterprise-memberships")]
-public class EnterpriseMembershipController(IMediator mediator)
-    : MappedCrudController<EnterpriseMembership, EnterpriseMembershipResponse, CreateEnterpriseMembershipCommand, CreateListEnterpriseMembershipCommand, UpdateEnterpriseMembershipCommand, UpdateListEnterpriseMembershipCommand>(mediator)
+[Authorize(Policy = SecurityNames.PrimaryOwner)]
+public sealed class EnterpriseMembershipController(IMediator mediator) : ControllerBase
 {
-    protected override EnterpriseMembershipResponse MapEntity(EnterpriseMembership entity) => new(entity.Id, entity.EnterpriseId, entity.UserId, entity.KindId, entity.IsActive, entity.JoinedAt);
-    protected override CreateListEnterpriseMembershipCommand WrapCreateInRange(CreateEnterpriseMembershipCommand command) => new([command]);
-    protected override UpdateListEnterpriseMembershipCommand WrapUpdateInRange(UpdateEnterpriseMembershipCommand command) => new([command]);
-    protected override IRequest<Result<bool>> DeleteRangeCommand(List<long> ids) => new DeleteListEnterpriseMembershipCommand(ids);
-    protected override IRequest<Result<List<EnterpriseMembership>>> GetAllQuery() => new GetAllEnterpriseMembershipQuery();
-    protected override IRequest<Result<EnterpriseMembership>> GetByIdQuery(long id) => new GetByIdEnterpriseMembershipQuery(id);
-    protected override IRequest<Result<List<EnterpriseMembership>>> GetListByListIdQuery(List<long> ids) => new GetListByListIdEnterpriseMembershipQuery(ids);
+    /// <summary>
+    /// Lista os membros da loja.
+    /// </summary>
+    [HttpGet("get-all")]
+    public async Task<IActionResult> Members(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new ListMembersQuery(), ct));
+    }
+
+    /// <summary>
+    /// Atualiza o tipo e a ativação de um membro.
+    /// </summary>
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> Update(long id, MembershipUpdateRequest request, CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new UpdateMembershipCommand(id, request), ct));
+    }
+
+    /// <summary>
+    /// Define os perfis de acesso de um membro.
+    /// </summary>
+    [HttpPut("{id:long}/access-roles")]
+    public async Task<IActionResult> Assign(long id, MembershipRolesRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new AssignRolesCommand(id, request), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
 }

@@ -16,6 +16,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(255);
         builder.Property(e => e.PasswordHash).HasMaxLength(500);
         builder.Property(e => e.SecurityVersion).HasDefaultValue(1L);
+        builder.Property(e => e.SecurityVersion).IsConcurrencyToken();
         builder.OwnsOne(e => e.Email, email =>
         {
             email.Property<long>("UserId").HasColumnName("id");

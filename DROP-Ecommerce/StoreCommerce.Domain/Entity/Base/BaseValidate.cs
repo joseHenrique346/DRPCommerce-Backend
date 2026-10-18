@@ -43,28 +43,36 @@ public static class BaseValidate
 
     public static void ValidateEmailFormat(string? value, string propertyName)
     {
-        if (value is null) return;
+        if (value is null)
+            return;
+
         if (!Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             throw new ArgumentException($"{propertyName} has an invalid email format.");
     }
 
     public static void ValidateUrlFormat(string? value, string propertyName)
     {
-        if (value is null) return;
+        if (value is null)
+            return;
+
         if (!Uri.TryCreate(value, UriKind.Absolute, out _))
             throw new ArgumentException($"{propertyName} has an invalid URL format.");
     }
 
     public static void ValidateZipCodeFormat(string? value, string propertyName)
     {
-        if (value is null) return;
+        if (value is null)
+            return;
+
         if (!Regex.IsMatch(value, @"^\d{5}(-\d{4})?$|^\d{8}$"))
             throw new ArgumentException($"{propertyName} has an invalid zip code format.");
     }
 
     public static void ValidatePhoneFormat(string? value, string propertyName)
     {
-        if (value is null) return;
+        if (value is null)
+            return;
+
         if (!Regex.IsMatch(value, @"^\+?[\d\s\-()]{7,20}$"))
             throw new ArgumentException($"{propertyName} has an invalid phone format.");
     }

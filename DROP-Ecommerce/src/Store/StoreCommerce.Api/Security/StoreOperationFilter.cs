@@ -1,0 +1,86 @@
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace StoreCommerce.Api.Security;
+
+// Deny by default. Unmapped commercial modules remain principal-owner-only until the permission matrix is expanded.
+/// <summary>
+/// Protege operações comerciais do Store e nega permissões ainda não mapeadas para usuários comuns.
+/// </summary>
+public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
+{
+    /// <summary>
+    /// Aplica a matriz de permissões e restringe módulos não mapeados ao dono principal para negar acessos por padrão.
+    /// </summary>
+    public Task OnAuthorizationAsync(AuthorizationFilterContext context)
+    {
+        var endpoint = context.HttpContext.GetEndpoint();
+
+        if (endpoint?.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+            return Task.CompletedTask;
+
+        if (context.ActionDescriptor is not ControllerActionDescriptor descriptor)
+            return Task.CompletedTask;
+
+        var controller = descriptor.ControllerName;
+
+        if (controller is
+            "BackofficeAuth" or
+            "StorefrontAuth" or
+            "User" or
+            "Enterprise" or
+            "EnterpriseMembership" or
+            "AccessRole" or
+            "AccessRolePermission" or
+            "MembershipAccessRole" or
+            "EnterpriseDomain" or
+            "Invitation" or
+            "InvitationAcceptance" or
+            "OwnershipTransfer" or
+            "OwnershipTransferAcceptance" or
+            "StorefrontCustomer" or
+            "StorefrontEnterprise" or
+            "StorefrontOrder" or
+            "StorefrontProduct" or
+            "InternalIdentity" or
+            "InternalTenant" or
+            "InternalCustomer" or
+            "InternalEmployee" or
+            "InternalProduct" or
+            "InternalEnterprise" or
+            "Permission" or
+            "EnterpriseMembershipKind")
+            return Task.CompletedTask;
+
+        var user = context.HttpContext.User;
+
+        if (user.Identity?.IsAuthenticated != true || user.FindFirst(SecurityNames.Actor)?.Value != "user" ||
+            user.FindFirst(SecurityNames.Membership) is null)
+        {
+            context.Result = new UnauthorizedResult();
+
+            return Task.CompletedTask;
+        }
+
+        var read = descriptor.ActionName.StartsWith("Get", StringComparison.OrdinalIgnoreCase);
+        var verb = context.HttpContext.Request.Method;
+        string? permission = controller switch
+        {
+            "Product" => read ? "products.view" : verb == "POST" ? "products.create" : verb == "DELETE" ? "products.delete" : "products.edit",
+            "Category" => read ? "products.view" : verb == "POST" ? "products.create" : verb == "DELETE" ? "products.delete" : "products.edit",
+            "Order" or "OrderItem" => read ? "orders.view" : "orders.manage",
+            "Customer" => read ? "customers.view" : "customers.manage",
+            "Employee" or "EmployeePosition" or "Department" => "employees.manage",
+            _ => null
+        };
+        var allowed = permission is null ? user.FindFirst(SecurityNames.Kind)?.Value == "primary_owner" : SecurityNames.HasPermission(user, permission);
+
+        if (!allowed)
+            context.Result = new ObjectResult(new ProblemDetails { Status = 403, Title = "Acesso não permitido." }) { StatusCode = 403 };
+
+        return Task.CompletedTask;
+    }
+}

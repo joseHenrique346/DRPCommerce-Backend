@@ -8,6 +8,7 @@ public class QueueSession : BaseEntity
 
     public long QueueEntryId { get; private set; }
     public long CustomerId { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public string Token { get; private set; }
     public long QueueSessionStatusId { get; private set; }
     public DateTime IssuedAt { get; private set; }

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Identity;
 using System.Text.RegularExpressions;
 
 namespace StoreCommerce.Application.Features;
@@ -33,7 +34,7 @@ public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TReque
             return await next();
 
         var errors = failures.Select(failure => Error.Validation(
-            CreateErrorCode(failure.PropertyName),
+            request is IIdentityOperation ? failure.ErrorCode : CreateErrorCode(failure.PropertyName),
             failure.ErrorMessage));
 
         return TResponse.Validation(errors);

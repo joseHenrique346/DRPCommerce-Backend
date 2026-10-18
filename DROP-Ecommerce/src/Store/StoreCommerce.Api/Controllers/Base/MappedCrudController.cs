@@ -6,8 +6,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Api.Controllers.Base;
 
-public abstract class MappedCrudController<TEntity, TResponse, TCreateCommand, TCreateRangeCommand, TUpdateCommand, TUpdateRangeCommand>(IMediator mediator)
-    : BaseController<TEntity, TCreateCommand, TCreateRangeCommand, TUpdateCommand, TUpdateRangeCommand>(mediator)
+public abstract class MappedCrudController<TEntity, TResponse, TCreateCommand, TCreateRangeCommand, TUpdateCommand, TUpdateRangeCommand>(IMediator mediator) : BaseController<TEntity, TCreateCommand, TCreateRangeCommand, TUpdateCommand, TUpdateRangeCommand>(mediator)
     where TEntity : BaseEntity
     where TCreateCommand : IRequest<Result<TEntity>>
     where TCreateRangeCommand : IRequest<Result<List<TEntity>>>

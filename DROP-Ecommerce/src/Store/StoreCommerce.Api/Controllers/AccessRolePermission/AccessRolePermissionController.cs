@@ -1,27 +1,52 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/access-role-permissions")]
-public class AccessRolePermissionController(IMediator mediator) : ControllerBase
+[Authorize(Policy = SecurityNames.PrimaryOwner)]
+public sealed class AccessRolePermissionController(IMediator mediator) : ControllerBase
 {
-    [HttpPost("add")]
-    public async Task<IActionResult> AddAsync([FromBody] CreateAccessRolePermissionCommand command, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(command, cancellationToken));
-
-    [HttpDelete("delete/{accessRoleId:long}/{permissionId:long}")]
-    public async Task<IActionResult> DeleteAsync(long accessRoleId, long permissionId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new DeleteAccessRolePermissionCommand(accessRoleId, permissionId), cancellationToken));
-
-    [HttpGet("get-by-key/{accessRoleId:long}/{permissionId:long}")]
-    public async Task<IActionResult> GetByKeyAsync(long accessRoleId, long permissionId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new GetByKeyAccessRolePermissionQuery(accessRoleId, permissionId), cancellationToken));
-
+    /// <summary>
+    /// Lista as permissões dos perfis da loja.
+    /// </summary>
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new GetAllAccessRolePermissionQuery(), cancellationToken));
+    public async Task<IActionResult> List(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new ListRolePermissionsQuery(), ct));
+    }
+
+    /// <summary>
+    /// Adiciona uma permissão ao perfil de acesso.
+    /// </summary>
+    [HttpPut("{roleId:long}/{permissionId:long}")]
+    public async Task<IActionResult> Grant(long roleId, long permissionId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SetRolePermissionCommand(roleId, permissionId, true), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Remove uma permissão do perfil de acesso.
+    /// </summary>
+    [HttpDelete("{roleId:long}/{permissionId:long}")]
+    public async Task<IActionResult> Revoke(long roleId, long permissionId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SetRolePermissionCommand(roleId, permissionId, false), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
 }

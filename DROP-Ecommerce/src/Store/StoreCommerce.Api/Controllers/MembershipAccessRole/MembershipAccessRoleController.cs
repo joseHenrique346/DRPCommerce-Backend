@@ -1,27 +1,52 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/membership-access-roles")]
-public class MembershipAccessRoleController(IMediator mediator) : ControllerBase
+[Authorize(Policy = SecurityNames.PrimaryOwner)]
+public sealed class MembershipAccessRoleController(IMediator mediator) : ControllerBase
 {
-    [HttpPost("add")]
-    public async Task<IActionResult> AddAsync([FromBody] CreateMembershipAccessRoleCommand command, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(command, cancellationToken));
-
-    [HttpDelete("delete/{enterpriseMembershipId:long}/{accessRoleId:long}")]
-    public async Task<IActionResult> DeleteAsync(long enterpriseMembershipId, long accessRoleId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new DeleteMembershipAccessRoleCommand(enterpriseMembershipId, accessRoleId), cancellationToken));
-
-    [HttpGet("get-by-key/{enterpriseMembershipId:long}/{accessRoleId:long}")]
-    public async Task<IActionResult> GetByKeyAsync(long enterpriseMembershipId, long accessRoleId, CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new GetByKeyMembershipAccessRoleQuery(enterpriseMembershipId, accessRoleId), cancellationToken));
-
+    /// <summary>
+    /// Lista os perfis atribuídos aos membros da loja.
+    /// </summary>
     [HttpGet("get-all")]
-    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken) =>
-        this.ToActionResult(await mediator.Send(new GetAllMembershipAccessRoleQuery(), cancellationToken));
+    public async Task<IActionResult> List(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new ListMembershipRolesQuery(), ct));
+    }
+
+    /// <summary>
+    /// Atribui um perfil de acesso ao membro.
+    /// </summary>
+    [HttpPut("{membershipId:long}/{roleId:long}")]
+    public async Task<IActionResult> Grant(long membershipId, long roleId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SetMembershipRoleCommand(membershipId, roleId, true), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Remove um perfil de acesso do membro.
+    /// </summary>
+    [HttpDelete("{membershipId:long}/{roleId:long}")]
+    public async Task<IActionResult> Revoke(long membershipId, long roleId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new SetMembershipRoleCommand(membershipId, roleId, false), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
 }

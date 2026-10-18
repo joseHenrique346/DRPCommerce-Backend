@@ -15,6 +15,7 @@ public class DropReservation : BaseEntity, ISoftDeletable
     public int Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
     public decimal TotalAmount { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore] 
     public string LockToken { get; private set; }
     public DateTime ReservedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }

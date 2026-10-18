@@ -2,11 +2,12 @@ using StoreCommerce.Domain.Entity.Base;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class User : BaseEntity
+public partial class User : BaseEntity
 {
     public string FullName { get; private set; } = string.Empty;
     public UserEmail Email { get; private set; } = null!;
     public string NormalizedEmail { get; private set; } = string.Empty;
+    [System.Text.Json.Serialization.JsonIgnore] 
     public string? PasswordHash { get; private set; }
     public bool EmailConfirmed { get; private set; }
     public bool IsActive { get; private set; }

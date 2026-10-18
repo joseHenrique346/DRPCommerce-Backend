@@ -1,22 +1,47 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Api.Controllers.Base;
-using StoreCommerce.Application.Contracts.Identity;
+using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
-using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Entity;
+using Commerce.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 
+[ApiController]
 [Route("api/users")]
-public class UserController(IMediator mediator)
-    : MappedCrudController<User, UserResponse, CreateUserCommand, CreateListUserCommand, UpdateUserCommand, UpdateListUserCommand>(mediator)
+[Authorize(Policy = SecurityNames.GlobalUser)]
+public sealed class UserController(IMediator mediator) : ControllerBase
 {
-    protected override UserResponse MapEntity(User entity) => new(entity.Id, entity.FullName, entity.Email.Value, entity.NormalizedEmail, entity.EmailConfirmed, entity.IsActive, entity.LastLoginAt);
-    protected override CreateListUserCommand WrapCreateInRange(CreateUserCommand command) => new([command]);
-    protected override UpdateListUserCommand WrapUpdateInRange(UpdateUserCommand command) => new([command]);
-    protected override IRequest<Result<bool>> DeleteRangeCommand(List<long> ids) => new DeleteListUserCommand(ids);
-    protected override IRequest<Result<List<User>>> GetAllQuery() => new GetAllUserQuery();
-    protected override IRequest<Result<User>> GetByIdQuery(long id) => new GetByIdUserQuery(id);
-    protected override IRequest<Result<List<User>>> GetListByListIdQuery(List<long> ids) => new GetListByListIdUserQuery(ids);
+    /// <summary>
+    /// Consulta o perfil do usuário autenticado.
+    /// </summary>
+    [HttpGet("me")]
+    public async Task<IActionResult> Me(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new GetUserQuery(), ct));
+    }
+
+    /// <summary>
+    /// Atualiza o nome do usuário autenticado.
+    /// </summary>
+    [HttpPut("me")]
+    public async Task<IActionResult> Update(UpdateUserProfileRequest request, CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new UpdateUserProfileCommand(request), ct));
+    }
+
+    /// <summary>
+    /// Desativa a conta do usuário sem lojas sob sua propriedade.
+    /// </summary>
+    [HttpDelete("me")]
+    public async Task<IActionResult> Deactivate(CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeactivateUserCommand(), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
 }

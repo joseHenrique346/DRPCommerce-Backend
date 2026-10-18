@@ -9,8 +9,7 @@ using StoreCommerce.Domain.Entity;
 namespace StoreCommerce.Api.Controllers;
 
 [Route("api/employee-positions")]
-public class EmployeePositionController(IMediator mediator)
-    : MappedCrudController<EmployeePosition, EmployeePositionResponse, CreateEmployeePositionCommand, CreateListEmployeePositionCommand, UpdateEmployeePositionCommand, UpdateListEmployeePositionCommand>(mediator)
+public class EmployeePositionController(IMediator mediator) : MappedCrudController<EmployeePosition, EmployeePositionResponse, CreateEmployeePositionCommand, CreateListEmployeePositionCommand, UpdateEmployeePositionCommand, UpdateListEmployeePositionCommand>(mediator)
 {
     protected override EmployeePositionResponse MapEntity(EmployeePosition entity) => new(entity.Id, entity.EnterpriseId, entity.Name, entity.NormalizedName, entity.Description, entity.IsActive);
     protected override CreateListEmployeePositionCommand WrapCreateInRange(CreateEmployeePositionCommand command) => new([command]);

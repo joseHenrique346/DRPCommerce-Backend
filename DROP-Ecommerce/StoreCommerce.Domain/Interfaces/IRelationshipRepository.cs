@@ -1,6 +1,6 @@
 namespace StoreCommerce.Domain.Interfaces;
 
-public interface IRelationshipRepository<TEntity> where TEntity : class
+public interface IRelationshipRepository<TEntity> : IEntityRepository<TEntity> where TEntity : class
 {
     Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<TEntity?> GetByKeyAsync(long firstId, long secondId, CancellationToken cancellationToken = default);

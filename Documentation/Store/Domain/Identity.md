@@ -1,117 +1,92 @@
-# Identidade e acesso: estrutura inicial
+# Identidade, lojas e autorização
 
-Implementado na branch `feat/83-CriacaoUsuarioLogin`. Esta etapa inclui classes, navigation properties, configurações EF, repositórios, DTOs, comandos de CRUD e controllers. Login, emissão/renovação de tokens, convites, verificação de domínio e policies de autorização serão implementados em outra etapa.
+Implementação na branch `feat/83-CriacaoUsuarioLogin`. O backend agora possui casos de uso de autenticação e gestão de acesso, além das entidades e mapeamentos. Para configuração, contratos HTTP e limitações desta etapa, veja [Autenticação e segurança](../Api/Authentication.md).
 
-## Relacionamentos
+## Modelo escolhido para o TCC
 
-```mermaid
-erDiagram
-    USER ||--o{ ENTERPRISE_MEMBERSHIP : participa
-    ENTERPRISE ||--o{ ENTERPRISE_MEMBERSHIP : possui
-    ENTERPRISE ||--o{ ENTERPRISE_DOMAIN : publica
-    ENTERPRISE ||--o{ CUSTOMER : possui
-    ENTERPRISE ||--o{ ACCESS_ROLE : configura
-    ENTERPRISE ||--o{ EMPLOYEE_POSITION : possui
-    ENTERPRISE ||--o{ DEPARTMENT : possui
-    ENTERPRISE_MEMBERSHIP_KIND ||--o{ ENTERPRISE_MEMBERSHIP : classifica
-    ENTERPRISE_MEMBERSHIP ||--o| EMPLOYEE : perfil_funcional
-    EMPLOYEE_POSITION ||--o{ EMPLOYEE : cargo
-    DEPARTMENT ||--o{ EMPLOYEE : departamento
-    ENTERPRISE_MEMBERSHIP ||--o{ MEMBERSHIP_ACCESS_ROLE : recebe
-    ACCESS_ROLE ||--o{ MEMBERSHIP_ACCESS_ROLE : atribuido
-    ACCESS_ROLE ||--o{ ACCESS_ROLE_PERMISSION : concede
-    PERMISSION ||--o{ ACCESS_ROLE_PERMISSION : compoe
-```
+`Enterprise` é a loja e também o tenant. Não foi criada uma entidade Store separada. O cliente acessa uma loja por seu domínio; não há conta de comprador compartilhada entre lojas.
 
-`Enterprise` continua representando loja e tenant. `User` é global; `Customer` continua independente dentro de cada loja, sem FK para `User`.
-
-## Entidades e tabelas
-
-| Classe | Tabela | Relações principais |
-|---|---|---|
-| User | usuario | Memberships em uma ou mais lojas |
-| Enterprise | empresa | Clientes, membros, domínios, cargos, departamentos e perfis |
-| EnterpriseMembership | membro_empresa | User + Enterprise + Kind; perfil Employee opcional |
-| EnterpriseMembershipKind | tipo_membro_empresa | 1: PrimaryOwner; 2: CoOwner; 3: Staff |
-| EnterpriseDomain | dominio_empresa | Enterprise |
-| Employee | funcionario | Membership + cargo + departamento da mesma loja |
-| EmployeePosition | cargo | Enterprise; substitui o antigo Role |
-| Department | departamento | Enterprise |
-| Customer | cliente | Enterprise; e-mail único dentro da loja |
-| AccessRole | papel_acesso | Enterprise; perfis configuráveis |
-| Permission | permissao | Catálogo global com códigos definidos no sistema |
-| AccessRolePermission | papel_acesso_permissao | AccessRole + Permission |
-| MembershipAccessRole | membro_empresa_papel_acesso | Membership + AccessRole da mesma loja |
-
-Os nomes de classes e propriedades estão em inglês, mantendo as tabelas em português e as colunas em snake_case, conforme o projeto.
-
-## Mapeamento EF
-
-- E-mail normalizado de `User`: único globalmente.
-- E-mail normalizado de `Customer`: único por `EnterpriseId`, inclusive para contas excluídas logicamente.
-- Membership: único por `(EnterpriseId, UserId)`.
-- Índice parcial de membership: no máximo um `PrimaryOwner` ativo por loja.
-- Domínio normalizado: único globalmente; no máximo um domínio marcado como primário por loja.
-- Nome de cargo, departamento ou AccessRole: único dentro da loja.
-- Employee: vínculo 1:1 com membership, sem credenciais próprias.
-- AccessRolePermission: PK composta `(AccessRoleId, PermissionId)`.
-- MembershipAccessRole: PK composta `(EnterpriseMembershipId, AccessRoleId)`.
-- FKs compostas com `EnterpriseId` impedem associar funcionário, cargo, departamento, membership ou perfil de acesso de lojas diferentes.
-- Exclusão das referências principais usa `DeleteBehavior.Restrict`.
-- Entidades de loja e suas relações receberam query filters de tenant. O TenantProvider existente ainda depende da claim EnterpriseId; resolução por domínio e seleção autenticada de loja ficam para a etapa de autenticação.
-
-O índice de dono principal garante **no máximo um**, não garante a existência de um. Cadastro transacional da loja, transferência, proteção do dono principal e gestão de acessos ainda precisam de seus casos de uso e autorização.
-
-## Caminho das camadas
+- `User`: conta administrativa global. Pode criar lojas e participar de outras lojas.
+- `EnterpriseMembership`: liga User à loja, com tipo, status e versão de acesso.
+- `EnterpriseMembershipKind`: 1 = dono principal, 2 = sócio-proprietário, 3 = funcionário.
+- `Employee`: perfil funcional opcional da membership; não guarda senha.
+- `Customer`: conta independente da loja, com senha própria; não tem FK para User.
+- `AccessRole`: perfil de acesso configurável por loja, como Catálogo ou Financeiro.
+- `Permission`: catálogo global de operações reconhecidas pelo código.
+- `MembershipAccessRole` e `AccessRolePermission`: atribuição dos perfis e suas permissões.
+- `EmployeePosition` e `Department`: cargo e departamento; não concedem autorização.
+- `EnterpriseDomain`: hostname normalizado, verificação e publicação da loja.
 
 ```text
-Controller
-  → Command/Query via MediatR
-    → Handler de CRUD
-      → Interface de repositório
-        → Repositório EF
-          → StoreCommerceDbContext + IEntityTypeConfiguration
+User → EnterpriseMembership ← Enterprise → Customer
+                  ↓                ↓
+            MembershipAccessRole  EnterpriseDomain
+                  ↓
+              AccessRole → AccessRolePermission ← Permission
+
+EnterpriseMembership → Employee → EmployeePosition / Department
 ```
 
-Os CRUDs das novas entidades reutilizam os handlers-base de listas do projeto. `MappedCrudController` transforma os resultados em DTOs com campos escalares, evitando serializar ciclos de navigation properties ou devolver hashes de senha.
+O mesmo e-mail pode existir em clientes de lojas diferentes, com senhas diferentes. Um User também pode ter o mesmo e-mail de um Customer: são identidades e públicos de token distintos.
 
-As relações com PK composta têm `IRelationshipRepository<T>` e controllers próprios; elas não possuem um Id artificial para encaixar no CRUD de BaseEntity.
+## Autoridade e permissões
 
-## Endpoints
+Somente o dono principal gere convites, tipos de membership, perfis, permissões e transferência de propriedade. Sócios e funcionários usam os perfis atribuídos e não recebem essa autoridade pelo nome do cargo ou por uma permissão operacional.
 
-| Prefixo | Operações |
-|---|---|
-| /api/users | CRUD simples e em lote |
-| /api/enterprise-memberships | CRUD simples e em lote |
-| /api/enterprise-domains | CRUD simples e em lote |
-| /api/access-roles | CRUD simples e em lote |
-| /api/employee-positions | CRUD simples e em lote |
-| /api/departments | CRUD existente adaptado ao tenant |
-| /api/employees | CRUD existente vinculado à membership |
-| /api/customers | CRUD existente adaptado à identidade por loja |
-| /api/enterprises | CRUD existente da loja |
-| /api/permissions | GET get-all e get-by-id/{id}; catálogo sem edição pública |
-| /api/enterprise-membership-kinds | GET get-all |
-| /api/access-role-permissions | POST add; GET get-all/get-by-key/{accessRoleId}/{permissionId}; DELETE delete/{accessRoleId}/{permissionId} |
-| /api/membership-access-roles | POST add; GET get-all/get-by-key/{enterpriseMembershipId}/{accessRoleId}; DELETE delete/{enterpriseMembershipId}/{accessRoleId} |
+O dono principal possui acesso operacional implícito dentro de sua loja. Não existe `SuperUser` global. A transferência exige senha do dono atual, destinatário ativo da mesma loja, aceite autenticado e senha do destinatário. O antigo dono vira sócio; a transação mantém exatamente um dono principal ativo.
 
-Nos CRUDs de Id simples, os sufixos seguem a base existente: `add`, `add-range`, `update`, `update-range`, `delete/{id}`, `delete-range`, `get-all`, `get-by-id/{id}` e `get-list-by-list-id`.
+Mudar permissões, perfis, tipo ou status de membership invalida os JWTs administrativos afetados por `AccessVersion`. Alterar senha, encerrar todas as sessões ou desativar uma conta invalida as sessões por `SecurityVersion`. Essas versões são verificadas no banco a cada requisição protegida.
 
-As requisições desta etapa ainda têm IDs de relacionamento para cadastro estrutural. A futura camada de autenticação deverá obter o tenant e o ator do contexto confiável, e aplicar as regras de acesso antes de executar os casos de uso.
+## Persistência de credenciais e ações
 
-## Contratos ajustados
+| Entidade | Tabela | Vínculo |
+|---|---|---|
+| UserRefreshToken | usuario_refresh_token | User, família de sessão e membership selecionada opcional |
+| CustomerRefreshToken | cliente_refresh_token | Customer + Enterprise, família de sessão |
+| UserActionToken | usuario_token_acao | User, finalidade e expiração |
+| CustomerActionToken | cliente_token_acao | Customer + Enterprise, finalidade e expiração |
+| EnterpriseInvitation | convite_empresa | Loja, e-mail convidado, tipo e membership emissora |
+| InvitationAccessRole | convite_empresa_papel_acesso | Convite + perfis da mesma loja |
+| OwnershipTransfer | transferencia_propriedade | Loja, membership emissora e destinatária |
 
-- User recebe nome, e-mail e status. Não recebe senha ou hash neste CRUD.
-- Employee recebe EnterpriseId, EnterpriseMembershipId, nome, PositionId, DepartmentId, status e data de contratação. E-mail e PasswordHash deixam de pertencer ao funcionário.
-- Customer recebe e-mail e telefone como strings, mapeados para os value objects existentes. PasswordHash foi retirado dos contratos públicos de criação/atualização.
-- Hash de senha continua mapeado em User e Customer, mas é nullable enquanto o fluxo de credenciais não estiver implementado. Atualizar o perfil não altera a senha armazenada.
-- EmailConfirmed, IsVerified do domínio e versões de segurança/acesso estão modelados, mas seus fluxos de validação/invalidação ainda não existem.
-- Respostas de Employee e Customer preservam o campo Id e também oferecem EmployeeId/CustomerId, usados pelos contratos de integração do Drop.
+Senhas usam PasswordHasher do ASP.NET Core. Refresh tokens e tokens de ação são aleatórios; o banco guarda somente SHA-256. Refresh é rotacionado atomicamente; reutilização revoga toda a família. A expiração absoluta da família não é prolongada por rotação.
 
-## Revisão e próxima etapa
+Confirmação de e-mail e recuperação têm entidades e casos de uso preparados, mas permanecem indisponíveis enquanto a entrega segura de tokens estiver desabilitada nesta etapa. Convites e transferências têm entrega manual pelo dono principal, com token devolvido uma única vez na emissão.
 
-O catálogo inicial de Permission está em PermissionCodes e seu seed em PermissionConfiguration. A matriz de permissões por operação ainda precisa ser alinhada antes de criar policies ou handlers de autorização.
+## Invariantes e isolamento
 
-O modelo foi verificado com a compilação da solução e com `dotnet ef dbcontext info` / `dotnet ef dbcontext script`, sem aplicação de mudanças no banco. Não foi criado projeto de testes.
+- User: e-mail normalizado único globalmente.
+- Customer: e-mail normalizado único por loja, inclusive após exclusão lógica.
+- Membership: única por `(EnterpriseId, UserId)`.
+- Índice parcial: no máximo um dono principal ativo por loja; cadastro e transferência preservam sua existência.
+- Hostname único globalmente; no máximo um domínio primário por loja.
+- Loja nova recebe subdomínio da plataforma, já verificado e primário.
+- Domínio próprio começa não verificado e inativo; publicação depende de prova DNS TXT.
+- Para desativar/excluir um domínio primário, escolha outro primário primeiro.
+- Employee: relação 1:1 opcional com membership e referências funcionais da mesma loja.
+- FKs compostas de tenant protegem relações de memberships, perfis, convites, funcionários e transferências.
+- Query filters e proteção de SaveChanges rejeitam dados ou referências de outra loja.
+- Tenant do storefront vem do Host verificado; tenant administrativo vem da membership autenticada.
+- DTO, query string ou cabeçalho público não concedem autoridade sobre um tenant.
+- Operações de clientes usam CustomerId autenticado, não um ID escolhido no body.
 
-As migrations históricas permanecem intactas. A evolução de schema e eventual adaptação de dados existentes devem ser tratadas antes de utilizar os novos mapeamentos contra um banco criado pelas migrations atuais.
+## Camadas e fluxos
+
+```text
+Controllers de identidade
+  → IIdentityService / IAccessManagementService (Application)
+    → serviços transacionais (Infrastructure)
+      → entidades de domínio + StoreCommerceDbContext + configurações EF
+```
+
+Os serviços de identidade usam uma mesma unidade EF/transação para bloquear conta/loja, modificar relações e consumir tokens atomicamente. Os CRUDs comerciais continuam usando MediatR, repositórios e UnitOfWork existentes. CRUD genérico não pode modificar diretamente as entidades de identidade ou autorização.
+
+O Drop mantém banco próprio, sem FKs entre serviços. Usa os IDs canônicos do Store e valida sessão, tenant e recursos por integração interna autenticada. Veja [Integração Store/Drop](../../Drop/Infrastructure/StoreIntegration.md).
+
+## Migration e dados antigos
+
+Foi criada `20261008194931_IdentityAndSessions`, sem alterar as migrations históricas. Ela foi validada em banco temporário vazio.
+
+A migration interrompe antes de modificar uma instalação que tenha lojas, funcionários, cargos ou departamentos antigos. É necessário definir o dono de cada loja e revisar a importação das credenciais/vínculos antes de migrar dados reais. Nenhum dono é inventado e nenhuma senha antiga é descartada automaticamente.
+
+Não foi aplicada migration aos bancos existentes do desenvolvedor. Não foi criado projeto de testes; a validação foi executada com bancos temporários e dados fictícios. O script temporário foi removido após a validação.

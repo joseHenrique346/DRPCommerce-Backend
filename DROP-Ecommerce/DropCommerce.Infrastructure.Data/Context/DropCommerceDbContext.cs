@@ -1,18 +1,35 @@
+using DropCommerce.Application.Integrations.Store.Interfaces;
+using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
 using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace DropCommerce.Infrastructure.Data.Context;
 
-public class DropCommerceDbContext : DbContext
+public partial class DropCommerceDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
+    private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
+    private readonly IDropOperationScope _operationScope;
+    private readonly IStoreCustomerReader _storeCustomers;
+    private readonly IStoreProductReader _storeProducts;
 
-    public DropCommerceDbContext(DbContextOptions<DropCommerceDbContext> options, ITenantProvider tenantProvider)
+    public DropCommerceDbContext(
+        DbContextOptions<DropCommerceDbContext> options,
+        ITenantProvider tenantProvider,
+        IHttpContextAccessor httpAccessor,
+        IDropOperationScope operationScope,
+        IStoreCustomerReader storeCustomers,
+        IStoreProductReader storeProducts)
         : base(options)
     {
         _tenantProvider = tenantProvider;
+        _httpAccessor = httpAccessor;
+        _operationScope = operationScope;
+        _storeCustomers = storeCustomers;
+        _storeProducts = storeProducts;
     }
 
     #region DbSets
@@ -83,8 +100,9 @@ public class DropCommerceDbContext : DbContext
         }
 
         // Global query filter: DropEvent has tenant + soft delete
-        modelBuilder.Entity<DropEvent>().HasQueryFilter(e =>
-            e.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.IsDeleted);
+        modelBuilder.Entity<DropEvent>().HasQueryFilter(DropEvent =>
+            DropEvent.EnterpriseId == _tenantProvider.GetEnterpriseId() &&
+            !DropEvent.IsDeleted);
 
         // Global query filters for other ISoftDeletable entities
         ApplySoftDeleteFilter<DropProduct>(modelBuilder);
@@ -93,22 +111,47 @@ public class DropCommerceDbContext : DbContext
         ApplySoftDeleteFilter<DropReservation>(modelBuilder);
         ApplySoftDeleteFilter<DropRegistration>(modelBuilder);
         ApplySoftDeleteFilter<DropNotification>(modelBuilder);
+        ConfigureSecurityFilters(modelBuilder);
     }
 
-    private static void ApplySoftDeleteFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity, ISoftDeletable
+    private static void ApplySoftDeleteFilter<T>(ModelBuilder modelBuilder)
+        where T : BaseEntity, ISoftDeletable
     {
-        modelBuilder.Entity<T>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<T>().HasQueryFilter(Entity => !Entity.IsDeleted);
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override int SaveChanges() => SaveChanges(true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
+        UpdateChangedDates();
+
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        SaveChangesAsync(true, cancellationToken);
+
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        await GuardWritesAsync(cancellationToken);
+        UpdateChangedDates();
+
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void UpdateChangedDates()
     {
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
             if (entry.State == EntityState.Modified)
+            {
                 entry.Entity.SetChangedDate();
+            }
         }
-
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     private static string ToSnakeCase(string name)

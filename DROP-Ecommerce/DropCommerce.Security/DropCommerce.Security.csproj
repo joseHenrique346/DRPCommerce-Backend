@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DropCommerce.Application\DropCommerce.Application.csproj" />
+    <ProjectReference Include="..\DropCommerce.Domain\DropCommerce.Domain.csproj" />
+    <ProjectReference Include="..\DropCommerce.Infrastructure.Data\DropCommerce.Infrastructure.Data.csproj" />
+    <ProjectReference Include="..\Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj" />
+    <Compile Include="..\Shared\Security\CommerceSecurityRegistration.cs" Link="Configuration\CommerceSecurityRegistration.cs" />
+  </ItemGroup>
+
+</Project>

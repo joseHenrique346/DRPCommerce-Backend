@@ -11,6 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\Security\SecurityErrors.cs" Link="Security\Shared\SecurityErrors.cs" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" PrivateAssets="all" />
     <PackageReference Include="Refit" Version="14.0.1" />
@@ -21,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DropCommerce.Application\DropCommerce.Application.csproj" />
     <ProjectReference Include="..\DropCommerce.Domain\DropCommerce.Domain.csproj" />
+    <ProjectReference Include="..\Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

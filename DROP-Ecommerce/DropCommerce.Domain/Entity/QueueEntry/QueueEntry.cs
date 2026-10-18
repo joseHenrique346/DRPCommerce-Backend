@@ -8,6 +8,7 @@ public class QueueEntry : BaseEntity
 
     public long DropEventId { get; private set; }
     public long CustomerId { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore] 
     public string SessionToken { get; private set; }
     public int Position { get; private set; }
     public long QueueEntryStatusId { get; private set; }

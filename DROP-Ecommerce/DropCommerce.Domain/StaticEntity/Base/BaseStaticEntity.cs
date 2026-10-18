@@ -4,8 +4,14 @@ namespace DropCommerce.Domain.StaticEntity;
 
 public abstract class BaseStaticEntity : IEquatable<BaseStaticEntity>
 {
-    public long Id { get; }
-    public string Description { get; }
+    public long Id
+    {
+        get;
+    }
+    public string Description
+    {
+        get;
+    }
 
     protected BaseStaticEntity(long id, string description)
     {
@@ -25,13 +31,18 @@ public abstract class BaseStaticEntity : IEquatable<BaseStaticEntity>
 
     public bool Equals(BaseStaticEntity? other)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
         return GetType() == other.GetType() && Id == other.Id;
     }
 
     public override int GetHashCode() => HashCode.Combine(GetType(), Id);
 
     public static bool operator ==(BaseStaticEntity? left, BaseStaticEntity? right) => Equals(left, right);
+
     public static bool operator !=(BaseStaticEntity? left, BaseStaticEntity? right) => !Equals(left, right);
 }

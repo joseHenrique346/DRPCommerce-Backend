@@ -12,6 +12,9 @@ namespace StoreCommerce.Api.Controllers;
 [Route("api/permissions")]
 public class PermissionController(IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Lista o catálogo de permissões do sistema.
+    /// </summary>
     [HttpGet("get-all")]
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -21,6 +24,9 @@ public class PermissionController(IMediator mediator) : ControllerBase
             : this.ToActionResult(result);
     }
 
+    /// <summary>
+    /// Consulta uma permissão pelo identificador.
+    /// </summary>
     [HttpGet("get-by-id/{id:long}")]
     public async Task<IActionResult> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
