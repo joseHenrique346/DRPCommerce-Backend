@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Drop", "2. Drop", "{98F5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Gateway", "3. Gateway", "{1F6B0C17-1392-4EA2-A65B-B7465D9E5458}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Shared", "4. Shared", "{B260A077-01BF-4F39-8299-01B39472C2D0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Security", "4. Security", "{B260A077-01BF-4F39-8299-01B39472C2D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Security.Shared", "Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj", "{8E3A8A71-334D-4C64-9F94-33B0F663B29D}"
 EndProject
