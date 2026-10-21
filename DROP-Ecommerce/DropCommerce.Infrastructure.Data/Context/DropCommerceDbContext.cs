@@ -1,3 +1,4 @@
+using Commerce.Appearance.Infrastructure;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
@@ -5,12 +6,14 @@ using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using AppearanceBaseEntity = Commerce.Appearance.Domain.Entity.Base.BaseEntity;
 
 namespace DropCommerce.Infrastructure.Data.Context;
 
 public partial class DropCommerceDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
+    private readonly AppearanceWriteScope _appearanceWrites;
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
     private readonly IDropOperationScope _operationScope;
     private readonly IStoreCustomerReader _storeCustomers;
@@ -22,10 +25,12 @@ public partial class DropCommerceDbContext : DbContext
         IHttpContextAccessor httpAccessor,
         IDropOperationScope operationScope,
         IStoreCustomerReader storeCustomers,
-        IStoreProductReader storeProducts)
+        IStoreProductReader storeProducts,
+        AppearanceWriteScope appearanceWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
+        _appearanceWrites = appearanceWrites;
         _httpAccessor = httpAccessor;
         _operationScope = operationScope;
         _storeCustomers = storeCustomers;
@@ -73,6 +78,7 @@ public partial class DropCommerceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureAppearance(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DropCommerceDbContext).Assembly);
 
         // Convention: snake_case for all column names
@@ -124,10 +130,7 @@ public partial class DropCommerceDbContext : DbContext
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
-        UpdateChangedDates();
-
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        return SaveChangesAsync(acceptAllChangesOnSuccess, CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
@@ -137,10 +140,10 @@ public partial class DropCommerceDbContext : DbContext
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
+        _appearanceWrites.Guard(this);
         await GuardWritesAsync(cancellationToken);
-        UpdateChangedDates();
 
-        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        return await SaveWithAppearanceActivationAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     private void UpdateChangedDates()
@@ -151,6 +154,12 @@ public partial class DropCommerceDbContext : DbContext
             {
                 entry.Entity.SetChangedDate();
             }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<AppearanceBaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+                entry.Entity.SetChangedDate();
         }
     }
 

@@ -17,4 +17,7 @@
     <ProjectReference Include="..\Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Commerce.Appearance.Application\Commerce.Appearance.Application.csproj" />
+  </ItemGroup>
 </Project>

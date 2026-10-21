@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -23,7 +23,7 @@
 		<ProjectReference Include="..\..\..\StoreCommerce.Security\StoreCommerce.Security.csproj" />
 	</ItemGroup>
 
-	<Target Name="InstallGitHooks" AfterTargets="AfterBuild" Condition="'$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">
+	<Target Name="InstallGitHooks" AfterTargets="AfterBuild" Condition="'$(InstallGitHooks)' != 'false' And '$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">
 		<ItemGroup>
 			<HookFiles Include="$(SolutionDir)automation\commit-msg" />
 		</ItemGroup>
@@ -31,4 +31,7 @@
 		<Exec Command="git config core.hooksPath .git/hooks" WorkingDirectory="$(SolutionDir).." />
 	</Target>
 	
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Commerce.Appearance.Api\Commerce.Appearance.Api.csproj" />
+  </ItemGroup>
 </Project>

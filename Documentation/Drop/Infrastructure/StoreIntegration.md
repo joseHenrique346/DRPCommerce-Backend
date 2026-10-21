@@ -42,7 +42,9 @@ Infrastructure contém os clients Refit, DTOs HTTP, adapters e StoreIntegrationR
 
 StoreSessionValidator, DropTenantResolver e a implementação de IDropOperationScope também pertencem a DropCommerce.Security. A composição é feita pela API por AddDropSecurity. Veja [Organização dos projetos Security](../../Shared/Security.md).
 
-A versão Refit 14 instalada usa AddRefitGeneratedClient e SystemTextJsonContentSerializer explícito. Foram preservadas as interfaces/adapters existentes; não foi acrescentado Refit.Reflection.
+Refit e Refit.HttpClientFactory usam a versão 15.2.0, com AddRefitGeneratedClient e SystemTextJsonContentSerializer explícito. As interfaces/adapters existentes continuam usando clientes gerados.
+
+Essa versão inclui a [correção do carregamento do gerador no Visual Studio](https://github.com/reactiveui/refit/pull/2309). Na versão 14.0.1, o MSBuild do Visual Studio podia emitir CS8784 por não carregar System.Memory 4.0.2.0 e produzir uma DLL sem os clientes, mesmo com sucesso na compilação. Compilar pelo terminal não reproduzia essa falha. O projeto Infrastructure trata CS8032, CS8784 e CS8785 como erros para impedir que falhas de carregamento ou execução dos geradores passem despercebidas.
 
 Consultas de recursos usam até 2 segundos por tentativa, 5 segundos totais e até 2 retries, desabilitados para POST. Há circuit breaker. Clientes de sessão/resolução têm timeout de 5 segundos. Cancelamento do chamador continua sendo propagado.
 

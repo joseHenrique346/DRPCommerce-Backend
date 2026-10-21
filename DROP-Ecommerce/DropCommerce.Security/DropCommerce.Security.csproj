@@ -15,7 +15,7 @@
     <ProjectReference Include="..\DropCommerce.Domain\DropCommerce.Domain.csproj" />
     <ProjectReference Include="..\DropCommerce.Infrastructure.Data\DropCommerce.Infrastructure.Data.csproj" />
     <ProjectReference Include="..\Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj" />
-    <Compile Include="..\Shared\Security\CommerceSecurityRegistration.cs" Link="Configuration\CommerceSecurityRegistration.cs" />
+    <Compile Include="..\Shared\Security\Configuration\CommerceSecurityRegistration.cs" Link="Configuration\CommerceSecurityRegistration.cs" />
   </ItemGroup>
 
 </Project>
