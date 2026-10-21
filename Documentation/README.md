@@ -26,6 +26,7 @@ Documentos compartilhados:
 - [Infraestrutura](Shared/Infrastructure.md)
 - [Startup do projeto](Shared/StartupProject.md)
 - [Organização dos projetos Security](Shared/Security.md)
+- [Aparência versionada, presets e contratos do frontend](Shared/Appearance.md)
 
 Identidade e autorização:
 

@@ -12,7 +12,9 @@ public static class DependencyInjection
     {
         var assembly = typeof(DependencyInjection).Assembly;
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
+            assembly,
+            typeof(Commerce.Appearance.Application.Features.GetAppearanceStatusQueryHandler).Assembly));
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));

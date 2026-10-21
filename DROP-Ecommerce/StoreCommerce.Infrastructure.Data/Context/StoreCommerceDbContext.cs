@@ -1,22 +1,26 @@
+using Commerce.Appearance.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
+using AppearanceBaseEntity = Commerce.Appearance.Domain.Entity.Base.BaseEntity;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
 
 public partial class StoreCommerceDbContext : DbContext
 {
     private readonly ITenantProvider _tenantProvider;
+    private readonly AppearanceWriteScope _appearanceWrites;
     private readonly IIdentityOperationScope _identityScope;
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
-        IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor)
+        IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
+        _appearanceWrites = appearanceWrites;
         _identityScope = identityScope;
         _httpAccessor = httpAccessor;
     }
@@ -68,6 +72,7 @@ public partial class StoreCommerceDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureAppearance(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StoreCommerceDbContext).Assembly);
         ConfigureSecurityFilters(modelBuilder);
 
@@ -143,8 +148,11 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        _appearanceWrites.Guard(this);
         GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
+
         UpdateChangedDates();
+
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
@@ -153,14 +161,23 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        _appearanceWrites.Guard(this);
         await GuardWritesAsync(cancellationToken);
+
         UpdateChangedDates();
+
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     private void UpdateChangedDates()
     {
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+                entry.Entity.SetChangedDate();
+        }
+
+        foreach (var entry in ChangeTracker.Entries<AppearanceBaseEntity>())
         {
             if (entry.State == EntityState.Modified)
                 entry.Entity.SetChangedDate();

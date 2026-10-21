@@ -47,6 +47,8 @@ IIdentityUnitOfWork amplia o contrato de gravação com transações. IUnitOfWor
 
 Shared/Commerce.Security.Shared é uma biblioteca comum que compila SecurityOptions e SecurityPrimitives, mantidos em Shared/Security, uma única vez para os dois módulos.
 
+Os fontes compartilhados ficam organizados em `Shared/Security/Options`, `Primitives`, `Configuration` e `Errors`. As referências de compilação dos projetos apontam para essas subpastas, preservando os namespaces e a separação das dependências.
+
 A configuração ASP.NET de autenticação, autorização, cookies e rate limiting é incluída nas bibliotecas Security. SecurityErrors, dependente de EF/PostgreSQL, continua incluído nas infraestruturas. Application e StoreCommerce.Security não precisam do EF para consumir as primitivas.
 
 ## Compatibilidade e escopo

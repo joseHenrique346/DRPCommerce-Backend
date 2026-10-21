@@ -14,6 +14,7 @@ public static class SecurityErrors
     public static SecurityFailure? Classify(Exception exception) => exception switch
     {
         SecurityFailure failure => failure,
+        Commerce.Appearance.Domain.AppearanceFailure failure => new(failure.Status, failure.Code, failure.Message),
         ArgumentException => new(400, "Validation.InvalidInput", "Os dados informados são inválidos."),
         DbUpdateConcurrencyException => new(409, "Data.ConcurrentChange", "O registro foi alterado. Atualize e tente novamente."),
         DbUpdateException { InnerException: PostgresException { SqlState: "23505" } } => new(409, "Data.Duplicate", "Já existe um registro com estes dados."),

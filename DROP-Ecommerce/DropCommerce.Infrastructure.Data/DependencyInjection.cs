@@ -1,3 +1,7 @@
+using Commerce.Appearance.Infrastructure;
+using Commerce.Appearance.Application;
+using Commerce.Appearance.Domain.StaticEntity;
+using DropCommerce.Application.Appearance;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Domain.Interfaces;
 using DropCommerce.Infrastructure.Data.Context;
@@ -23,6 +27,22 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
+        services.AddSingleton<StoreIntegrationScope>();
+        services.AddScoped<AppearanceWriteScope>();
+        services.AddScoped<IAppearanceContext, DropAppearanceContext>();
+        services.AddScoped<IAppearanceResources, DropAppearanceResources>();
+        services.AddScoped<IDropAppearanceEventRepository, DropAppearanceEventRepository>();
+        services.AddScoped<IAppearanceRepository>(provider => new EfAppearanceRepository<DropCommerceDbContext>(
+            provider.GetRequiredService<DropCommerceDbContext>(),
+            provider.GetRequiredService<AppearanceWriteScope>(),
+            AppearanceChannel.Drop));
+        services.AddScoped<IMediaAssetReader, DisabledMediaAssetReader>();
+        services.AddScoped<AppearanceSettingsValidator>();
+        services.AddScoped<AppearanceResourceValidator>();
+        services.AddScoped<AppearanceMigration>();
+        services.AddScoped<ThemeDefinitionValidator>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddHostedService<AppearanceMaintenanceWorker>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 

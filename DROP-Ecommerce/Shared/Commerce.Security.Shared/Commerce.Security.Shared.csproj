@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <Compile Include="..\Security\SecurityOptions.cs" Link="Options\SecurityOptions.cs" />
-    <Compile Include="..\Security\SecurityPrimitives.cs" Link="Primitives\SecurityPrimitives.cs" />
+    <Compile Include="..\Security\Options\SecurityOptions.cs" Link="Options\SecurityOptions.cs" />
+    <Compile Include="..\Security\Primitives\SecurityPrimitives.cs" Link="Primitives\SecurityPrimitives.cs" />
   </ItemGroup>
 
 </Project>

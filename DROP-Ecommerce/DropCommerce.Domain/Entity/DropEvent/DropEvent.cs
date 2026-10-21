@@ -28,6 +28,7 @@ public class DropEvent : BaseEntity, ISoftDeletable
     public DateTime QueueOpensAt { get; private set; }
     public DateTime DropStartsAt { get; private set; }
     public DateTime DropEndsAt { get; private set; }
+    public long? EffectiveAppearanceRevisionId { get; private set; }
 
     #region Navigation Properties
 
@@ -150,6 +151,13 @@ public class DropEvent : BaseEntity, ISoftDeletable
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
+    }
+
+    public void PinAppearance(long revisionId)
+    {
+        BaseValidate.ValidateId(revisionId, nameof(revisionId));
+
+        EffectiveAppearanceRevisionId = revisionId;
     }
 
     #endregion

@@ -21,6 +21,7 @@ public static class DependencyInjectionConfig
         services.AddSwaggerGen(options =>
         {
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "DropCommerce.Api.xml"));
+            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Commerce.Appearance.Api.xml"));
 
             options.AddServer(new OpenApiServer
             {

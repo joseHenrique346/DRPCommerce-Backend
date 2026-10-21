@@ -32,7 +32,10 @@ public partial class StoreCommerceDbContext
         if (_identityScope.IsOpen)
             return;
 
-        var changes = ChangeTracker.Entries().Where(x => x.State is EntityState.Added or EntityState.Modified or EntityState.Deleted && !x.Metadata.IsOwned()).ToList();
+        var changes = ChangeTracker.Entries()
+            .Where(Entry => !Commerce.Appearance.Infrastructure.AppearanceWriteScope.IsAppearanceEntity(Entry.Entity))
+            .Where(Entry => Entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted && !Entry.Metadata.IsOwned())
+            .ToList();
 
         if (changes.Count == 0)
             return;

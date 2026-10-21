@@ -16,4 +16,7 @@
     <ProjectReference Include="..\DropCommerce.Domain\DropCommerce.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Commerce.Appearance.Application\Commerce.Appearance.Application.csproj" />
+  </ItemGroup>
 </Project>

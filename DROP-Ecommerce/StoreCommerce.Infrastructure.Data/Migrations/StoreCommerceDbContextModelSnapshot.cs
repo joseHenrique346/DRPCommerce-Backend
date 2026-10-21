@@ -22,6 +22,564 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Commerce.Appearance.Domain.Appearance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AppearanceTargetTypeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_target_type_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long?>("DropEventId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("drop_event_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("MigrationBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("migration_blocked");
+
+                    b.Property<string>("MigrationFailureCode")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("migration_failure_code");
+
+                    b.Property<long?>("PublishedRevisionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("published_revision_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_aparencia");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_appearance_tenant_id");
+
+                    b.HasIndex("AppearanceTargetTypeId")
+                        .HasDatabaseName("ix_aparencia_appearance_target_type_id");
+
+                    b.HasIndex("EnterpriseId", "AppearanceTargetTypeId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appearance_default_target")
+                        .HasFilter("drop_event_id IS NULL");
+
+                    b.HasIndex("EnterpriseId", "AppearanceTargetTypeId", "DropEventId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appearance_specific_target")
+                        .HasFilter("drop_event_id IS NOT NULL");
+
+                    b.HasIndex("EnterpriseId", "Id", "PublishedRevisionId")
+                        .HasDatabaseName("ix_aparencia_enterprise_id_id_published_revision_id");
+
+                    b.ToTable("aparencia", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_appearance_store_target", "appearance_target_type_id = 1");
+
+                            t.HasCheckConstraint("ck_appearance_target_event", "(appearance_target_type_id = 3 AND drop_event_id IS NOT NULL AND drop_event_id > 0) OR (appearance_target_type_id IN (1, 2) AND drop_event_id IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.AppearanceEditSession", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AppearanceEditSessionStatusId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_edit_session_status_id");
+
+                    b.Property<long>("AppearanceId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_id");
+
+                    b.Property<long?>("BaseRevisionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("base_revision_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EditorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("editor_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_open");
+
+                    b.Property<string>("PreviewJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("preview_json");
+
+                    b.Property<long?>("RestoredFromRevisionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("restored_from_revision_id");
+
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("settings_json");
+
+                    b.Property<long>("ThemeReleaseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("theme_release_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sessao_edicao_aparencia");
+
+                    b.HasIndex("AppearanceEditSessionStatusId")
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_appearance_edit_session_status_id");
+
+                    b.HasIndex("AppearanceId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_appearance_id")
+                        .HasFilter("is_open = TRUE");
+
+                    b.HasIndex("ThemeReleaseId")
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_theme_release_id");
+
+                    b.HasIndex("IsOpen", "ExpiresAt")
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_is_open_expires_at");
+
+                    b.HasIndex("EnterpriseId", "AppearanceId", "BaseRevisionId")
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_enterprise_id_appearance_id_base_re~");
+
+                    b.HasIndex("EnterpriseId", "AppearanceId", "RestoredFromRevisionId")
+                        .HasDatabaseName("ix_sessao_edicao_aparencia_enterprise_id_appearance_id_restore~");
+
+                    b.ToTable("sessao_edicao_aparencia", (string)null);
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.AppearanceRevision", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AppearanceId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_id");
+
+                    b.Property<long>("AppearanceRevisionOriginId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_revision_origin_id");
+
+                    b.Property<string>("Checksum")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("checksum");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<long>("Number")
+                        .HasColumnType("bigint")
+                        .HasColumnName("number");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<long>("PublishedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("published_by");
+
+                    b.Property<long?>("RestoredFromRevisionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("restored_from_revision_id");
+
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("settings_json");
+
+                    b.Property<long>("ThemeReleaseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("theme_release_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_revisao_aparencia");
+
+                    b.HasAlternateKey("EnterpriseId", "Id")
+                        .HasName("ak_revision_tenant_id");
+
+                    b.HasAlternateKey("EnterpriseId", "AppearanceId", "Id")
+                        .HasName("ak_revision_tenant_owner_id");
+
+                    b.HasIndex("AppearanceRevisionOriginId")
+                        .HasDatabaseName("ix_revisao_aparencia_appearance_revision_origin_id");
+
+                    b.HasIndex("ThemeReleaseId")
+                        .HasDatabaseName("ix_revisao_aparencia_theme_release_id");
+
+                    b.HasIndex("AppearanceId", "Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_revisao_aparencia_appearance_id_number");
+
+                    b.HasIndex("EnterpriseId", "RestoredFromRevisionId")
+                        .HasDatabaseName("ix_revisao_aparencia_enterprise_id_restored_from_revision_id");
+
+                    b.ToTable("revisao_aparencia", (string)null);
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.StaticEntity.AppearanceChannel", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_canal_aparencia");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_canal_aparencia_code");
+
+                    b.ToTable("canal_aparencia", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "store",
+                            Description = "Vitrine"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "drop",
+                            Description = "Drop"
+                        });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.StaticEntity.AppearanceEditSessionStatus", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_status_sessao_edicao_aparencia");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_status_sessao_edicao_aparencia_code");
+
+                    b.ToTable("status_sessao_edicao_aparencia", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "InEdit",
+                            Description = "Em edição"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "InPreview",
+                            Description = "Em prévia"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Code = "Published",
+                            Description = "Publicada"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Code = "Cancelled",
+                            Description = "Cancelada"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Code = "Released",
+                            Description = "Liberada pelo proprietário"
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            Code = "Expired",
+                            Description = "Expirada"
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            Code = "Migrated",
+                            Description = "Encerrada por migração"
+                        });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.StaticEntity.AppearanceRevisionOrigin", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_origem_revisao_aparencia");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_origem_revisao_aparencia_code");
+
+                    b.ToTable("origem_revisao_aparencia", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "Publish",
+                            Description = "Publicação"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "Rollback",
+                            Description = "Restauração"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Code = "Migration",
+                            Description = "Migração do tema"
+                        });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.StaticEntity.AppearanceTargetType", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tipo_alvo_aparencia");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tipo_alvo_aparencia_code");
+
+                    b.ToTable("tipo_alvo_aparencia", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "store",
+                            Description = "Vitrine"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "drop-default",
+                            Description = "Padrão dos drops"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Code = "drop-event",
+                            Description = "Drop específico"
+                        });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.ThemeRelease", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AppearanceChannelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("appearance_channel_id");
+
+                    b.Property<string>("Checksum")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("checksum");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("DefaultsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("defaults_json");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTime?>("MigrationDeadline")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("migration_deadline");
+
+                    b.Property<string>("MigrationJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("migration_json");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RendererContract")
+                        .HasColumnType("integer")
+                        .HasColumnName("renderer_contract");
+
+                    b.Property<long?>("ReplacementReleaseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("replacement_release_id");
+
+                    b.Property<string>("SchemaJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("schema_json");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_versao_tema");
+
+                    b.HasIndex("ReplacementReleaseId")
+                        .HasDatabaseName("ix_versao_tema_replacement_release_id");
+
+                    b.HasIndex("AppearanceChannelId", "Key", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_versao_tema_appearance_channel_id_key_version");
+
+                    b.ToTable("versao_tema", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>
                 {
                     b.Property<long>("Id")
@@ -3119,6 +3677,125 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                             Id = 4L,
                             Description = "Estorno"
                         });
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.Appearance", b =>
+                {
+                    b.HasOne("Commerce.Appearance.Domain.StaticEntity.AppearanceTargetType", "AppearanceTargetType")
+                        .WithMany()
+                        .HasForeignKey("AppearanceTargetTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_appearance_target_type");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aparencia_empresa_enterprise_id");
+
+                    b.HasOne("Commerce.Appearance.Domain.AppearanceRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "Id", "PublishedRevisionId")
+                        .HasPrincipalKey("EnterpriseId", "AppearanceId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_appearance_published_revision");
+
+                    b.Navigation("AppearanceTargetType");
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.AppearanceEditSession", b =>
+                {
+                    b.HasOne("Commerce.Appearance.Domain.StaticEntity.AppearanceEditSessionStatus", "AppearanceEditSessionStatus")
+                        .WithMany()
+                        .HasForeignKey("AppearanceEditSessionStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_edit_session_status");
+
+                    b.HasOne("Commerce.Appearance.Domain.ThemeRelease", null)
+                        .WithMany()
+                        .HasForeignKey("ThemeReleaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_edit_release");
+
+                    b.HasOne("Commerce.Appearance.Domain.Appearance", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "AppearanceId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_edit_appearance");
+
+                    b.HasOne("Commerce.Appearance.Domain.AppearanceRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "AppearanceId", "BaseRevisionId")
+                        .HasPrincipalKey("EnterpriseId", "AppearanceId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_edit_base_revision");
+
+                    b.HasOne("Commerce.Appearance.Domain.AppearanceRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "AppearanceId", "RestoredFromRevisionId")
+                        .HasPrincipalKey("EnterpriseId", "AppearanceId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_edit_restore_revision");
+
+                    b.Navigation("AppearanceEditSessionStatus");
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.AppearanceRevision", b =>
+                {
+                    b.HasOne("Commerce.Appearance.Domain.StaticEntity.AppearanceRevisionOrigin", "AppearanceRevisionOrigin")
+                        .WithMany()
+                        .HasForeignKey("AppearanceRevisionOriginId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_revision_origin");
+
+                    b.HasOne("Commerce.Appearance.Domain.ThemeRelease", null)
+                        .WithMany()
+                        .HasForeignKey("ThemeReleaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_revision_release");
+
+                    b.HasOne("Commerce.Appearance.Domain.Appearance", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "AppearanceId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_revision_appearance");
+
+                    b.HasOne("Commerce.Appearance.Domain.AppearanceRevision", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId", "RestoredFromRevisionId")
+                        .HasPrincipalKey("EnterpriseId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_revision_restored_from");
+
+                    b.Navigation("AppearanceRevisionOrigin");
+                });
+
+            modelBuilder.Entity("Commerce.Appearance.Domain.ThemeRelease", b =>
+                {
+                    b.HasOne("Commerce.Appearance.Domain.StaticEntity.AppearanceChannel", "AppearanceChannel")
+                        .WithMany()
+                        .HasForeignKey("AppearanceChannelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_theme_channel");
+
+                    b.HasOne("Commerce.Appearance.Domain.ThemeRelease", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacementReleaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_theme_replacement");
+
+                    b.Navigation("AppearanceChannel");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>

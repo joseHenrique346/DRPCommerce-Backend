@@ -149,7 +149,8 @@ public static class CommerceSecurityRegistration
             var origins = configuration.GetSection("Security:AllowedOrigins").Get<string[]>() ?? [];
 
             if (origins.Length > 0)
-                policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()
+                    .WithExposedHeaders("ETag", "Retry-After");
         }));
         // Vincula o header CSRF a um cookie protegido para rejeitar ações forjadas pelo navegador.
         services.AddAntiforgery(options =>
