@@ -1,5 +1,7 @@
+using SharedCommerce.Api.Configuration;
+using SharedCommerce.Application.Options;
+using SharedCommerce.Application.Interfaces;
 using Microsoft.Extensions.Options;
-using Commerce.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

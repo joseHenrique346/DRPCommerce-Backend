@@ -4,21 +4,21 @@ O backend oferece temas fixos mantidos pela plataforma, com configurações vali
 
 ## Organização
 
-As bibliotecas em `DROP-Ecommerce/Shared/Commerce.Appearance.*` separam contratos HTTP, domínio, Application com Commands/Queries MediatR, persistência EF e controllers-base. Store e Drop registram adapters próprios de contexto, recursos e banco. Não existe banco ou microsserviço novo de temas.
+As bibliotecas em `DROP-Ecommerce/Shared/SharedCommerce.*`, no grupo `4. Shared`, concentram Appearance e Security nas camadas comuns de Domain, Application, Infrastructure.Data e Api. Os contratos HTTP pertencem a Application, sem projeto separado de Contracts. Store e Drop registram adapters próprios de contexto, recursos e banco. Não existe banco ou microsserviço novo de temas. Consulte a [estrutura do Shared](README.md).
 
 Os arquivos C# ficam em subpastas por responsabilidade:
 
-- `Commerce.Appearance.Api/Controllers`: controllers-base de administração e consulta pública.
-- `Commerce.Appearance.Contracts/Requests`, `Responses` e `Manifests`: entradas, respostas e manifesto público.
-- `Commerce.Appearance.Domain/Entity`, `StaticEntity` e `Exceptions`: entidades persistidas, classificações fixas e falhas do domínio.
-- `Commerce.Appearance.Application/Features`, `Interfaces`, `Mappings` e `Validation`: handlers e resultados dos casos de uso, contratos internos, mapeamento de respostas e validação.
-- `Commerce.Appearance.Infrastructure/Configurations`, `Context`, `Repositories`, `Providers` e `Workers`: mapeamentos EF, escopo de gravação, persistência, provedores e manutenção.
+- `SharedCommerce.Api/Controllers`: controllers-base de administração e consulta pública.
+- `SharedCommerce.Application/Contracts/Appearance/Requests`, `Responses` e `Manifests`: entradas, respostas e manifesto público, com um tipo por arquivo.
+- `SharedCommerce.Domain/Entity`, `StaticEntity` e `Exceptions`: entidades persistidas, classificações fixas e falhas do domínio.
+- `SharedCommerce.Application/Features/Commands`, `Features/Notifications`, `Interfaces`, `Mappings` e `Validation`: handlers e resultados dos casos de uso, contratos internos, mapeamento de respostas e validação. Commands e Queries são agrupados por entidade, seguindo Store e Drop.
+- `SharedCommerce.Infrastructure.Data/Configurations`, `Context`, `Repositories`, `Providers` e `Workers`: mapeamentos EF, escopo de gravação, persistência, provedores e manutenção.
 
 Cada entidade tem seu próprio `IEntityTypeConfiguration<T>`, em uma subpasta de `Configurations`. Os dois DbContexts aplicam essas configurações e mantêm localmente os filtros e relacionamentos específicos do módulo.
 
-Os tipos de apoio usam o prefixo `Input` para entrada e `Output` para saída. `InputAppearanceTarget` fica em `Contracts/Requests`; `OutputThemeDescription`, em `Contracts/Responses`; e `OutputResolvedAppearance`, junto do caso de uso `Features/ResolvePublishedAppearance`.
+Os tipos de apoio usam o prefixo `Input` para entrada e `Output` para saída. `InputAppearanceTarget` fica em `Contracts/Appearance/Requests`; `OutputThemeDescription`, em `Contracts/Appearance/Responses`; e `OutputResolvedAppearance`, junto do caso de uso `Features/Commands/Appearance/Queries/ResolvePublishedAppearance`.
 
-As quatro entidades persistidas de aparência utilizam as bases de `Commerce.Appearance.Domain/Entity/Base`: `Appearance`, `AppearanceRevision`, `ThemeRelease` e `AppearanceEditSession` herdam de `BaseEntity`, com identificador `long` gerado pelo PostgreSQL. A base concentra o identificador, `CreatedAt`, `UpdatedAt` e `SetChangedDate`. A criação é registrada pelo PostgreSQL, e os dois DbContexts atualizam a data de alteração antes de salvar entidades modificadas. `BaseValidate` reúne as validações básicas de identificadores, textos e datas; os validadores de configuração/recursos e a transformação de migração continuam em `Application/Validation`. As regras de estado permanecem nas entidades. As bases compartilhadas não referenciam os domínios de Store ou Drop.
+As quatro entidades persistidas de aparência utilizam as bases de `SharedCommerce.Domain/Entity/Base`: `Appearance`, `AppearanceRevision`, `ThemeRelease` e `AppearanceEditSession` herdam de `BaseEntity`, com identificador `long` gerado pelo PostgreSQL. A base concentra o identificador, `CreatedAt`, `UpdatedAt` e `SetChangedDate`. A criação é registrada pelo PostgreSQL, e os dois DbContexts atualizam a data de alteração antes de salvar entidades modificadas. `BaseValidate` reúne as validações básicas de identificadores, textos e datas; os validadores de configuração/recursos e a transformação de migração continuam em `Application/Validation`. As regras de estado permanecem nas entidades. As bases compartilhadas não referenciam os domínios de Store ou Drop.
 
 As migrations `AppearanceEntityBases` adicionam as datas às quatro tabelas existentes, sem alterar suas chaves ou relações. Nas revisões já publicadas, `CreatedAt` recebe o valor de `PublishedAt`. Para os demais registros existentes, a criação recebe a data da atualização do banco, pois não havia uma data anterior armazenada; `UpdatedAt` permanece nulo até a próxima alteração.
 

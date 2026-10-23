@@ -13,8 +13,8 @@ public sealed class GlobalExceptionHandler(
         CancellationToken cancellationToken)
     {
         var classified = exception is DropCommerce.Infrastructure.Data.Integrations.Store.Exceptions.StoreIntegrationException
-            ? new Commerce.Security.SecurityFailure(503, "Store.Unavailable", "Integração com a loja indisponível.")
-            : Commerce.Security.SecurityErrors.Classify(exception);
+            ? new SharedCommerce.Domain.Exceptions.SecurityFailure(503, "Store.Unavailable", "Integração com a loja indisponível.")
+            : SharedCommerce.Infrastructure.Data.Exceptions.SecurityErrors.Classify(exception);
         if (classified is { } expected)
         {
             httpContext.Response.StatusCode = expected.Status;

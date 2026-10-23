@@ -27,6 +27,7 @@ Documentos compartilhados:
 - [Startup do projeto](Shared/StartupProject.md)
 - [Organização dos projetos Security](Shared/Security.md)
 - [Aparência versionada, presets e contratos do frontend](Shared/Appearance.md)
+- [Planejamento de pesquisa de pagamentos, envios, CRM e ERP](Shared/PlanejamentoIntegracoes.md)
 
 Identidade e autorização:
 

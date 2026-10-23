@@ -1,5 +1,6 @@
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using StoreCommerce.Application.Identity;
-using Commerce.Security;
 using Microsoft.AspNetCore.Http;
 using StoreCommerce.Domain.Interfaces;
 

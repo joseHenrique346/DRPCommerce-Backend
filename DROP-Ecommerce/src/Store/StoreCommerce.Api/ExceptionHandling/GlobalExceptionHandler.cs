@@ -12,7 +12,7 @@ public sealed class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (Commerce.Security.SecurityErrors.Classify(exception) is { } expected)
+        if (SharedCommerce.Infrastructure.Data.Exceptions.SecurityErrors.Classify(exception) is { } expected)
         {
             httpContext.Response.StatusCode = expected.Status;
             return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Application.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

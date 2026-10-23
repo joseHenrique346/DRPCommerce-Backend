@@ -1,6 +1,5 @@
-using Commerce.Appearance.Api;
-using Commerce.Appearance.Application.Features;
-using Commerce.Appearance.Contracts;
+using SharedCommerce.Api.Controllers;
+using SharedCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Appearance;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +18,7 @@ public sealed class StorefrontAppearanceController(IMediator mediator) : Appeara
     /// Consulta a aparência publicada da vitrine ou uma revisão específica.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(Commerce.Appearance.Contracts.AppearanceManifest), 200)]
+    [ProducesResponseType(typeof(SharedCommerce.Application.Contracts.Appearance.AppearanceManifest), 200)]
     [ProducesResponseType(304)]
     [HttpGet("revisions/{revisionId:long:min(1)}")]
     public async Task<IActionResult> Get(long? revisionId, CancellationToken ct)

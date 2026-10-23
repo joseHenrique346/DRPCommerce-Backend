@@ -1,8 +1,8 @@
-using Commerce.Appearance.Domain;
-using Commerce.Appearance.Domain.StaticEntity;
-using Commerce.Appearance.Infrastructure.Configurations;
+using SharedCommerce.Domain.Entity;
+using SharedCommerce.Domain.StaticEntity;
+using SharedCommerce.Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
-using AppearanceEntity = Commerce.Appearance.Domain.Appearance;
+using AppearanceEntity = SharedCommerce.Domain.Entity.Appearance;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
 

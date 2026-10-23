@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Application.Security;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
 

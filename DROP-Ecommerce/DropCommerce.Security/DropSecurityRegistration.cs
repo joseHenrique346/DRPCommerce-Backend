@@ -1,4 +1,6 @@
-using Commerce.Security;
+using SharedCommerce.Api.Configuration;
+using SharedCommerce.Application.Options;
+using SharedCommerce.Application.Interfaces;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Security.Handlers;

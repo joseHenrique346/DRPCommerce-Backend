@@ -1,10 +1,10 @@
-using Commerce.Appearance.Infrastructure;
+using SharedCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
-using AppearanceBaseEntity = Commerce.Appearance.Domain.Entity.Base.BaseEntity;
+using AppearanceBaseEntity = SharedCommerce.Domain.Entity.Base.BaseEntity;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
 

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using StoreCommerce.Domain.Interfaces;
 
@@ -17,15 +16,15 @@ public class TenantProvider : ITenantProvider
     {
         var context = _httpContextAccessor.HttpContext;
 
-        if (context?.Items[Commerce.Security.SecurityNames.TrustedServiceTenant] is long serviceTenant && serviceTenant > 0)
+        if (context?.Items[SharedCommerce.Application.Security.SecurityNames.TrustedServiceTenant] is long serviceTenant && serviceTenant > 0)
             return serviceTenant;
 
-        if (context?.Items[Commerce.Security.SecurityNames.ResolvedTenant] is long resolvedTenant && resolvedTenant > 0)
+        if (context?.Items[SharedCommerce.Application.Security.SecurityNames.ResolvedTenant] is long resolvedTenant && resolvedTenant > 0)
         {
             var tokenTenant = context.User.FindFirst("EnterpriseId");
 
             if (tokenTenant is not null && tokenTenant.Value != resolvedTenant.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                throw new Commerce.Security.SecurityFailure(403, "Security.TenantMismatch", "Token não pertence à loja do domínio.");
+                throw new SharedCommerce.Domain.Exceptions.SecurityFailure(403, "Security.TenantMismatch", "Token não pertence à loja do domínio.");
 
             return resolvedTenant;
         }
@@ -33,6 +32,6 @@ public class TenantProvider : ITenantProvider
         if (context?.User.Identity?.IsAuthenticated == true && long.TryParse(context.User.FindFirst("EnterpriseId")?.Value, out var id) && id > 0)
             return id;
 
-        throw new Commerce.Security.SecurityFailure(401, "Security.TenantRequired", "Contexto autenticado de loja necessário.");
+        throw new SharedCommerce.Domain.Exceptions.SecurityFailure(401, "Security.TenantRequired", "Contexto autenticado de loja necessário.");
     }
 }

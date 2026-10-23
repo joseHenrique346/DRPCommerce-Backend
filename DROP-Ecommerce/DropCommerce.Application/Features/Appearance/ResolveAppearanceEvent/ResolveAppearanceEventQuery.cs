@@ -1,4 +1,4 @@
-using Commerce.Appearance.Contracts;
+using SharedCommerce.Application.Contracts.Appearance;
 using MediatR;
 
 namespace DropCommerce.Application.Features;

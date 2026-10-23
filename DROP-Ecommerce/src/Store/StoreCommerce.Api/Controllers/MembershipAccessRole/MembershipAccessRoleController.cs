@@ -1,10 +1,9 @@
+using SharedCommerce.Application.Security;
 using MediatR;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
-using Commerce.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Api.Controllers;
 

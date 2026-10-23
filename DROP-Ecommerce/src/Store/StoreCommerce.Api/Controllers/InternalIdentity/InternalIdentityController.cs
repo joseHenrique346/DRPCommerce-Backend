@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreCommerce.Application.Identity;

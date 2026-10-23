@@ -1,4 +1,5 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
 using System.Text.RegularExpressions;

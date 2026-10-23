@@ -1,5 +1,5 @@
-using Commerce.Appearance.Application.Features;
-using Commerce.Appearance.Domain;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Features.Notifications;
 using DropCommerce.Application.Appearance;
 using MediatR;
 

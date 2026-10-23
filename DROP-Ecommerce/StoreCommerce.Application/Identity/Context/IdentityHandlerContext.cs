@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Application.Options;
 
 namespace StoreCommerce.Application.Identity;
 

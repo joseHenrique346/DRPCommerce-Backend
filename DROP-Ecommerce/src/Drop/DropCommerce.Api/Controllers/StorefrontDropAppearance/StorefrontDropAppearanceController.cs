@@ -1,5 +1,5 @@
-using Commerce.Appearance.Api;
-using Commerce.Appearance.Application.Features;
+using SharedCommerce.Api.Controllers;
+using SharedCommerce.Application.Features.Commands;
 using DropCommerce.Application.Features;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +18,7 @@ public sealed class StorefrontDropAppearanceController(IMediator mediator) : App
     /// Consulta a aparência publicada do evento de drop ou uma revisão específica.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(Commerce.Appearance.Contracts.AppearanceManifest), 200)]
+    [ProducesResponseType(typeof(SharedCommerce.Application.Contracts.Appearance.AppearanceManifest), 200)]
     [ProducesResponseType(304)]
     [HttpGet("revisions/{revisionId:long:min(1)}")]
     public async Task<IActionResult> Get(string slug, long? revisionId, CancellationToken ct)

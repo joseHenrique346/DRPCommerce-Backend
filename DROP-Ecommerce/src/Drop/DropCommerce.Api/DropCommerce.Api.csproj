@@ -24,6 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Shared\Commerce.Appearance.Api\Commerce.Appearance.Api.csproj" />
+    <ProjectReference Include="..\..\..\Shared\SharedCommerce.Api\SharedCommerce.Api.csproj" />
   </ItemGroup>
 </Project>

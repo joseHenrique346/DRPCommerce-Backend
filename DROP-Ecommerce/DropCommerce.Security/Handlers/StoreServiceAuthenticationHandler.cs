@@ -1,4 +1,6 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
+using SharedCommerce.Application.Options;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;

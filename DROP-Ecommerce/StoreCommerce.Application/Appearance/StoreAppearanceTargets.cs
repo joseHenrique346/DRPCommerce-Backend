@@ -1,5 +1,5 @@
-using Commerce.Appearance.Contracts;
-using Commerce.Appearance.Domain.StaticEntity;
+using SharedCommerce.Application.Contracts.Appearance;
+using SharedCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Appearance;
 

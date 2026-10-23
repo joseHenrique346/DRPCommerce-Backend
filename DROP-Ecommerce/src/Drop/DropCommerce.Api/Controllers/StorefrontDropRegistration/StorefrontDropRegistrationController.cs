@@ -1,4 +1,5 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
 using DropCommerce.Domain.StaticEntity;

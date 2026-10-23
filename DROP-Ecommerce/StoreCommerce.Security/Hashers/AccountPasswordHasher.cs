@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Application.Security;
 using Microsoft.AspNetCore.Identity;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;

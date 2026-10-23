@@ -1,4 +1,5 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;

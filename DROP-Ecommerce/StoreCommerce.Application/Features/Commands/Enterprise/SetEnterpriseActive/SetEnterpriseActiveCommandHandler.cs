@@ -1,6 +1,5 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 

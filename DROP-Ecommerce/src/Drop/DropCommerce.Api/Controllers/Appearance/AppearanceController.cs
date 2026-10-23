@@ -1,5 +1,5 @@
-using Commerce.Appearance.Api;
-using Commerce.Appearance.Contracts;
+using SharedCommerce.Api.Controllers;
+using SharedCommerce.Application.Contracts.Appearance;
 using DropCommerce.Application.Appearance;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

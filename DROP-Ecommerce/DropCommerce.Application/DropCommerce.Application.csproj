@@ -17,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Commerce.Appearance.Application\Commerce.Appearance.Application.csproj" />
+    <ProjectReference Include="..\Shared\SharedCommerce.Application\SharedCommerce.Application.csproj" />
   </ItemGroup>
 </Project>

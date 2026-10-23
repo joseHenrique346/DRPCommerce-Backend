@@ -13,7 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StoreCommerce.Application\StoreCommerce.Application.csproj" />
     <ProjectReference Include="..\StoreCommerce.Domain\StoreCommerce.Domain.csproj" />
-    <Compile Include="..\Shared\Security\Configuration\CommerceSecurityRegistration.cs" Link="Configuration\CommerceSecurityRegistration.cs" />
+    <ProjectReference Include="..\Shared\SharedCommerce.Api\SharedCommerce.Api.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
   </ItemGroup>
 

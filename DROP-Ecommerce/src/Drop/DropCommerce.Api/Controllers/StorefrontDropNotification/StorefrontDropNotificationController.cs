@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Application.Security;
 using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

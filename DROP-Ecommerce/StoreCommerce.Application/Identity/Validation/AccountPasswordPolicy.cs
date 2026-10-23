@@ -1,4 +1,4 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
 
 namespace StoreCommerce.Application.Identity;
 

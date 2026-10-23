@@ -1,6 +1,8 @@
-using Commerce.Appearance.Infrastructure;
-using Commerce.Appearance.Application;
-using Commerce.Appearance.Domain.StaticEntity;
+using SharedCommerce.Infrastructure.Data;
+using SharedCommerce.Infrastructure.Data.Repositories;
+using SharedCommerce.Infrastructure.Data.Context;
+using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Domain.StaticEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Identity;
@@ -19,20 +21,13 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
-        services.AddScoped<AppearanceWriteScope>();
+        services.AddSharedInfrastructure();
         services.AddScoped<IAppearanceContext, StoreAppearanceContext>();
         services.AddScoped<IAppearanceResources, StoreAppearanceResources>();
-        services.AddScoped<IAppearanceRepository>(provider => new EfAppearanceRepository<StoreCommerceDbContext>(
+        services.AddScoped<IAppearanceRepository>(provider => new AppearanceRepository<StoreCommerceDbContext>(
             provider.GetRequiredService<StoreCommerceDbContext>(),
             provider.GetRequiredService<AppearanceWriteScope>(),
             AppearanceChannel.Store));
-        services.AddScoped<IMediaAssetReader, DisabledMediaAssetReader>();
-        services.AddScoped<AppearanceSettingsValidator>();
-        services.AddScoped<AppearanceResourceValidator>();
-        services.AddScoped<AppearanceMigration>();
-        services.AddScoped<ThemeDefinitionValidator>();
-        services.AddSingleton(TimeProvider.System);
-        services.AddHostedService<AppearanceMaintenanceWorker>();
         services.AddScoped<UnitOfWork>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());
         services.AddScoped<IIdentityUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());

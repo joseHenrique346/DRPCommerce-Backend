@@ -1,8 +1,9 @@
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Options;
+using SharedCommerce.Application.Interfaces;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using Commerce.Security;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace DropCommerce.Security.Validators;

@@ -1,5 +1,5 @@
-using Commerce.Appearance.Application;
-using Commerce.Appearance.Application.Features;
+using SharedCommerce.Application;
+using SharedCommerce.Application.Features.Commands;
 using DropCommerce.Application.Features;
 using FluentValidation;
 using MediatR;
@@ -14,9 +14,7 @@ public static class DependencyInjection
     {
         var assembly = typeof(DependencyInjection).Assembly;
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-            assembly,
-            typeof(GetAppearanceStatusQueryHandler).Assembly));
+        services.AddSharedApplication(assembly);
         services.RemoveAll<IRequestHandler<ResolvePublishedAppearanceQuery, OutputResolvedAppearance?>>();
         services.AddTransient<IRequestHandler<ResolvePublishedAppearanceQuery, OutputResolvedAppearance?>,
             ResolveDropPublishedAppearanceQueryHandler>();

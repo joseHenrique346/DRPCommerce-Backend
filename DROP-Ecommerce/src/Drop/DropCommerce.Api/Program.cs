@@ -1,5 +1,5 @@
+using SharedCommerce.Api.Configuration;
 using DropCommerce.Api.Configuration;
-using Commerce.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 

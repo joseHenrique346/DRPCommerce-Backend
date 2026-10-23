@@ -1,7 +1,7 @@
-using Commerce.Appearance.Application;
-using Commerce.Appearance.Contracts;
-using Commerce.Appearance.Domain;
-using Commerce.Appearance.Domain.StaticEntity;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Application.Contracts.Appearance;
+using SharedCommerce.Domain.StaticEntity;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Domain.Entity;
 using DropCommerce.Infrastructure.Data.Context;

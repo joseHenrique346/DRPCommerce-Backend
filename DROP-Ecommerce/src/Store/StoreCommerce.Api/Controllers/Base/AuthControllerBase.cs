@@ -1,7 +1,7 @@
+using SharedCommerce.Domain.Exceptions;
 using MediatR;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Result;
-using Commerce.Security;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using StoreCommerce.Api.Security;

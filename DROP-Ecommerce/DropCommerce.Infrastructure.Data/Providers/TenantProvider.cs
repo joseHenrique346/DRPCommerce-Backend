@@ -1,5 +1,5 @@
-using System.Security.Claims;
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using DropCommerce.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 

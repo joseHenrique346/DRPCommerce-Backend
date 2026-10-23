@@ -1,7 +1,7 @@
+using SharedCommerce.Application.Security;
 using MediatR;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Features.Commands;
-using Commerce.Security;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,5 +1,5 @@
+using SharedCommerce.Api.Configuration;
 using StoreCommerce.Api.Configuration;
-using Commerce.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 

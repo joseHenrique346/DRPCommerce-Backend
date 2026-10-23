@@ -1,4 +1,5 @@
-using Commerce.Security;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Options;
 using MediatR;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Result;

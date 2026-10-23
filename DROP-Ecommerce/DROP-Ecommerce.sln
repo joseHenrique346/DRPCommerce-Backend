@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36623.8
@@ -9,9 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Drop", "2. Drop", "{98F5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Gateway", "3. Gateway", "{1F6B0C17-1392-4EA2-A65B-B7465D9E5458}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Security", "4. Security", "{B260A077-01BF-4F39-8299-01B39472C2D0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Security.Shared", "Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj", "{8E3A8A71-334D-4C64-9F94-33B0F663B29D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Shared", "4. Shared", "{B260A077-01BF-4F39-8299-01B39472C2D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreCommerce.Api", "src\Store\StoreCommerce.Api\StoreCommerce.Api.csproj", "{4E533607-0A05-6EEE-4342-BD7E999F3BC2}"
 EndProject
@@ -35,17 +33,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreCommerce.Security", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DropCommerce.Security", "DropCommerce.Security\DropCommerce.Security.csproj", "{3C25A409-FA63-44AE-886E-552FB75615C0}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Appearance", "5. Appearance", "{4F52FD11-658E-A102-6CD3-7D7C16FFA15B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Domain", "Shared\SharedCommerce.Domain\SharedCommerce.Domain.csproj", "{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Appearance.Contracts", "Shared\Commerce.Appearance.Contracts\Commerce.Appearance.Contracts.csproj", "{3E8742D0-64D9-47E9-B2F0-B726406292A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Application", "Shared\SharedCommerce.Application\SharedCommerce.Application.csproj", "{52086270-B0F0-43A3-9E7D-8B327B669C9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Appearance.Domain", "Shared\Commerce.Appearance.Domain\Commerce.Appearance.Domain.csproj", "{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Infrastructure.Data", "Shared\SharedCommerce.Infrastructure.Data\SharedCommerce.Infrastructure.Data.csproj", "{69D8CF67-39EA-49C0-8901-EBC51C264AF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Appearance.Application", "Shared\Commerce.Appearance.Application\Commerce.Appearance.Application.csproj", "{52086270-B0F0-43A3-9E7D-8B327B669C9C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Appearance.Infrastructure", "Shared\Commerce.Appearance.Infrastructure\Commerce.Appearance.Infrastructure.csproj", "{69D8CF67-39EA-49C0-8901-EBC51C264AF4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commerce.Appearance.Api", "Shared\Commerce.Appearance.Api\Commerce.Appearance.Api.csproj", "{B21EEAF0-6F15-40DF-88B9-DD4332109A71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Api", "Shared\SharedCommerce.Api\SharedCommerce.Api.csproj", "{B21EEAF0-6F15-40DF-88B9-DD4332109A71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,10 +47,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8E3A8A71-334D-4C64-9F94-33B0F663B29D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E3A8A71-334D-4C64-9F94-33B0F663B29D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E3A8A71-334D-4C64-9F94-33B0F663B29D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E3A8A71-334D-4C64-9F94-33B0F663B29D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4E533607-0A05-6EEE-4342-BD7E999F3BC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4E533607-0A05-6EEE-4342-BD7E999F3BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E533607-0A05-6EEE-4342-BD7E999F3BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -101,10 +91,6 @@ Global
 		{3C25A409-FA63-44AE-886E-552FB75615C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C25A409-FA63-44AE-886E-552FB75615C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C25A409-FA63-44AE-886E-552FB75615C0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3E8742D0-64D9-47E9-B2F0-B726406292A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3E8742D0-64D9-47E9-B2F0-B726406292A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3E8742D0-64D9-47E9-B2F0-B726406292A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3E8742D0-64D9-47E9-B2F0-B726406292A5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -126,7 +112,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{8E3A8A71-334D-4C64-9F94-33B0F663B29D} = {B260A077-01BF-4F39-8299-01B39472C2D0}
 		{4E533607-0A05-6EEE-4342-BD7E999F3BC2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EC7E0E27-E5EE-2A12-FA6F-603666EEBAA6} = {98F50DBD-BF8A-4E84-B293-53486032E3E7}
 		{6DC36FA8-00BE-9B0E-3397-CAA168D1DE19} = {1F6B0C17-1392-4EA2-A65B-B7465D9E5458}
@@ -138,11 +123,10 @@ Global
 		{CD56CC49-5EFC-5819-4A75-0251DC83DF6F} = {98F50DBD-BF8A-4E84-B293-53486032E3E7}
 		{C2D778ED-5226-4F62-B63D-6B16D34BC27D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{3C25A409-FA63-44AE-886E-552FB75615C0} = {98F50DBD-BF8A-4E84-B293-53486032E3E7}
-		{3E8742D0-64D9-47E9-B2F0-B726406292A5} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
-		{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
-		{52086270-B0F0-43A3-9E7D-8B327B669C9C} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
-		{69D8CF67-39EA-49C0-8901-EBC51C264AF4} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
-		{B21EEAF0-6F15-40DF-88B9-DD4332109A71} = {4F52FD11-658E-A102-6CD3-7D7C16FFA15B}
+		{9CDC3ADF-CDD7-44AF-8DE6-7B1AAECFF1AB} = {B260A077-01BF-4F39-8299-01B39472C2D0}
+		{52086270-B0F0-43A3-9E7D-8B327B669C9C} = {B260A077-01BF-4F39-8299-01B39472C2D0}
+		{69D8CF67-39EA-49C0-8901-EBC51C264AF4} = {B260A077-01BF-4F39-8299-01B39472C2D0}
+		{B21EEAF0-6F15-40DF-88B9-DD4332109A71} = {B260A077-01BF-4F39-8299-01B39472C2D0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {92A075FD-36F1-488E-8C1E-8000DF1D68B6}

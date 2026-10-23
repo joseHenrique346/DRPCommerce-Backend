@@ -14,10 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StoreCommerce.Domain\StoreCommerce.Domain.csproj" />
-    <ProjectReference Include="..\Shared\Commerce.Security.Shared\Commerce.Security.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Shared\Commerce.Appearance.Application\Commerce.Appearance.Application.csproj" />
+    <ProjectReference Include="..\Shared\SharedCommerce.Application\SharedCommerce.Application.csproj" />
   </ItemGroup>
 </Project>

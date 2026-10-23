@@ -12,7 +12,12 @@ Os casos de uso de identidade seguem o fluxo `Controller → MediatR → Handler
 | StoreCommerce.Infrastructure.Data | Consultas EF, repositórios, transações e gravação no banco |
 | StoreCommerce.Security | Hash de senha, JWT, contexto autenticado, resolução de tenant, verificação DNS e entrega de ações |
 | DropCommerce.Security | Validação da sessão pelo Store, resolução de tenant e autenticação dos clients internos |
-| Commerce.Security.Shared | Tipos, opções e primitivas comuns, mantidos em Shared |
+| SharedCommerce.Domain | Falhas comuns de domínio e segurança |
+| SharedCommerce.Application | Interfaces, opções e primitivas comuns de segurança |
+| SharedCommerce.Infrastructure.Data | Classificação comum de falhas de persistência |
+| SharedCommerce.Api | Registro e pipeline HTTP comum de segurança |
+
+Essas quatro bibliotecas ficam no grupo `4. Shared`, junto da aparência, conforme a [estrutura do Shared](README.md). Os arquivos comuns são compilados apenas no projeto responsável, sem `Compile Include` entre módulos.
 
 ## Pastas do StoreCommerce.Security
 
@@ -29,7 +34,7 @@ As antigas classes IdentityService e AccessManagementService foram substituídas
 
 ## Dependências
 
-StoreCommerce.Security referencia Application e Domain, sem referenciar Infrastructure.Data nem usar DbContext. Application depende de contratos, não de Entity Framework.
+StoreCommerce.Security referencia Application, Domain e a biblioteca HTTP SharedCommerce.Api, sem referenciar Infrastructure.Data nem usar DbContext. Application depende de contratos, não de Entity Framework.
 
 O Drop mantém sua referência à infraestrutura para os clients da integração existente. A comunicação Store/Drop continua por HTTP; uma API não referencia a infraestrutura do outro módulo.
 
@@ -45,11 +50,11 @@ IIdentityUnitOfWork amplia o contrato de gravação com transações. IUnitOfWor
 
 ## Shared
 
-Shared/Commerce.Security.Shared é uma biblioteca comum que compila SecurityOptions e SecurityPrimitives, mantidos em Shared/Security, uma única vez para os dois módulos.
+`SharedCommerce.Application/Options` contém `SecurityOptions`; `Security` contém `SecurityNames`, `OpaqueToken` e `HostName`; e `Interfaces` reúne `ISessionValidator` e `IRequestTenantResolver`. Cada tipo fica em seu próprio arquivo.
 
-Os fontes compartilhados ficam organizados em `Shared/Security/Options`, `Primitives`, `Configuration` e `Errors`. As referências de compilação dos projetos apontam para essas subpastas, preservando os namespaces e a separação das dependências.
+`SecurityFailure` fica em `SharedCommerce.Domain/Exceptions`, junto das falhas de aparência. O Domain não depende de ASP.NET, EF ou contratos de entrada/saída.
 
-A configuração ASP.NET de autenticação, autorização, cookies e rate limiting é incluída nas bibliotecas Security. SecurityErrors, dependente de EF/PostgreSQL, continua incluído nas infraestruturas. Application e StoreCommerce.Security não precisam do EF para consumir as primitivas.
+A configuração ASP.NET de autenticação, autorização, cookies e rate limiting é compilada uma vez em `SharedCommerce.Api/Configuration`. `SecurityErrors`, dependente de EF/PostgreSQL, fica em `SharedCommerce.Infrastructure.Data/Exceptions`. As duas APIs consomem essa implementação comum. Application e StoreCommerce.Security não precisam do EF para consumir as primitivas.
 
 ## Compatibilidade e escopo
 

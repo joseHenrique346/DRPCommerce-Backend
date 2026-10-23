@@ -1,5 +1,6 @@
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
 using System.Text.Json;
-using Commerce.Security;
 using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Security.Verifiers;

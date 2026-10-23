@@ -1,4 +1,4 @@
-using Commerce.Appearance.Infrastructure;
+using SharedCommerce.Infrastructure.Data.Context;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
@@ -6,7 +6,7 @@ using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using AppearanceBaseEntity = Commerce.Appearance.Domain.Entity.Base.BaseEntity;
+using AppearanceBaseEntity = SharedCommerce.Domain.Entity.Base.BaseEntity;
 
 namespace DropCommerce.Infrastructure.Data.Context;
 

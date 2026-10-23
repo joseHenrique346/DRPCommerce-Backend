@@ -1,6 +1,6 @@
-using Commerce.Appearance.Application;
-using Commerce.Appearance.Contracts;
-using Commerce.Appearance.Domain;
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Application.Contracts.Appearance;
 using DropCommerce.Application.Appearance;
 using MediatR;
 

@@ -1,8 +1,8 @@
-using Commerce.Appearance.Application;
-using Commerce.Appearance.Application.Features;
+using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Application.Features.Commands;
 using DropCommerce.Application.Appearance;
 using MediatR;
-using static Commerce.Appearance.Application.AppearanceResponseMapper;
+using static SharedCommerce.Application.Mappings.AppearanceResponseMapper;
 
 namespace DropCommerce.Application.Features;
 

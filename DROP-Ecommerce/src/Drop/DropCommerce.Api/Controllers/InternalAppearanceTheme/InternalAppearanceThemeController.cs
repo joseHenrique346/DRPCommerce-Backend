@@ -1,4 +1,4 @@
-using Commerce.Appearance.Api;
+using SharedCommerce.Api.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

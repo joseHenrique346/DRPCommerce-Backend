@@ -1,5 +1,5 @@
-using Commerce.Appearance.Application.Features;
-using Commerce.Security;
+using SharedCommerce.Application.Security;
+using SharedCommerce.Application.Features.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +17,7 @@ public sealed class AppearanceThemeController(IMediator mediator) : ControllerBa
     /// Lista os temas disponíveis para a vitrine.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyList<Commerce.Appearance.Contracts.OutputThemeDescription>), 200)]
+    [ProducesResponseType(typeof(IReadOnlyList<SharedCommerce.Application.Contracts.Appearance.OutputThemeDescription>), 200)]
     public async Task<IActionResult> GetThemes(CancellationToken ct)
     {
         return Ok(await mediator.Send(new GetAppearanceThemesQuery(), ct));

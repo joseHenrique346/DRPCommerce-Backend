@@ -1,10 +1,10 @@
-using Commerce.Appearance.Domain;
-using Commerce.Appearance.Domain.StaticEntity;
-using Commerce.Appearance.Infrastructure;
+using SharedCommerce.Infrastructure.Data.Repositories;
+using SharedCommerce.Domain.Entity;
+using SharedCommerce.Domain.StaticEntity;
 using DropCommerce.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using AppearanceEntity = Commerce.Appearance.Domain.Appearance;
+using AppearanceEntity = SharedCommerce.Domain.Entity.Appearance;
 
 namespace DropCommerce.Infrastructure.Data.Context;
 
@@ -25,7 +25,7 @@ public partial class DropCommerceDbContext
                 transaction = await Database.BeginTransactionAsync(ct);
 
             foreach (var tenant in activated.Select(DropEvent => DropEvent.EnterpriseId).Distinct().Order())
-                await EfAppearanceRepository<DropCommerceDbContext>.LockTenantAsync(this, tenant, ct);
+                await AppearanceRepository<DropCommerceDbContext>.LockTenantAsync(this, tenant, ct);
 
             foreach (var dropEvent in activated)
             {

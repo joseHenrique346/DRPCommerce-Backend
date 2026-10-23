@@ -1,8 +1,11 @@
+using SharedCommerce.Domain.Exceptions;
+using SharedCommerce.Application.Security;
+using SharedCommerce.Application.Options;
+using SharedCommerce.Application.Interfaces;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Commerce.Security;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StoreCommerce.Application.Identity;
