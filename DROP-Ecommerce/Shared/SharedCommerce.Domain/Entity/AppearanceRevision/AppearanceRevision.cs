@@ -5,6 +5,7 @@ namespace SharedCommerce.Domain.Entity;
 
 public sealed class AppearanceRevision : BaseEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long AppearanceId { get; private set; }
     public long ThemeReleaseId { get; private set; }
@@ -15,10 +16,18 @@ public sealed class AppearanceRevision : BaseEntity
     public DateTime PublishedAt { get; private set; }
     public long? RestoredFromRevisionId { get; private set; }
     public long AppearanceRevisionOriginId { get; private set; }
+
+    #region Navigation Properties
     public AppearanceRevisionOrigin AppearanceRevisionOrigin { get; private set; } = null!;
+    #endregion
 
+    #endregion
+
+    #region Constructors
     private AppearanceRevision() { }
+    #endregion
 
+    #region Functions
     public static AppearanceRevision Create(long enterpriseId, long appearanceId, long releaseId, long number, string settingsJson, string checksum, long editorId, DateTime now, long? restoredFromRevisionId = null, AppearanceRevisionOrigin? origin = null)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
@@ -46,4 +55,5 @@ public sealed class AppearanceRevision : BaseEntity
             AppearanceRevisionOriginId = (origin ?? StaticEntity.AppearanceRevisionOrigin.Publish).Id
         };
     }
+    #endregion
 }

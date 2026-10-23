@@ -6,6 +6,7 @@ namespace SharedCommerce.Domain.Entity;
 
 public sealed class AppearanceEditSession : BaseEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long AppearanceId { get; private set; }
     public long ThemeReleaseId { get; private set; }
@@ -15,13 +16,21 @@ public sealed class AppearanceEditSession : BaseEntity
     public string SettingsJson { get; private set; } = "{}";
     public string? PreviewJson { get; private set; }
     public long AppearanceEditSessionStatusId { get; private set; } = StaticEntity.AppearanceEditSessionStatus.InEdit.Id;
-    public AppearanceEditSessionStatus AppearanceEditSessionStatus { get; private set; } = null!;
     public bool IsOpen { get; private set; } = true;
     public long Version { get; private set; } = 1;
     public DateTime ExpiresAt { get; private set; }
 
-    private AppearanceEditSession() { }
+    #region Navigation Properties
+    public AppearanceEditSessionStatus AppearanceEditSessionStatus { get; private set; } = null!;
+    #endregion
 
+    #endregion
+
+    #region Constructors
+    private AppearanceEditSession() { }
+    #endregion
+
+    #region Functions
     public static AppearanceEditSession Begin(
         long enterpriseId,
         long appearanceId,
@@ -99,4 +108,5 @@ public sealed class AppearanceEditSession : BaseEntity
         PreviewJson = null;
         Version++;
     }
+    #endregion
 }

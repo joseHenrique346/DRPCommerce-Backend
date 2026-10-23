@@ -5,6 +5,7 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Employee : BaseEntity, ITenantEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long EnterpriseMembershipId { get; private set; }
     public string FullName { get; private set; } = string.Empty;
@@ -13,24 +14,34 @@ public class Employee : BaseEntity, ITenantEntity
     public bool IsActive { get; private set; }
     public DateTime HiredAt { get; private set; }
 
+    #region Navigation Properties
     public Enterprise Enterprise { get; private set; } = null!;
     public EnterpriseMembership EnterpriseMembership { get; private set; } = null!;
     public EmployeePosition Position { get; private set; } = null!;
     public Department Department { get; private set; } = null!;
+    #endregion
 
+    #endregion
+
+    #region Constructors
     protected Employee() { }
 
     private Employee(long enterpriseId, long enterpriseMembershipId, string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidatePositive(enterpriseMembershipId, nameof(EnterpriseMembershipId));
+
         EnterpriseId = enterpriseId;
         EnterpriseMembershipId = enterpriseMembershipId;
         UpdateDetails(fullName, positionId, departmentId, isActive, hiredAt);
     }
+    #endregion
 
-    public static Employee Create(long enterpriseId, long enterpriseMembershipId, string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt) =>
-        new(enterpriseId, enterpriseMembershipId, fullName, positionId, departmentId, isActive, hiredAt);
+    #region Functions
+    public static Employee Create(long enterpriseId, long enterpriseMembershipId, string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt)
+    {
+        return new Employee(enterpriseId, enterpriseMembershipId, fullName, positionId, departmentId, isActive, hiredAt);
+    }
 
     public void UpdateDetails(string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt)
     {
@@ -38,10 +49,12 @@ public class Employee : BaseEntity, ITenantEntity
         BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
         BaseValidate.ValidatePositive(positionId, nameof(PositionId));
         BaseValidate.ValidatePositive(departmentId, nameof(DepartmentId));
+
         FullName = fullName;
         PositionId = positionId;
         DepartmentId = departmentId;
         IsActive = isActive;
         HiredAt = hiredAt;
     }
+    #endregion
 }

@@ -6,8 +6,8 @@ namespace SharedCommerce.Domain.Entity;
 
 public sealed class ThemeRelease : BaseEntity
 {
+    #region Properties
     public long AppearanceChannelId { get; private set; }
-    public AppearanceChannel AppearanceChannel { get; private set; } = null!;
     public string Key { get; private set; } = string.Empty;
     public string Version { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
@@ -20,8 +20,17 @@ public sealed class ThemeRelease : BaseEntity
     public string MigrationJson { get; private set; } = "{}";
     public bool IsDeprecated => MigrationDeadline.HasValue;
 
-    private ThemeRelease() { }
+    #region Navigation Properties
+    public AppearanceChannel AppearanceChannel { get; private set; } = null!;
+    #endregion
 
+    #endregion
+
+    #region Constructors
+    private ThemeRelease() { }
+    #endregion
+
+    #region Functions
     public static ThemeRelease Create(AppearanceChannel channel, string key, string version, string name, int rendererContract, string schemaJson, string defaultsJson, string checksum)
     {
         BaseValidate.ValidatePositive(channel.Id, nameof(AppearanceChannelId));
@@ -60,4 +69,5 @@ public sealed class ThemeRelease : BaseEntity
         MigrationDeadline = deadline;
         MigrationJson = migrationJson;
     }
+    #endregion
 }

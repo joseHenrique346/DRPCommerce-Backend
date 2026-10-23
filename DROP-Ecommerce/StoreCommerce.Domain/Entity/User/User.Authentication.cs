@@ -5,22 +5,13 @@ namespace StoreCommerce.Domain.Entity;
 
 public partial class User : IAuthenticationAccount
 {
-    [JsonIgnore]
-    public int FailedLoginCount
-    {
-        get; private set;
-    }
-    [JsonIgnore]
-    public DateTime? LockoutUntil
-    {
-        get; private set;
-    }
-    [JsonIgnore]
-    public DateTime? LastFailedLoginAt
-    {
-        get; private set;
-    }
+    #region Properties
+    [JsonIgnore] public int FailedLoginCount { get; private set; }
+    [JsonIgnore] public DateTime? LockoutUntil { get; private set; }
+    [JsonIgnore] public DateTime? LastFailedLoginAt { get; private set; }
+    #endregion
 
+    #region Functions
     public void SetPassword(string passwordHash, bool invalidateSessions = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
@@ -60,4 +51,5 @@ public partial class User : IAuthenticationAccount
         LastFailedLoginAt = null;
         LastLoginAt = now;
     }
+    #endregion
 }

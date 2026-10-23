@@ -5,9 +5,9 @@ namespace StoreCommerce.Domain.Entity;
 
 public class CustomerRefreshToken : BaseEntity, ITenantEntity
 {
+    #region Properties
     public long CustomerId { get; private set; }
     public long EnterpriseId { get; private set; }
-    public Customer Customer { get; private set; } = null!;
     [JsonIgnore] public string TokenHash { get; private set; } = string.Empty;
     public Guid FamilyId { get; private set; }
     public long SecurityVersionAtIssue { get; private set; }
@@ -17,20 +17,39 @@ public class CustomerRefreshToken : BaseEntity, ITenantEntity
     public DateTime? RevokedAt { get; private set; }
     public long? ReplacedByTokenId { get; private set; }
 
-    protected CustomerRefreshToken() { }
+    #region Navigation Properties
+    public Customer Customer { get; private set; } = null!;
+    #endregion
 
-    public static CustomerRefreshToken Create(Customer account, string hash, Guid family, DateTime expiresAt) =>
-        new()
+    #endregion
+
+    #region Constructors
+    protected CustomerRefreshToken() { }
+    #endregion
+
+    #region Functions
+    public static CustomerRefreshToken Create(Customer account, string hash, Guid family, DateTime expiresAt)
+    {
+        return new CustomerRefreshToken
         {
-            CustomerId = account.Id, Customer = account, EnterpriseId = account.EnterpriseId,
-            TokenHash = hash, FamilyId = family, SecurityVersionAtIssue = account.SecurityVersion,
-            ExpiresAt = expiresAt, FamilyExpiresAt = expiresAt
+            CustomerId = account.Id,
+            Customer = account,
+            EnterpriseId = account.EnterpriseId,
+            TokenHash = hash,
+            FamilyId = family,
+            SecurityVersionAtIssue = account.SecurityVersion,
+            ExpiresAt = expiresAt,
+            FamilyExpiresAt = expiresAt
         };
+    }
 
     public bool IsUsable(DateTime now, long version) =>
         ConsumedAt is null && RevokedAt is null && ExpiresAt > now && FamilyExpiresAt > now && SecurityVersionAtIssue == version;
 
     public void Consume(DateTime now) => ConsumedAt = now;
+
     public void SetReplacement(long id) => ReplacedByTokenId = id;
+
     public void Revoke(DateTime now) => RevokedAt ??= now;
+    #endregion
 }

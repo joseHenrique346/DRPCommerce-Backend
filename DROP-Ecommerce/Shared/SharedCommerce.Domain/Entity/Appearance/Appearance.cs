@@ -6,17 +6,26 @@ namespace SharedCommerce.Domain.Entity;
 
 public sealed class Appearance : BaseEntity
 {
+    #region Properties
     public long EnterpriseId { get; private set; }
     public long AppearanceTargetTypeId { get; private set; }
-    public AppearanceTargetType AppearanceTargetType { get; private set; } = null!;
     public long? DropEventId { get; private set; }
     public long? PublishedRevisionId { get; private set; }
     public bool MigrationBlocked { get; private set; }
     public string? MigrationFailureCode { get; private set; }
     public long Version { get; private set; } = 1;
 
-    private Appearance() { }
+    #region Navigation Properties
+    public AppearanceTargetType AppearanceTargetType { get; private set; } = null!;
+    #endregion
 
+    #endregion
+
+    #region Constructors
+    private Appearance() { }
+    #endregion
+
+    #region Functions
     public static Appearance Create(long enterpriseId, long appearanceTargetTypeId, long? dropEventId = null)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId), "Appearance.InvalidTenant", "Loja inválida.");
@@ -53,4 +62,5 @@ public sealed class Appearance : BaseEntity
         MigrationFailureCode = code;
         Version++;
     }
+    #endregion
 }
