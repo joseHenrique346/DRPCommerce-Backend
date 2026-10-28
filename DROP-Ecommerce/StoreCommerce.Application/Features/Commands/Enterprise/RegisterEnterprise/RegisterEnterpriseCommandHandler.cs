@@ -39,6 +39,7 @@ public sealed class RegisterEnterpriseCommandHandler(IdentityHandlerContext cont
         domain.SetPublication(true, true);
         data.EnterpriseMemberships.Add(membership);
         data.EnterpriseDomains.Add(domain);
+        data.StoreSettings.Add(StoreSettings.CreateDefault(enterprise.Id));
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);
 

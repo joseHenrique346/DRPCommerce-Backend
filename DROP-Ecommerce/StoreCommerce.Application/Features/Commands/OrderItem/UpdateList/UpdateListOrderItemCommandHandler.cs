@@ -11,11 +11,16 @@ namespace StoreCommerce.Application.Features.Commands;
 public class UpdateListOrderItemCommandHandler(
     IRepository<OrderItem> repository,
     IOrderRepository orderRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    StoreSettingsReader storeSettings)
     : IRequestHandler<UpdateListOrderItemCommand, Result<List<OrderItem>>>
 {
     public async Task<Result<List<OrderItem>>> Handle(UpdateListOrderItemCommand request, CancellationToken cancellationToken)
     {
+        if (!await storeSettings.IsStoreActiveAsync(cancellationToken))
+            return Result<List<OrderItem>>.Failure(StoreSettingsReader.InactiveStoreError);
+
+        var settings = await storeSettings.GetCurrentAsync(cancellationToken);
         var listId = request.commands.Select(command => command.id).ToList();
 
         if (listId.Count != listId.Distinct().Count())
@@ -38,7 +43,12 @@ public class UpdateListOrderItemCommandHandler(
             if (!order.IsEditable)
                 return Result<List<OrderItem>>.Validation("Order.NotEditable", $"Os itens do pedido {order.Id} só podem ser alterados enquanto ele estiver pendente.");
 
-            items.Add(order.UpdateItemQuantity(command.id, command.quantity));
+            var currentQuantity = order.ListOrderItem.First(item => item.Id == command.id).Quantity;
+
+            if (!settings.IsWithinItemLimit(order.TotalQuantity - currentQuantity + command.quantity))
+                return Result<List<OrderItem>>.Validation("Order.MaxItemsExceeded", $"O pedido {order.Id} excede o limite de {settings.MaxItemsPerOrder} itens da loja.");
+
+            items.Add(order.UpdateItemQuantity(command.id, command.quantity, settings));
         }
 
         await unitOfWork.CommitAsync(cancellationToken);

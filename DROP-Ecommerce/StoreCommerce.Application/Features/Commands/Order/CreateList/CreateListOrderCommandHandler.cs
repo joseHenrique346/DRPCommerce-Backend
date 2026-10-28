@@ -10,12 +10,17 @@ public class CreateListOrderCommandHandler(
     IRepository<Coupon> couponRepository,
     IUnitOfWork unitOfWork,
     ITenantProvider tenantProvider,
+    StoreSettingsReader storeSettings,
     TimeProvider time)
     : IRequestHandler<CreateListOrderCommand, Result<List<Order>>>
 {
     public async Task<Result<List<Order>>> Handle(CreateListOrderCommand request, CancellationToken cancellationToken)
     {
+        if (!await storeSettings.IsStoreActiveAsync(cancellationToken))
+            return Result<List<Order>>.Failure(StoreSettingsReader.InactiveStoreError);
+
         var enterpriseId = tenantProvider.GetEnterpriseId();
+        var settings = await storeSettings.GetCurrentAsync(cancellationToken);
         var now = time.GetUtcNow().UtcDateTime;
         var coupons = await OrderCouponLoader.LoadAsync(couponRepository, request.commands.Select(command => command.couponId), cancellationToken);
         var orders = new List<Order>(request.commands.Count);
@@ -31,7 +36,7 @@ public class CreateListOrderCommandHandler(
                 if (error is not null)
                     return Result<List<Order>>.Failure(error);
 
-                order.ApplyCoupon(coupons[couponId], now);
+                order.ApplyCoupon(coupons[couponId], now, settings);
             }
 
             orders.Add(order);

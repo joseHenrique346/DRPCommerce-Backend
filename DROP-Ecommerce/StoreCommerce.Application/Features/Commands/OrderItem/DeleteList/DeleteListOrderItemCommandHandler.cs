@@ -11,11 +11,16 @@ namespace StoreCommerce.Application.Features.Commands;
 public class DeleteListOrderItemCommandHandler(
     IRepository<OrderItem> repository,
     IOrderRepository orderRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    StoreSettingsReader storeSettings)
     : IRequestHandler<DeleteListOrderItemCommand, Result<bool>>
 {
     public async Task<Result<bool>> Handle(DeleteListOrderItemCommand request, CancellationToken cancellationToken)
     {
+        if (!await storeSettings.IsStoreActiveAsync(cancellationToken))
+            return Result<bool>.Failure(StoreSettingsReader.InactiveStoreError);
+
+        var settings = await storeSettings.GetCurrentAsync(cancellationToken);
         var listId = request.ids.Distinct().ToList();
         var orderIdByItemId = await OrderItemLookup.GetOrderIdsAsync(repository, listId, cancellationToken);
 
@@ -33,7 +38,7 @@ public class DeleteListOrderItemCommandHandler(
             if (!order.IsEditable)
                 return Result<bool>.Validation("Order.NotEditable", $"Os itens do pedido {order.Id} só podem ser removidos enquanto ele estiver pendente.");
 
-            repository.Remove(order.RemoveItem(id));
+            repository.Remove(order.RemoveItem(id, settings));
         }
 
         await unitOfWork.CommitAsync(cancellationToken);

@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Features;
+using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Application;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddSharedApplication(assembly);
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
+        services.AddScoped<StoreSettingsReader>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;

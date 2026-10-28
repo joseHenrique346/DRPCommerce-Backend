@@ -13,11 +13,16 @@ public class CreateListOrderItemCommandHandler(
     IOrderRepository orderRepository,
     IRepository<Product> productRepository,
     IRepository<Service> serviceRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    StoreSettingsReader storeSettings)
     : IRequestHandler<CreateListOrderItemCommand, Result<List<OrderItem>>>
 {
     public async Task<Result<List<OrderItem>>> Handle(CreateListOrderItemCommand request, CancellationToken cancellationToken)
     {
+        if (!await storeSettings.IsStoreActiveAsync(cancellationToken))
+            return Result<List<OrderItem>>.Failure(StoreSettingsReader.InactiveStoreError);
+
+        var settings = await storeSettings.GetCurrentAsync(cancellationToken);
         var commands = request.commands;
         var orders = (await orderRepository.GetListWithItemsAsync(commands.Select(command => command.orderId).Distinct().ToList(), cancellationToken))
             .ToDictionary(order => order.Id);
@@ -33,6 +38,9 @@ public class CreateListOrderItemCommandHandler(
             if (!order.IsEditable)
                 return Result<List<OrderItem>>.Validation("Order.NotEditable", $"O pedido {order.Id} só pode receber itens enquanto estiver pendente.");
 
+            if (!settings.IsWithinItemLimit(order.TotalQuantity + command.quantity))
+                return Result<List<OrderItem>>.Validation("Order.MaxItemsExceeded", $"O pedido {order.Id} excede o limite de {settings.MaxItemsPerOrder} itens da loja.");
+
             OrderItem item;
 
             if (command.productId is long productId)
@@ -43,7 +51,7 @@ public class CreateListOrderItemCommandHandler(
                 if (!product.IsActive)
                     return Result<List<OrderItem>>.Validation("Product.Inactive", $"O produto {productId} está inativo.");
 
-                item = order.AddProductItem(product, command.quantity);
+                item = order.AddProductItem(product, command.quantity, settings);
             }
             else
             {
@@ -55,7 +63,7 @@ public class CreateListOrderItemCommandHandler(
                 if (!service.IsActive)
                     return Result<List<OrderItem>>.Validation("Service.Inactive", $"O serviço {serviceId} está inativo.");
 
-                item = order.AddServiceItem(service, command.quantity);
+                item = order.AddServiceItem(service, command.quantity, settings);
             }
 
             if (!items.Contains(item))

@@ -2585,6 +2585,61 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("envio", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreSettings", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllowBackorder")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allow_backorder");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency_code")
+                        .IsFixedLength();
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int?>("MaxItemsPerOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_items_per_order");
+
+                    b.Property<decimal>("MinOrderValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("min_order_value");
+
+                    b.Property<int>("PendingOrderExpirationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("pending_order_expiration_minutes");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_configuracao_loja");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_configuracao_loja_enterprise_id");
+
+                    b.ToTable("configuracao_loja", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Supplier", b =>
                 {
                     b.Property<long>("Id")
@@ -4502,6 +4557,18 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("State");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreSettings", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithOne()
+                        .HasForeignKey("StoreCommerce.Domain.Entity.StoreSettings", "EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_configuracao_loja_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Supplier", b =>

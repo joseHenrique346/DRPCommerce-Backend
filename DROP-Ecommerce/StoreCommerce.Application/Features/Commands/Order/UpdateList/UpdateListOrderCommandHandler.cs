@@ -9,6 +9,7 @@ public class UpdateListOrderCommandHandler(
     IOrderRepository repository,
     IRepository<Coupon> couponRepository,
     IUnitOfWork unitOfWork,
+    StoreSettingsReader storeSettings,
     TimeProvider time)
     : IRequestHandler<UpdateListOrderCommand, Result<List<Order>>>
 {
@@ -26,6 +27,8 @@ public class UpdateListOrderCommandHandler(
             return Result<List<Order>>.NotFound("Order.NotFound", $"Order com id {missingId} não encontrado.");
 
         var now = time.GetUtcNow().UtcDateTime;
+        var settings = await storeSettings.GetCurrentAsync(cancellationToken);
+        var storeActive = await storeSettings.IsStoreActiveAsync(cancellationToken);
         var changedCouponIds = request.commands
             .Where(command => command.couponId != orders[command.id].CouponId)
             .Select(command => command.couponId);
@@ -43,6 +46,9 @@ public class UpdateListOrderCommandHandler(
                 if (!order.IsEditable)
                     return Result<List<Order>>.Validation("Order.NotEditable", $"O cupom do pedido {order.Id} só pode ser alterado enquanto ele estiver pendente.");
 
+                if (!storeActive)
+                    return Result<List<Order>>.Failure(StoreSettingsReader.InactiveStoreError);
+
                 if (command.couponId is long couponId)
                 {
                     var error = OrderCouponLoader.Validate(coupons, couponId, now);
@@ -50,16 +56,20 @@ public class UpdateListOrderCommandHandler(
                     if (error is not null)
                         return Result<List<Order>>.Failure(error);
 
-                    order.ApplyCoupon(coupons[couponId], now);
+                    order.ApplyCoupon(coupons[couponId], now, settings);
                 }
                 else
                 {
-                    order.ApplyCoupon(null, now);
+                    order.ApplyCoupon(null, now, settings);
                 }
             }
 
             // O status é aplicado por último para que a troca de cupom ocorra enquanto o pedido ainda está pendente.
-            order.UpdateStatus(command.statusId, command.paymentStatusId);
+            if (order.IsEditable && !order.CanLeavePending(command.statusId, settings))
+                return Result<List<Order>>.Validation("Order.MinOrderValue",
+                    $"O pedido {order.Id} precisa ter itens e subtotal de pelo menos {settings.MinOrderValue:0.00} para sair de Pendente.");
+
+            order.UpdateStatus(command.statusId, command.paymentStatusId, settings);
             result.Add(order);
         }
 

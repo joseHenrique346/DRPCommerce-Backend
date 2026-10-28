@@ -88,13 +88,32 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
     public bool IsEditable => OrderStatusId == OrderStatus.Pending.Id;
 
-    public void UpdateStatus(long orderStatusId, long orderPaymentStatusId)
+    /// <summary>
+    /// Quantidade total de unidades do pedido (soma das quantidades dos itens).
+    /// </summary>
+    public int TotalQuantity => _listOrderItem.Sum(item => item.Quantity);
+
+    /// <summary>
+    /// Indica se o pedido pode sair de Pendente para o status informado: cancelar é sempre permitido;
+    /// os demais exigem itens e subtotal igual ou maior que o pedido mínimo da loja.
+    /// </summary>
+    public bool CanLeavePending(long orderStatusId, StoreSettings settings) =>
+        orderStatusId == OrderStatus.Pending.Id ||
+        orderStatusId == OrderStatus.Cancelled.Id ||
+        (_listOrderItem.Count > 0 && settings.MeetsMinOrderValue(SubTotal));
+
+    public void UpdateStatus(long orderStatusId, long orderPaymentStatusId, StoreSettings settings)
     {
+        EnsureSettings(settings);
+
         if (!BaseStaticEntity.GetAll<OrderStatus>().Any(status => status.Id == orderStatusId))
             throw new ArgumentException($"{nameof(OrderStatusId)} is invalid.");
 
         if (!BaseStaticEntity.GetAll<OrderPaymentStatus>().Any(status => status.Id == orderPaymentStatusId))
             throw new ArgumentException($"{nameof(OrderPaymentStatusId)} is invalid.");
+
+        if (IsEditable && !CanLeavePending(orderStatusId, settings))
+            throw new ArgumentException("O pedido precisa ter itens e atingir o valor mínimo da loja para sair de Pendente.");
 
         OrderStatusId = orderStatusId;
         OrderPaymentStatusId = orderPaymentStatusId;
@@ -114,9 +133,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     /// <summary>
     /// Aplica (ou remove, quando nulo) o cupom do pedido e recalcula os valores.
     /// </summary>
-    public void ApplyCoupon(Coupon? coupon, DateTime now)
+    public void ApplyCoupon(Coupon? coupon, DateTime now, StoreSettings settings)
     {
         EnsureEditable();
+        EnsureSettings(settings);
 
         if (coupon is not null)
         {
@@ -129,10 +149,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
         Coupon = coupon;
         CouponId = coupon?.Id;
-        Recalculate();
+        Recalculate(settings);
     }
 
-    public OrderItem AddProductItem(Product product, int quantity)
+    public OrderItem AddProductItem(Product product, int quantity, StoreSettings settings)
     {
         BaseValidate.ValidateNotNull(product, nameof(Product));
 
@@ -141,10 +161,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
         var existing = _listOrderItem.FirstOrDefault(item => item.ProductId == product.Id);
 
-        return AddOrMergeItem(existing, () => OrderItem.Create(this, product.Id, null, product.Name, product.SKU, quantity, product.Price), quantity);
+        return AddOrMergeItem(existing, () => OrderItem.Create(this, product.Id, null, product.Name, product.SKU, quantity, product.Price), quantity, settings);
     }
 
-    public OrderItem AddServiceItem(Service service, int quantity)
+    public OrderItem AddServiceItem(Service service, int quantity, StoreSettings settings)
     {
         BaseValidate.ValidateNotNull(service, nameof(Service));
 
@@ -153,36 +173,42 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
         var existing = _listOrderItem.FirstOrDefault(item => item.ServiceId == service.Id);
 
-        return AddOrMergeItem(existing, () => OrderItem.Create(this, null, service.Id, service.Name, string.Empty, quantity, service.Price), quantity);
+        return AddOrMergeItem(existing, () => OrderItem.Create(this, null, service.Id, service.Name, string.Empty, quantity, service.Price), quantity, settings);
     }
 
-    public OrderItem UpdateItemQuantity(long orderItemId, int quantity)
+    public OrderItem UpdateItemQuantity(long orderItemId, int quantity, StoreSettings settings)
     {
         EnsureEditable();
+        EnsureSettings(settings);
 
         var item = GetItem(orderItemId);
+        EnsureItemLimit(TotalQuantity - item.Quantity + quantity, settings);
         item.UpdateQuantity(quantity);
-        Recalculate();
+        Recalculate(settings);
 
         return item;
     }
 
-    public OrderItem RemoveItem(long orderItemId)
+    public OrderItem RemoveItem(long orderItemId, StoreSettings settings)
     {
         EnsureEditable();
+        EnsureSettings(settings);
 
         var item = GetItem(orderItemId);
         _listOrderItem.Remove(item);
-        Recalculate();
+        Recalculate(settings);
 
         return item;
     }
 
     /// <summary>
     /// Recalcula subtotal, desconto (com rateio entre os itens) e total do pedido.
+    /// O frete permanece zerado até a integração com o serviço de envio.
     /// </summary>
-    public void Recalculate()
+    public void Recalculate(StoreSettings settings)
     {
+        EnsureSettings(settings);
+
         if (CouponId.HasValue && Coupon is null)
             throw new InvalidOperationException("O cupom do pedido precisa estar carregado para recalcular os valores.");
 
@@ -198,10 +224,12 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         DeletedAt = DateTime.UtcNow;
     }
 
-    private OrderItem AddOrMergeItem(OrderItem? existing, Func<OrderItem> factory, int quantity)
+    private OrderItem AddOrMergeItem(OrderItem? existing, Func<OrderItem> factory, int quantity, StoreSettings settings)
     {
         EnsureEditable();
+        EnsureSettings(settings);
         BaseValidate.ValidatePositive(quantity, nameof(OrderItem.Quantity));
+        EnsureItemLimit(checked(TotalQuantity + quantity), settings);
 
         OrderItem item;
 
@@ -216,7 +244,7 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
             _listOrderItem.Add(item);
         }
 
-        Recalculate();
+        Recalculate(settings);
 
         return item;
     }
@@ -243,6 +271,20 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     private OrderItem GetItem(long orderItemId) =>
         _listOrderItem.FirstOrDefault(item => item.Id == orderItemId)
             ?? throw new ArgumentException("Item não pertence ao pedido.");
+
+    private void EnsureSettings(StoreSettings settings)
+    {
+        BaseValidate.ValidateNotNull(settings, nameof(StoreSettings));
+
+        if (settings.EnterpriseId != EnterpriseId)
+            throw new ArgumentException("Configurações não pertencem à loja do pedido.");
+    }
+
+    private static void EnsureItemLimit(int totalQuantity, StoreSettings settings)
+    {
+        if (!settings.IsWithinItemLimit(totalQuantity))
+            throw new ArgumentException($"O pedido excede o limite de {settings.MaxItemsPerOrder} itens da loja.");
+    }
 
     private void EnsureEditable()
     {

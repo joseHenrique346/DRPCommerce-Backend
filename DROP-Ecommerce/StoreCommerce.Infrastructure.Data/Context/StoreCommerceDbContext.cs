@@ -51,6 +51,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<AccessRolePermission> AccessRolePermissions => Set<AccessRolePermission>();
     public DbSet<MembershipAccessRole> MembershipAccessRoles => Set<MembershipAccessRole>();
     public DbSet<EnterpriseMembershipKind> EnterpriseMembershipKinds => Set<EnterpriseMembershipKind>();
+    public DbSet<StoreSettings> StoreSettings => Set<StoreSettings>();
 
     // Static Entities
     public DbSet<CouponType> CouponTypes => Set<CouponType>();
@@ -120,6 +121,7 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<Invoice>(modelBuilder);
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);
+        ApplyTenantFilter<StoreSettings>(modelBuilder);
 
         // Dependents of filtered aggregates must use the same visibility rules.
         modelBuilder.Entity<OrderItem>().HasQueryFilter(e =>
