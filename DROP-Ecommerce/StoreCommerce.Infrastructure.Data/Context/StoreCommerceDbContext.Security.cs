@@ -2,6 +2,7 @@ using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.StaticEntity;
 using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
@@ -92,6 +93,26 @@ public partial class StoreCommerceDbContext
 
                     if (o.CouponId.HasValue && (entry.State == EntityState.Added || entry.Property(nameof(Order.CouponId)).IsModified))
                         await EnsureTenantAsync<Coupon>(o.CouponId.Value, tenant, ct);
+
+                    if (entry.State == EntityState.Modified &&
+                        (o.OrderStatusId == OrderStatus.Cancelled.Id || o.OrderStatusId == OrderStatus.Refunded.Id ||
+                         o.OrderPaymentStatusId == OrderPaymentStatus.PartialRefund.Id || o.OrderPaymentStatusId == OrderPaymentStatus.FullRefund.Id))
+                    {
+                        var originalStatus = await Orders.AsNoTracking()
+                            .Where(Order => Order.Id == o.Id)
+                            .Select(Order => new { Order.OrderStatusId, Order.OrderPaymentStatusId })
+                            .SingleAsync(ct);
+
+                        if (originalStatus.OrderStatusId != o.OrderStatusId && o.OrderStatusId == OrderStatus.Cancelled.Id &&
+                            !SecurityNames.HasPermission(principal, PermissionCodes.OrdersCancel))
+                            throw new SecurityFailure(403, "Security.CancelPermissionRequired", "Permissão para cancelar pedidos necessária.");
+
+                        if (((originalStatus.OrderStatusId != o.OrderStatusId && o.OrderStatusId == OrderStatus.Refunded.Id) ||
+                             (originalStatus.OrderPaymentStatusId != o.OrderPaymentStatusId &&
+                              (o.OrderPaymentStatusId == OrderPaymentStatus.PartialRefund.Id || o.OrderPaymentStatusId == OrderPaymentStatus.FullRefund.Id))) &&
+                            !SecurityNames.HasPermission(principal, PermissionCodes.OrdersRefund))
+                            throw new SecurityFailure(403, "Security.RefundPermissionRequired", "Permissão para reembolsar pedidos necessária.");
+                    }
 
                     break;
                 case Employee e:

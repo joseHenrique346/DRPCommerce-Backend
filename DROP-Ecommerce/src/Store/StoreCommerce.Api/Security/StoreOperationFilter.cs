@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Api.Security;
 
@@ -65,15 +66,24 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             return Task.CompletedTask;
         }
 
-        var read = descriptor.ActionName.StartsWith("Get", StringComparison.OrdinalIgnoreCase);
+        var action = descriptor.ActionName;
+        var read = action.StartsWith("Get", StringComparison.OrdinalIgnoreCase);
         var verb = context.HttpContext.Request.Method;
         string? permission = controller switch
         {
-            "Product" => read ? "products.view" : verb == "POST" ? "products.create" : verb == "DELETE" ? "products.delete" : "products.edit",
-            "Category" => read ? "products.view" : verb == "POST" ? "products.create" : verb == "DELETE" ? "products.delete" : "products.edit",
-            "Order" or "OrderItem" => read ? "orders.view" : "orders.manage",
-            "Customer" => read ? "customers.view" : "customers.manage",
-            "Employee" or "EmployeePosition" or "Department" => "employees.manage",
+            "Product" => read ? PermissionCodes.ProductsView :
+                verb == "POST" ? PermissionCodes.ProductsCreate :
+                verb == "DELETE" ? PermissionCodes.ProductsDelete : PermissionCodes.ProductsEdit,
+            "Category" => read ? PermissionCodes.CategoriesView : PermissionCodes.CategoriesManage,
+            "Coupon" => read ? PermissionCodes.CouponsView : PermissionCodes.CouponsManage,
+            "Supplier" => PermissionCodes.SuppliersManage,
+            "Inventory" or "StockMovement" => PermissionCodes.InventoryManage,
+            "Order" when action.StartsWith("Cancel", StringComparison.OrdinalIgnoreCase) => PermissionCodes.OrdersCancel,
+            "Order" when action.StartsWith("Refund", StringComparison.OrdinalIgnoreCase) => PermissionCodes.OrdersRefund,
+            "Order" or "OrderItem" => read ? PermissionCodes.OrdersView : PermissionCodes.OrdersManage,
+            "Customer" => read ? PermissionCodes.CustomersView : PermissionCodes.CustomersManage,
+            "Employee" or "EmployeePosition" or "Department" => PermissionCodes.EmployeesManage,
+            "StoreSettings" => PermissionCodes.SettingsManage,
             _ => null
         };
         var allowed = permission is null ? user.FindFirst(SecurityNames.Kind)?.Value == "primary_owner" : SecurityNames.HasPermission(user, permission);

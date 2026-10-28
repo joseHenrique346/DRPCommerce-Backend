@@ -1,10 +1,13 @@
 using StoreCommerce.Api.Controllers.Base;
+using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using SharedCommerce.Application.Security;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -13,6 +16,21 @@ public class EmployeeController : MappedCrudController<Employee, EmployeeRespons
 {
     public EmployeeController(IMediator mediator) : base(mediator)
     {
+    }
+
+    /// <summary>
+    /// Desativa o funcionário e seu vínculo com a loja, invalidando o acesso administrativo.
+    /// </summary>
+    [HttpPut("{id:long}/deactivate")]
+    [Authorize(Policy = SecurityNames.PrimaryOwner)]
+    public async Task<IActionResult> DeactivateAsync(long id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new DeactivateEmployeeCommand(id), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
     }
 
     protected override EmployeeResponse MapEntity(Employee entity) => new(entity.Id, entity.EnterpriseId, entity.EnterpriseMembershipId, entity.FullName, entity.PositionId, entity.DepartmentId, entity.IsActive, entity.HiredAt);

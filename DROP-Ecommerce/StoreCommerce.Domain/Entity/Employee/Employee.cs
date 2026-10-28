@@ -60,5 +60,10 @@ public class Employee : BaseEntity, ITenantEntity
         IsActive = isActive;
         HiredAt = hiredAt;
     }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
     #endregion
 }

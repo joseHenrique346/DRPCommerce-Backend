@@ -58,6 +58,12 @@ public class EnterpriseMembership : BaseEntity, ITenantEntity
         JoinedAt = joinedAt;
     }
 
+    public void Deactivate()
+    {
+        IsActive = false;
+        InvalidateAccess();
+    }
+
     public void InvalidateAccess() => AccessVersion = checked(AccessVersion + 1);
     #endregion
 }

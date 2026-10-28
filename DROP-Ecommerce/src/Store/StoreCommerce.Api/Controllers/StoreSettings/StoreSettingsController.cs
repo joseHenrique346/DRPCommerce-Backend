@@ -5,7 +5,7 @@ using StoreCommerce.Application.Features.Commands;
 
 namespace StoreCommerce.Api.Controllers;
 
-// Autorização pelo StoreOperationFilter: módulo ainda não mapeado na matriz de permissões, restrito ao dono principal.
+// Autorização pelo StoreOperationFilter: exige settings.manage ou o vínculo de dono principal.
 [ApiController]
 [Route("api/store-settings")]
 public sealed class StoreSettingsController(IMediator mediator) : ControllerBase

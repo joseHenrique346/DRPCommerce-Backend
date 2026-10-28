@@ -2265,6 +2265,96 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                             IsActive = true,
                             Module = "Drop",
                             Name = "Gerenciar drops"
+                        },
+                        new
+                        {
+                            Id = 13L,
+                            Code = "categories.view",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar categorias",
+                            IsActive = true,
+                            Module = "Categories",
+                            Name = "Consultar categorias"
+                        },
+                        new
+                        {
+                            Id = 14L,
+                            Code = "categories.manage",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar categorias",
+                            IsActive = true,
+                            Module = "Categories",
+                            Name = "Gerenciar categorias"
+                        },
+                        new
+                        {
+                            Id = 15L,
+                            Code = "coupons.view",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar cupons",
+                            IsActive = true,
+                            Module = "Coupons",
+                            Name = "Consultar cupons"
+                        },
+                        new
+                        {
+                            Id = 16L,
+                            Code = "coupons.manage",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gerenciar cupons",
+                            IsActive = true,
+                            Module = "Coupons",
+                            Name = "Gerenciar cupons"
+                        },
+                        new
+                        {
+                            Id = 17L,
+                            Code = "suppliers.manage",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar e gerenciar fornecedores",
+                            IsActive = true,
+                            Module = "Suppliers",
+                            Name = "Gerenciar fornecedores"
+                        },
+                        new
+                        {
+                            Id = 18L,
+                            Code = "inventory.manage",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar e ajustar estoque",
+                            IsActive = true,
+                            Module = "Inventory",
+                            Name = "Gerenciar estoque"
+                        },
+                        new
+                        {
+                            Id = 19L,
+                            Code = "orders.cancel",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Cancelar pedidos",
+                            IsActive = true,
+                            Module = "Orders",
+                            Name = "Cancelar pedidos"
+                        },
+                        new
+                        {
+                            Id = 20L,
+                            Code = "orders.refund",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Registrar reembolsos de pedidos",
+                            IsActive = true,
+                            Module = "Orders",
+                            Name = "Reembolsar pedidos"
+                        },
+                        new
+                        {
+                            Id = 21L,
+                            Code = "settings.manage",
+                            CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar e alterar configurações da loja",
+                            IsActive = true,
+                            Module = "Settings",
+                            Name = "Gerenciar configurações da loja"
                         });
                 });
 

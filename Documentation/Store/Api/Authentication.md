@@ -138,6 +138,7 @@ PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha u
 | GET /api/enterprise-memberships/get-all | Membros da loja, dono principal |
 | PUT /api/enterprise-memberships/{id} | kindId 2/3 e isActive; não rebaixa/remove dono principal |
 | PUT /api/enterprise-memberships/{id}/access-roles | accessRoleIds da mesma loja |
+| PUT /api/employees/{id}/deactivate | Dono principal; desativa funcionário e Membership da loja atual e invalida o acesso |
 | GET /api/permissions/get-all | Catálogo estático de permissões |
 | GET /api/access-roles/get-all | Perfis da loja |
 | POST /api/access-roles/add | name, description, isActive, permissionIds |
@@ -169,13 +170,19 @@ Não há envio automático de links nesta etapa. Entregue os tokens por canal pr
 
 A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e certificado HTTPS continuam sendo configuração de infraestrutura.
 
-## Matriz inicial de operações comerciais
+## Matriz de operações comerciais
 
 | Módulo | Leitura | Escrita |
 |---|---|---|
-| Produtos / categorias | products.view | products.create, products.edit ou products.delete |
+| Produtos | products.view | products.create, products.edit ou products.delete |
+| Categorias | categories.view | categories.manage |
+| Cupons | coupons.view | coupons.manage |
+| Fornecedores | suppliers.manage | suppliers.manage |
+| Configurações da loja | settings.manage | settings.manage |
 | Preço/custo existente | — | products.edit + products.change_price |
 | Pedidos / itens | orders.view | orders.manage |
+| Cancelamento de pedidos pelo CRUD | — | orders.manage + orders.cancel |
+| Reembolso de pedidos ou do pagamento pelo CRUD | — | orders.manage + orders.refund |
 | Clientes administrativos | customers.view | customers.manage |
 | Funcionários / cargos / departamentos | employees.manage | employees.manage |
 | Eventos/produtos/cupons Drop | drop.events.view | drop.events.manage |
@@ -184,6 +191,14 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 | Outros módulos | Dono principal | Dono principal |
 
 Audit logs do Drop não aceitam mutação manual, inclusive pelo dono. Permissões não são novos códigos arbitrários cadastrados pela loja: a loja configura perfis usando o catálogo reconhecido pelo backend.
+
+`inventory.manage` já integra o catálogo e o mapeamento de estoque, para quando esse módulo for implementado. Esta etapa não cria endpoints de estoque, cancelamento ou reembolso. As alterações de status pelo CRUD existente verificam as permissões específicas, inclusive reembolso parcial/total do pagamento; atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
+
+A desativação de funcionário segue o fluxo de identidade reservado ao dono principal: bloqueia o dono principal como alvo, valida funcionário e Membership na loja atual e grava as duas desativações em uma transação. A Membership incrementa `AccessVersion`, fazendo os JWTs anteriores serem rejeitados na próxima validação. A conta global do usuário e os vínculos em outras lojas continuam disponíveis. O endpoint retorna 204 no sucesso, 404 para funcionário fora da loja atual ou inexistente e 409 para tentativa de desativar o dono principal.
+
+As nove novas permissões são incluídas por migration no catálogo. Perfis existentes precisam receber as permissões desejadas pelo fluxo de gestão de acessos; permissões de produto deixam de autorizar operações de categoria.
+
+Validação desta etapa: solução compilada e 145 verificações com dependências simuladas e consultas interceptadas, sem banco ou servidor HTTP. Foram conferidos isolamento entre lojas, proteção do dono principal, ordem da transação e encerramento sem commit em falhas, incremento de `AccessVersion`, matriz de permissões, proteção de status de pedidos e consistência entre modelo EF, snapshot e seed da migration. A migration foi gerada e não foi aplicada ao banco. O verificador temporário foi removido após a execução.
 
 ## Prazos e limites padrão
 
