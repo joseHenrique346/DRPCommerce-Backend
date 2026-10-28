@@ -5,6 +5,12 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Transaction : BaseEntity
 {
+    #region Constants
+    public const int GatewayReferenceMaxLength = 200;
+    public const int GatewayProviderMaxLength = 200;
+    public const int GatewayPayloadMaxLength = 4000;
+    #endregion
+
     #region Properties
     public long OrderId { get; private set; }
     public long CustomerId { get; private set; }
@@ -59,9 +65,9 @@ public class Transaction : BaseEntity
         BaseValidate.ValidatePositive(transactionStatusId, nameof(TransactionStatusId));
         BaseValidate.ValidatePositive(amount, nameof(Amount));
         BaseValidate.ValidatePositiveOrZero(fee, nameof(Fee));
-        BaseValidate.ValidateMaxLength(gatewayReference, 255, nameof(GatewayReference));
-        BaseValidate.ValidateMaxLength(gatewayProvider, 255, nameof(GatewayProvider));
-        BaseValidate.ValidateMaxLength(gatewayPayload, 5000, nameof(GatewayPayload));
+        BaseValidate.ValidateMaxLength(gatewayReference, GatewayReferenceMaxLength, nameof(GatewayReference));
+        BaseValidate.ValidateMaxLength(gatewayProvider, GatewayProviderMaxLength, nameof(GatewayProvider));
+        BaseValidate.ValidateMaxLength(gatewayPayload, GatewayPayloadMaxLength, nameof(GatewayPayload));
         BaseValidate.ValidateNullableNotFuture(paidAt, nameof(PaidAt));
         BaseValidate.ValidateNullableNotFuture(refundedAt, nameof(RefundedAt));
 
@@ -75,9 +81,9 @@ public class Transaction : BaseEntity
         BaseValidate.ValidatePositive(transactionStatusId, nameof(TransactionStatusId));
         BaseValidate.ValidatePositive(amount, nameof(Amount));
         BaseValidate.ValidatePositiveOrZero(fee, nameof(Fee));
-        BaseValidate.ValidateMaxLength(gatewayReference, 255, nameof(GatewayReference));
-        BaseValidate.ValidateMaxLength(gatewayProvider, 255, nameof(GatewayProvider));
-        BaseValidate.ValidateMaxLength(gatewayPayload, 5000, nameof(GatewayPayload));
+        BaseValidate.ValidateMaxLength(gatewayReference, GatewayReferenceMaxLength, nameof(GatewayReference));
+        BaseValidate.ValidateMaxLength(gatewayProvider, GatewayProviderMaxLength, nameof(GatewayProvider));
+        BaseValidate.ValidateMaxLength(gatewayPayload, GatewayPayloadMaxLength, nameof(GatewayPayload));
 
         TransactionTypeId = transactionTypeId;
         TransactionMethodId = transactionMethodId;

@@ -5,6 +5,13 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Category : BaseEntity, ITenantEntity, ISoftDeletable
 {
+    #region Constants
+    public const int NameMaxLength = 200;
+    public const int SlugMaxLength = 100;
+    public const int DescriptionMaxLength = 500;
+    public const int ImageUrlMaxLength = 500;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public long? ParentCategoryId { get; private set; }
@@ -52,11 +59,11 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 200, nameof(Name));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
         BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
-        BaseValidate.ValidateMaxLength(slug, 100, nameof(Slug));
-        BaseValidate.ValidateMaxLength(description, 500, nameof(Description));
-        BaseValidate.ValidateMaxLength(imageUrl, 500, nameof(ImageUrl));
+        BaseValidate.ValidateMaxLength(slug, SlugMaxLength, nameof(Slug));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
+        BaseValidate.ValidateMaxLength(imageUrl, ImageUrlMaxLength, nameof(ImageUrl));
         BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
 
         return new Category(enterpriseId, parentCategoryId, name, slug, description, imageUrl, displayOrder, isActive);
@@ -66,11 +73,11 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     {
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 200, nameof(Name));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
         BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
-        BaseValidate.ValidateMaxLength(slug, 100, nameof(Slug));
-        BaseValidate.ValidateMaxLength(description, 500, nameof(Description));
-        BaseValidate.ValidateMaxLength(imageUrl, 500, nameof(ImageUrl));
+        BaseValidate.ValidateMaxLength(slug, SlugMaxLength, nameof(Slug));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
+        BaseValidate.ValidateMaxLength(imageUrl, ImageUrlMaxLength, nameof(ImageUrl));
         BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
 
         ParentCategoryId = parentCategoryId;
@@ -81,6 +88,8 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         DisplayOrder = displayOrder;
         IsActive = isActive;
     }
+
+    public void SetActive(bool active) => IsActive = active;
 
     public void SoftDelete()
     {

@@ -4,11 +4,11 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateListServiceCommandHandler(IRepository<Service> repository, IUnitOfWork unitOfWork)
+public class CreateListServiceCommandHandler(IRepository<Service> repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
     : BaseCreateListHandler<CreateServiceCommand, CreateListServiceCommand, Service>(repository, unitOfWork)
 {
     protected override IReadOnlyCollection<CreateServiceCommand> GetCommandList(CreateListServiceCommand request) => request.commands;
 
     protected override Service CreateEntity(CreateServiceCommand command) =>
-        Service.Create(command.enterpriseId, command.categoryId, command.name, command.description, command.price, command.durationMinutes, command.isActive);
+        Service.Create(tenantProvider.GetEnterpriseId(), command.categoryId, command.name, command.description, command.price, command.durationMinutes, command.isActive);
 }

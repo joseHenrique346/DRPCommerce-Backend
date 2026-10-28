@@ -13,18 +13,18 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.FullName).HasMaxLength(200);
-        builder.Property(e => e.PasswordHash).HasMaxLength(500);
-        builder.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.FullName).HasMaxLength(Customer.FullNameMaxLength);
+        builder.Property(e => e.PasswordHash).HasMaxLength(Customer.PasswordHashMaxLength);
+        builder.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(Customer.NormalizedEmailMaxLength);
         builder.Property(e => e.SecurityVersion).HasDefaultValue(1L);
         builder.Property(e => e.SecurityVersion).IsConcurrencyToken();
         builder.HasAlternateKey(e => new { e.EnterpriseId, e.Id });
         builder.HasIndex(e => new { e.EnterpriseId, e.NormalizedEmail }).IsUnique();
-        builder.Property(e => e.AddressLine).HasMaxLength(200);
-        builder.Property(e => e.City).HasMaxLength(100);
-        builder.Property(e => e.ZipCode).HasMaxLength(20);
-        builder.Property(e => e.Country).HasMaxLength(100);
-        builder.Property(e => e.Gender).HasMaxLength(100);
+        builder.Property(e => e.AddressLine).HasMaxLength(Customer.AddressLineMaxLength);
+        builder.Property(e => e.City).HasMaxLength(Customer.CityMaxLength);
+        builder.Property(e => e.ZipCode).HasMaxLength(Customer.ZipCodeMaxLength);
+        builder.Property(e => e.Country).HasMaxLength(Customer.CountryMaxLength);
+        builder.Property(e => e.Gender).HasMaxLength(Customer.GenderMaxLength);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 

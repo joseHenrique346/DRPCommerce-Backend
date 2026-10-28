@@ -4,11 +4,11 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateListEmployeePositionCommandHandler(IEmployeePositionRepository repository, IUnitOfWork unitOfWork)
+public class CreateListEmployeePositionCommandHandler(IEmployeePositionRepository repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
     : BaseCreateListHandler<CreateEmployeePositionCommand, CreateListEmployeePositionCommand, EmployeePosition>(repository, unitOfWork)
 {
     protected override IReadOnlyCollection<CreateEmployeePositionCommand> GetCommandList(CreateListEmployeePositionCommand request) => request.commands;
 
     protected override EmployeePosition CreateEntity(CreateEmployeePositionCommand command) =>
-        EmployeePosition.Create(command.enterpriseId, command.name, command.description, command.isActive);
+        EmployeePosition.Create(tenantProvider.GetEnterpriseId(), command.name, command.description, command.isActive);
 }

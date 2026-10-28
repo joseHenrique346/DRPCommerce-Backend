@@ -1,4 +1,5 @@
 using FluentValidation;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -6,9 +7,6 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 {
     public CreateProductCommandValidator()
     {
-        RuleFor(product => product.enterpriseId)
-            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
-
         RuleFor(product => product.categoryId)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
@@ -18,24 +16,22 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
         RuleFor(product => product.name)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(200).WithMessage("{PropertyName} não pode ter mais de 200 caracteres.");
+            .MaximumLength(Product.NameMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.slug)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.")
+            .MaximumLength(Product.SlugMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.")
             .Matches(@"^[a-z0-9]+(?:-[a-z0-9]+)*$").WithMessage("{PropertyName} deve conter apenas letras minúsculas, números e hífens.");
 
         RuleFor(product => product.description)
-            .MaximumLength(2000).When(product => !string.IsNullOrWhiteSpace(product.description))
-            .WithMessage("{PropertyName} não pode ter mais de 2000 caracteres.");
+            .MaximumLength(Product.DescriptionMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.sku)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(100).WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Product.SkuMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.barCode)
-            .MaximumLength(50).When(product => !string.IsNullOrWhiteSpace(product.barCode))
-            .WithMessage("{PropertyName} não pode ter mais de 50 caracteres.");
+            .MaximumLength(Product.BarCodeMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.price)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
@@ -56,11 +52,9 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
 
         RuleFor(product => product.brand)
-            .MaximumLength(100).When(product => !string.IsNullOrWhiteSpace(product.brand))
-            .WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Product.BrandMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.imageUrls)
-            .MaximumLength(2000).When(product => !string.IsNullOrWhiteSpace(product.imageUrls))
-            .WithMessage("{PropertyName} não pode ter mais de 2000 caracteres.");
+            .MaximumLength(Product.ImageUrlsMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
     }
 }

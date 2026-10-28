@@ -6,7 +6,6 @@ public class CreateEnterpriseDomainCommandValidator : AbstractValidator<CreateEn
 {
     public CreateEnterpriseDomainCommandValidator()
     {
-        RuleFor(command => command.enterpriseId).GreaterThan(0);
         RuleFor(command => command.host).NotEmpty().MaximumLength(253);
     }
 }

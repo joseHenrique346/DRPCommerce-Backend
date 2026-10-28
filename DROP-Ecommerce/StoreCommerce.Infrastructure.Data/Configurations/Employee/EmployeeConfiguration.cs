@@ -11,7 +11,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.ToTable("funcionario");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.FullName).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.FullName).IsRequired().HasMaxLength(Employee.FullNameMaxLength);
         builder.HasOne(e => e.Enterprise).WithMany(e => e.ListEmployee)
             .HasForeignKey(e => e.EnterpriseId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.EnterpriseMembership).WithOne(e => e.Employee)

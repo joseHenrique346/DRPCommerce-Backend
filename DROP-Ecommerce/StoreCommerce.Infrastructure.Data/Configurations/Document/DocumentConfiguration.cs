@@ -13,9 +13,9 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.ReferenceType).HasMaxLength(500);
-        builder.Property(e => e.Number).HasMaxLength(100);
-        builder.Property(e => e.FileUrl).HasMaxLength(500);
+        builder.Property(e => e.ReferenceType).HasMaxLength(Document.ReferenceTypeMaxLength);
+        builder.Property(e => e.Number).HasMaxLength(Document.NumberMaxLength);
+        builder.Property(e => e.FileUrl).HasMaxLength(Document.FileUrlMaxLength);
 
         builder.HasOne(e => e.Enterprise)
             .WithMany(e => e.ListDocument)

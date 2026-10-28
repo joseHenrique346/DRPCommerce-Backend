@@ -1,4 +1,6 @@
 using FluentValidation;
+using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -9,18 +11,20 @@ public class UpdateCouponCommandValidator : AbstractValidator<UpdateCouponComman
         RuleFor(coupon => coupon.id)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
-        RuleFor(coupon => coupon.enterpriseId)
-            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
-
         RuleFor(coupon => coupon.code)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(50).WithMessage("{PropertyName} não pode ter mais de 50 caracteres.");
+            .Length(Coupon.CodeMinLength, Coupon.CodeMaxLength).WithMessage("{PropertyName} deve ter entre {MinLength} e {MaxLength} caracteres.");
 
         RuleFor(coupon => coupon.typeId)
+            .Must(typeId => BaseStaticEntity.GetAll<CouponType>().Any(type => type.Id == typeId))
+            .WithMessage("{PropertyName} inválido.");
+
+        RuleFor(coupon => coupon.discountValue)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
         RuleFor(coupon => coupon.discountValue)
-            .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
+            .LessThanOrEqualTo(Coupon.MaxPercentage).When(coupon => coupon.typeId == CouponType.Percentage.Id)
+            .WithMessage("{PropertyName} não pode ser maior que 100% em cupons percentuais.");
 
         RuleFor(coupon => coupon.minOrderValue)
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
@@ -28,12 +32,9 @@ public class UpdateCouponCommandValidator : AbstractValidator<UpdateCouponComman
         RuleFor(coupon => coupon.maxDiscountCap)
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
 
-        RuleFor(coupon => coupon.maxUses) 
+        RuleFor(coupon => coupon.maxUses)
             .GreaterThan(0).When(coupon => coupon.maxUses.HasValue)
             .WithMessage("{PropertyName} deve ser maior que zero quando fornecido.");
-
-        RuleFor(coupon => coupon.usedCount)
-            .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
 
         RuleFor(coupon => coupon.startsAt)
             .NotEqual(default(DateTime)).WithMessage("{PropertyName} deve ser uma data válida.");

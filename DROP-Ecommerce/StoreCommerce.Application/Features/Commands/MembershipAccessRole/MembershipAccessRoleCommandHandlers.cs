@@ -6,12 +6,12 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateMembershipAccessRoleCommandHandler(IMembershipAccessRoleRepository repository, IUnitOfWork unitOfWork)
+public class CreateMembershipAccessRoleCommandHandler(IMembershipAccessRoleRepository repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
     : IRequestHandler<CreateMembershipAccessRoleCommand, Result<MembershipAccessRoleResponse>>
 {
     public async Task<Result<MembershipAccessRoleResponse>> Handle(CreateMembershipAccessRoleCommand request, CancellationToken cancellationToken)
     {
-        var entity = MembershipAccessRole.Create(request.enterpriseId, request.enterpriseMembershipId, request.accessRoleId);
+        var entity = MembershipAccessRole.Create(tenantProvider.GetEnterpriseId(), request.enterpriseMembershipId, request.accessRoleId);
         await repository.AddAsync(entity, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
         return Result<MembershipAccessRoleResponse>.Success(new(entity.EnterpriseId, entity.EnterpriseMembershipId, entity.AccessRoleId));

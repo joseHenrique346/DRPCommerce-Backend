@@ -13,13 +13,13 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Name).HasMaxLength(200);
-        builder.Property(e => e.Slug).HasMaxLength(100);
-        builder.Property(e => e.Description).HasMaxLength(500);
-        builder.Property(e => e.SKU).HasMaxLength(100);
-        builder.Property(e => e.BarCode).HasMaxLength(100);
-        builder.Property(e => e.Brand).HasMaxLength(200);
-        builder.Property(e => e.ImageUrls).HasMaxLength(500);
+        builder.Property(e => e.Name).HasMaxLength(Product.NameMaxLength);
+        builder.Property(e => e.Slug).HasMaxLength(Product.SlugMaxLength);
+        builder.Property(e => e.Description).HasMaxLength(Product.DescriptionMaxLength);
+        builder.Property(e => e.SKU).HasMaxLength(Product.SkuMaxLength);
+        builder.Property(e => e.BarCode).HasMaxLength(Product.BarCodeMaxLength);
+        builder.Property(e => e.Brand).HasMaxLength(Product.BrandMaxLength);
+        builder.Property(e => e.ImageUrls).HasMaxLength(Product.ImageUrlsMaxLength);
 
         builder.Property(e => e.Price).HasPrecision(18, 2);
         builder.Property(e => e.CostPrice).HasPrecision(18, 2);

@@ -1,4 +1,5 @@
 using FluentValidation;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -6,37 +7,33 @@ public class CreateSupplierCommandValidator : AbstractValidator<CreateSupplierCo
 {
     public CreateSupplierCommandValidator()
     {
-        RuleFor(supplier => supplier.enterpriseId)
-            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
-
         RuleFor(supplier => supplier.companyName)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(200).WithMessage("{PropertyName} não pode ter mais de 200 caracteres.");
+            .MaximumLength(Supplier.CompanyNameMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(supplier => supplier.contactName)
-            .MaximumLength(150).When(supplier => !string.IsNullOrWhiteSpace(supplier.contactName))
-            .WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
+            .MaximumLength(Supplier.ContactNameMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(supplier => supplier.email).NotNull();
         RuleFor(supplier => supplier.phone).NotNull();
 
         RuleFor(supplier => supplier.addressLine)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(300).WithMessage("{PropertyName} não pode ter mais de 300 caracteres.");
+            .MaximumLength(Supplier.AddressLineMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(supplier => supplier.city)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
+            .MaximumLength(Supplier.CityMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(supplier => supplier.stateId)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
         RuleFor(supplier => supplier.zipCode)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(20).WithMessage("{PropertyName} não pode ter mais de 20 caracteres.");
+            .MaximumLength(Supplier.ZipCodeMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(supplier => supplier.country)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(100).WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Supplier.CountryMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
     }
 }

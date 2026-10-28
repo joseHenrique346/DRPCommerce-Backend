@@ -13,10 +13,10 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Number).HasMaxLength(100);
-        builder.Property(e => e.Series).HasMaxLength(100);
-        builder.Property(e => e.AccessKey).HasMaxLength(500);
-        builder.Property(e => e.FileUrl).HasMaxLength(500);
+        builder.Property(e => e.Number).HasMaxLength(Invoice.NumberMaxLength);
+        builder.Property(e => e.Series).HasMaxLength(Invoice.SeriesMaxLength);
+        builder.Property(e => e.AccessKey).HasMaxLength(Invoice.AccessKeyMaxLength);
+        builder.Property(e => e.FileUrl).HasMaxLength(Invoice.FileUrlMaxLength);
 
         builder.Property(e => e.TotalAmount).HasPrecision(18, 2);
         builder.Property(e => e.TaxAmount).HasPrecision(18, 2);

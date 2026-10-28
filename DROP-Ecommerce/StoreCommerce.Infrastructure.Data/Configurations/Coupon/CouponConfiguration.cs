@@ -13,7 +13,7 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Code).HasMaxLength(100);
+        builder.Property(e => e.Code).HasMaxLength(Coupon.CodeMaxLength);
 
         builder.Property(e => e.DiscountValue).HasPrecision(18, 2);
         builder.Property(e => e.MinOrderValue).HasPrecision(18, 2);

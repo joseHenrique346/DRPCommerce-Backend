@@ -13,9 +13,10 @@ public class UpdateListProductCommandHandler(IRepository<Product> repository, IU
 
     protected override void ApplyChanges(Product entity, UpdateProductCommand command)
     {
-        entity.UpdateDetails(command.name, command.slug, command.description, command.brand, command.imageUrls);
+        entity.UpdateDetails(command.name, command.slug, command.description, command.sku, command.barCode, command.brand, command.imageUrls, command.isDigital);
         entity.UpdatePricing(command.price, command.costPrice);
         entity.UpdateDimensions(command.weight, command.height, command.width, command.length);
         entity.UpdateCategory(command.categoryId, command.supplierId);
+        entity.SetActive(command.isActive);
     }
 }

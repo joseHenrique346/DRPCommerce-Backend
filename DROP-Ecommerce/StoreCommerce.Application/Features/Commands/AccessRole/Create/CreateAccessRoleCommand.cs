@@ -4,4 +4,4 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class CreateAccessRoleCommand(long enterpriseId, string name, string description, bool isActive) : IRequest<Result<AccessRole>>;
+public record class CreateAccessRoleCommand(string name, string description, bool isActive) : IRequest<Result<AccessRole>>;

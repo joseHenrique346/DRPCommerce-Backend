@@ -5,6 +5,16 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Product : BaseEntity, ITenantEntity, ISoftDeletable
 {
+    #region Constants
+    public const int NameMaxLength = 255;
+    public const int SlugMaxLength = 255;
+    public const int DescriptionMaxLength = 500;
+    public const int SkuMaxLength = 100;
+    public const int BarCodeMaxLength = 100;
+    public const int BrandMaxLength = 200;
+    public const int ImageUrlsMaxLength = 500;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public long CategoryId { get; private set; }
@@ -69,41 +79,32 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidatePositive(categoryId, nameof(CategoryId));
         BaseValidate.ValidateNullablePositive(supplierId, nameof(SupplierId));
-        BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
-        BaseValidate.ValidateMaxLength(slug, 255, nameof(Slug));
-        BaseValidate.ValidateMaxLength(description, 5000, nameof(Description));
-        BaseValidate.ValidateMaxLength(sku, 100, nameof(SKU));
-        BaseValidate.ValidateMaxLength(barCode, 100, nameof(BarCode));
+        ValidateDetails(name, slug, description, sku, barCode, brand, imageUrls);
         BaseValidate.ValidatePositive(price, nameof(Price));
         BaseValidate.ValidatePositiveOrZero(costPrice, nameof(CostPrice));
         BaseValidate.ValidatePositiveOrZero(weight, nameof(Weight));
         BaseValidate.ValidatePositiveOrZero(height, nameof(Height));
         BaseValidate.ValidatePositiveOrZero(width, nameof(Width));
         BaseValidate.ValidatePositiveOrZero(length, nameof(Length));
-        BaseValidate.ValidateMaxLength(brand, 255, nameof(Brand));
-        BaseValidate.ValidateMaxLength(imageUrls, 2000, nameof(ImageUrls));
 
         return new Product(enterpriseId, categoryId, supplierId, name, slug, description, sku, barCode, price, costPrice, weight, height, width, length, brand, imageUrls, isActive, isDigital);
     }
 
-    public void UpdateDetails(string name, string slug, string description, string brand, string imageUrls)
+    public void UpdateDetails(string name, string slug, string description, string sku, string barCode, string brand, string imageUrls, bool isDigital)
     {
-        BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
-        BaseValidate.ValidateMaxLength(slug, 255, nameof(Slug));
-        BaseValidate.ValidateMaxLength(description, 5000, nameof(Description));
-        BaseValidate.ValidateMaxLength(brand, 255, nameof(Brand));
-        BaseValidate.ValidateMaxLength(imageUrls, 2000, nameof(ImageUrls));
+        ValidateDetails(name, slug, description, sku, barCode, brand, imageUrls);
 
         Name = name;
         Slug = slug;
         Description = description;
+        SKU = sku;
+        BarCode = barCode;
         Brand = brand;
         ImageUrls = imageUrls;
+        IsDigital = isDigital;
     }
+
+    public void SetActive(bool active) => IsActive = active;
 
     public void UpdatePricing(decimal price, decimal costPrice)
     {
@@ -140,6 +141,20 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
+    }
+
+    private static void ValidateDetails(string name, string slug, string description, string sku, string barCode, string brand, string imageUrls)
+    {
+        BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
+        BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
+        BaseValidate.ValidateMaxLength(slug, SlugMaxLength, nameof(Slug));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
+        BaseValidate.ValidateNotNullOrEmpty(sku, nameof(SKU));
+        BaseValidate.ValidateMaxLength(sku, SkuMaxLength, nameof(SKU));
+        BaseValidate.ValidateMaxLength(barCode, BarCodeMaxLength, nameof(BarCode));
+        BaseValidate.ValidateMaxLength(brand, BrandMaxLength, nameof(Brand));
+        BaseValidate.ValidateMaxLength(imageUrls, ImageUrlsMaxLength, nameof(ImageUrls));
     }
     #endregion
 }

@@ -5,6 +5,15 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Shipment : BaseEntity
 {
+    #region Constants
+    public const int CarrierNameMaxLength = 200;
+    public const int TrackingCodeMaxLength = 100;
+    public const int AddressLineMaxLength = 200;
+    public const int CityMaxLength = 100;
+    public const int ZipCodeMaxLength = 20;
+    public const int CountryMaxLength = 100;
+    #endregion
+
     #region Properties
     public long OrderId { get; private set; }
     public long? SupplierId { get; private set; }
@@ -61,15 +70,20 @@ public class Shipment : BaseEntity
         BaseValidate.ValidatePositive(orderId, nameof(OrderId));
         BaseValidate.ValidateNullablePositive(supplierId, nameof(SupplierId));
         BaseValidate.ValidatePositive(shipmentTypeId, nameof(ShipmentTypeId));
-        BaseValidate.ValidateMaxLength(carrierName, 255, nameof(CarrierName));
-        BaseValidate.ValidateMaxLength(trackingCode, 255, nameof(TrackingCode));
+        BaseValidate.ValidateNotNullOrEmpty(carrierName, nameof(CarrierName));
+        BaseValidate.ValidateMaxLength(carrierName, CarrierNameMaxLength, nameof(CarrierName));
+        BaseValidate.ValidateMaxLength(trackingCode, TrackingCodeMaxLength, nameof(TrackingCode));
         BaseValidate.ValidatePositive(shipmentStatusId, nameof(ShipmentStatusId));
         BaseValidate.ValidatePositiveOrZero(shippingCost, nameof(ShippingCost));
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateNotNullOrEmpty(addressLine, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateNotNullOrEmpty(city, nameof(City));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
+        BaseValidate.ValidateNotNullOrEmpty(zipCode, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateNotNullOrEmpty(country, nameof(Country));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
         BaseValidate.ValidateNullableNotFuture(shippedAt, nameof(ShippedAt));
         BaseValidate.ValidateNullableNotFuture(deliveredAt, nameof(DeliveredAt));
 
@@ -80,14 +94,19 @@ public class Shipment : BaseEntity
     {
         BaseValidate.ValidateNullablePositive(supplierId, nameof(SupplierId));
         BaseValidate.ValidatePositive(shipmentTypeId, nameof(ShipmentTypeId));
-        BaseValidate.ValidateMaxLength(carrierName, 255, nameof(CarrierName));
-        BaseValidate.ValidateMaxLength(trackingCode, 255, nameof(TrackingCode));
+        BaseValidate.ValidateNotNullOrEmpty(carrierName, nameof(CarrierName));
+        BaseValidate.ValidateMaxLength(carrierName, CarrierNameMaxLength, nameof(CarrierName));
+        BaseValidate.ValidateMaxLength(trackingCode, TrackingCodeMaxLength, nameof(TrackingCode));
         BaseValidate.ValidatePositiveOrZero(shippingCost, nameof(ShippingCost));
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateNotNullOrEmpty(addressLine, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateNotNullOrEmpty(city, nameof(City));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
+        BaseValidate.ValidateNotNullOrEmpty(zipCode, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateNotNullOrEmpty(country, nameof(Country));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
 
         SupplierId = supplierId;
         ShipmentTypeId = shipmentTypeId;

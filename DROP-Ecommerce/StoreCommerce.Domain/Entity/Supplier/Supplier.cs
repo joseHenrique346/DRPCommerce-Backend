@@ -5,6 +5,15 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Supplier : BaseEntity, ITenantEntity
 {
+    #region Constants
+    public const int CompanyNameMaxLength = 200;
+    public const int ContactNameMaxLength = 200;
+    public const int AddressLineMaxLength = 200;
+    public const int CityMaxLength = 100;
+    public const int ZipCodeMaxLength = 20;
+    public const int CountryMaxLength = 100;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public string CompanyName { get; private set; }
@@ -53,15 +62,19 @@ public class Supplier : BaseEntity, ITenantEntity
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(companyName, nameof(CompanyName));
-        BaseValidate.ValidateMaxLength(companyName, 255, nameof(CompanyName));
-        BaseValidate.ValidateMaxLength(contactName, 255, nameof(ContactName));
+        BaseValidate.ValidateMaxLength(companyName, CompanyNameMaxLength, nameof(CompanyName));
+        BaseValidate.ValidateMaxLength(contactName, ContactNameMaxLength, nameof(ContactName));
         BaseValidate.ValidateNotNull(email, nameof(Email));
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateNotNullOrEmpty(addressLine, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateNotNullOrEmpty(city, nameof(City));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
+        BaseValidate.ValidateNotNullOrEmpty(zipCode, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateNotNullOrEmpty(country, nameof(Country));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
 
         return new Supplier(enterpriseId, companyName, contactName, email, phone, addressLine, city, stateId, zipCode, country, isActive);
     }
@@ -69,8 +82,8 @@ public class Supplier : BaseEntity, ITenantEntity
     public void UpdateInfo(string companyName, string contactName, SupplierEmail email, SupplierPhone phone)
     {
         BaseValidate.ValidateNotNullOrEmpty(companyName, nameof(CompanyName));
-        BaseValidate.ValidateMaxLength(companyName, 255, nameof(CompanyName));
-        BaseValidate.ValidateMaxLength(contactName, 255, nameof(ContactName));
+        BaseValidate.ValidateMaxLength(companyName, CompanyNameMaxLength, nameof(CompanyName));
+        BaseValidate.ValidateMaxLength(contactName, ContactNameMaxLength, nameof(ContactName));
         BaseValidate.ValidateNotNull(email, nameof(Email));
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
 
@@ -82,11 +95,15 @@ public class Supplier : BaseEntity, ITenantEntity
 
     public void UpdateAddress(string addressLine, string city, long stateId, string zipCode, string country)
     {
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateNotNullOrEmpty(addressLine, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateNotNullOrEmpty(city, nameof(City));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
+        BaseValidate.ValidateNotNullOrEmpty(zipCode, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateNotNullOrEmpty(country, nameof(Country));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
 
         AddressLine = addressLine;
         City = city;

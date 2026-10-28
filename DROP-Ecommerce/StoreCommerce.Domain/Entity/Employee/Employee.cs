@@ -5,6 +5,10 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Employee : BaseEntity, ITenantEntity
 {
+    #region Constants
+    public const int FullNameMaxLength = 255;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public long EnterpriseMembershipId { get; private set; }
@@ -46,7 +50,7 @@ public class Employee : BaseEntity, ITenantEntity
     public void UpdateDetails(string fullName, long positionId, long departmentId, bool isActive, DateTime hiredAt)
     {
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
-        BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
+        BaseValidate.ValidateMaxLength(fullName, FullNameMaxLength, nameof(FullName));
         BaseValidate.ValidatePositive(positionId, nameof(PositionId));
         BaseValidate.ValidatePositive(departmentId, nameof(DepartmentId));
 

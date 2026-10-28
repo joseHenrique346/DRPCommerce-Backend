@@ -6,6 +6,13 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Invoice : BaseEntity, ITenantEntity
 {
+    #region Constants
+    public const int NumberMaxLength = 100;
+    public const int SeriesMaxLength = 100;
+    public const int AccessKeyMaxLength = 500;
+    public const int FileUrlMaxLength = 500;
+    #endregion
+
     #region Properties
     public long OrderId { get; private set; }
     public long CustomerId { get; private set; }
@@ -57,14 +64,16 @@ public class Invoice : BaseEntity, ITenantEntity
         BaseValidate.ValidatePositive(customerId, nameof(CustomerId));
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
-        BaseValidate.ValidateMaxLength(number, 100, nameof(Number));
-        BaseValidate.ValidateMaxLength(series, 50, nameof(Series));
-        BaseValidate.ValidateMaxLength(accessKey, 255, nameof(AccessKey));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateNotNullOrEmpty(series, nameof(Series));
+        BaseValidate.ValidateMaxLength(series, SeriesMaxLength, nameof(Series));
+        BaseValidate.ValidateNotNullOrEmpty(accessKey, nameof(AccessKey));
+        BaseValidate.ValidateMaxLength(accessKey, AccessKeyMaxLength, nameof(AccessKey));
         BaseValidate.ValidatePositive(invoiceTypeId, nameof(InvoiceTypeId));
         BaseValidate.ValidatePositive(invoiceStatusId, nameof(InvoiceStatusId));
         BaseValidate.ValidatePositive(totalAmount, nameof(TotalAmount));
         BaseValidate.ValidatePositiveOrZero(taxAmount, nameof(TaxAmount));
-        BaseValidate.ValidateMaxLength(fileUrl, 1000, nameof(FileUrl));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
         BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
         BaseValidate.ValidateNullableNotFuture(issuedAt, nameof(IssuedAt));
 
@@ -74,14 +83,16 @@ public class Invoice : BaseEntity, ITenantEntity
     public void UpdateDetails(string number, string series, string accessKey, long invoiceTypeId, long invoiceStatusId, decimal totalAmount, decimal taxAmount, string fileUrl, DateTime? issuedAt)
     {
         BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
-        BaseValidate.ValidateMaxLength(number, 100, nameof(Number));
-        BaseValidate.ValidateMaxLength(series, 50, nameof(Series));
-        BaseValidate.ValidateMaxLength(accessKey, 255, nameof(AccessKey));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateNotNullOrEmpty(series, nameof(Series));
+        BaseValidate.ValidateMaxLength(series, SeriesMaxLength, nameof(Series));
+        BaseValidate.ValidateNotNullOrEmpty(accessKey, nameof(AccessKey));
+        BaseValidate.ValidateMaxLength(accessKey, AccessKeyMaxLength, nameof(AccessKey));
         BaseValidate.ValidatePositive(invoiceTypeId, nameof(InvoiceTypeId));
         BaseValidate.ValidatePositive(invoiceStatusId, nameof(InvoiceStatusId));
         BaseValidate.ValidatePositive(totalAmount, nameof(TotalAmount));
         BaseValidate.ValidatePositiveOrZero(taxAmount, nameof(TaxAmount));
-        BaseValidate.ValidateMaxLength(fileUrl, 1000, nameof(FileUrl));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
         BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
         BaseValidate.ValidateNullableNotFuture(issuedAt, nameof(IssuedAt));
 

@@ -4,4 +4,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class CreateOrderCommand(long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes) : IRequest<Result<Order>> { }
+/// <summary>
+/// Cria um pedido pendente. Subtotal, desconto e total são calculados a partir dos itens e do cupom.
+/// </summary>
+public record class CreateOrderCommand(long customerId, long? couponId, string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes) : IRequest<Result<Order>> { }

@@ -14,6 +14,16 @@ public class CouponController : BaseController<Coupon, CreateCouponCommand, Crea
     {
     }
 
+    /// <summary>
+    /// Ativa ou desativa um cupom.
+    /// </summary>
+    [HttpPut("{id:long}/activation")]
+    public async Task<IActionResult> SetActiveAsync(long id, [FromBody] bool active)
+    {
+        var result = await _mediator.Send(new SetCouponActiveCommand(id, active));
+        return HandleResult(result);
+    }
+
     protected override CreateListCouponCommand WrapCreateInRange(CreateCouponCommand command)
     {
         return new CreateListCouponCommand(new List<CreateCouponCommand> { command });

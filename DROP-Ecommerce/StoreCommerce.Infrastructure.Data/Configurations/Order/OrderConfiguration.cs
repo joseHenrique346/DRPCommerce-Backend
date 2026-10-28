@@ -19,10 +19,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.TaxAmount).HasPrecision(18, 2);
         builder.Property(e => e.TotalAmount).HasPrecision(18, 2);
 
-        builder.Property(e => e.ShippingAddressLine).HasMaxLength(200);
-        builder.Property(e => e.ShippingCity).HasMaxLength(100);
-        builder.Property(e => e.ShippingZipCode).HasMaxLength(20);
-        builder.Property(e => e.Notes).HasMaxLength(500);
+        builder.Property(e => e.ShippingAddressLine).HasMaxLength(Order.ShippingAddressLineMaxLength);
+        builder.Property(e => e.ShippingCity).HasMaxLength(Order.ShippingCityMaxLength);
+        builder.Property(e => e.ShippingZipCode).HasMaxLength(Order.ShippingZipCodeMaxLength);
+        builder.Property(e => e.Notes).HasMaxLength(Order.NotesMaxLength);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 

@@ -14,5 +14,6 @@ public class UpdateListCouponCommandHandler(IRepository<Coupon> repository, IUni
     protected override void ApplyChanges(Coupon entity, UpdateCouponCommand command)
     {
         entity.UpdateDetails(command.code, command.typeId, command.discountValue, command.minOrderValue, command.maxDiscountCap, command.maxUses, command.isSingleUse, command.startsAt, command.expiresAt);
+        entity.SetActive(command.isActive);
     }
 }

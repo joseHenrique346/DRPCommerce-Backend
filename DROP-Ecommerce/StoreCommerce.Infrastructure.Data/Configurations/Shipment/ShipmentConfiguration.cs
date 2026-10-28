@@ -13,12 +13,12 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.CarrierName).HasMaxLength(200);
-        builder.Property(e => e.TrackingCode).HasMaxLength(100);
-        builder.Property(e => e.AddressLine).HasMaxLength(200);
-        builder.Property(e => e.City).HasMaxLength(100);
-        builder.Property(e => e.ZipCode).HasMaxLength(20);
-        builder.Property(e => e.Country).HasMaxLength(100);
+        builder.Property(e => e.CarrierName).HasMaxLength(Shipment.CarrierNameMaxLength);
+        builder.Property(e => e.TrackingCode).HasMaxLength(Shipment.TrackingCodeMaxLength);
+        builder.Property(e => e.AddressLine).HasMaxLength(Shipment.AddressLineMaxLength);
+        builder.Property(e => e.City).HasMaxLength(Shipment.CityMaxLength);
+        builder.Property(e => e.ZipCode).HasMaxLength(Shipment.ZipCodeMaxLength);
+        builder.Property(e => e.Country).HasMaxLength(Shipment.CountryMaxLength);
 
         builder.Property(e => e.ShippingCost).HasPrecision(18, 2);
 

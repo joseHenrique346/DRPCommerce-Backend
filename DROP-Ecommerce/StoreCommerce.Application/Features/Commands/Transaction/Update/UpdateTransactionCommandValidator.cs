@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -31,15 +32,12 @@ public class UpdateTransactionCommandValidator : AbstractValidator<UpdateTransac
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
 
         RuleFor(transaction => transaction.gatewayReference)
-            .MaximumLength(200).When(t => !string.IsNullOrWhiteSpace(t.gatewayReference))
-            .WithMessage("{PropertyName} não pode ter mais de 200 caracteres.");
+            .MaximumLength(Transaction.GatewayReferenceMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(transaction => transaction.gatewayProvider)
-            .MaximumLength(100).When(t => !string.IsNullOrWhiteSpace(t.gatewayProvider))
-            .WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Transaction.GatewayProviderMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(transaction => transaction.gatewayPayload)
-            .MaximumLength(5000).When(t => !string.IsNullOrWhiteSpace(t.gatewayPayload))
-            .WithMessage("{PropertyName} não pode ter mais de 5000 caracteres.");
+            .MaximumLength(Transaction.GatewayPayloadMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
     }
 }

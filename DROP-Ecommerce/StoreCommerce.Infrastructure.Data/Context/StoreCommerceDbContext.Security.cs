@@ -85,9 +85,12 @@ public partial class StoreCommerceDbContext
 
                     break;
                 case Order o:
-                    await EnsureTenantAsync<Customer>(o.CustomerId, tenant, ct);
+                    // Referências são validadas quando novas ou alteradas; assim um pedido continua editável
+                    // mesmo que o cupom/cliente já vinculado tenha sido excluído logicamente depois.
+                    if (entry.State == EntityState.Added || entry.Property(nameof(Order.CustomerId)).IsModified)
+                        await EnsureTenantAsync<Customer>(o.CustomerId, tenant, ct);
 
-                    if (o.CouponId.HasValue)
+                    if (o.CouponId.HasValue && (entry.State == EntityState.Added || entry.Property(nameof(Order.CouponId)).IsModified))
                         await EnsureTenantAsync<Coupon>(o.CouponId.Value, tenant, ct);
 
                     break;
@@ -107,10 +110,12 @@ public partial class StoreCommerceDbContext
                 case OrderItem item:
                     await EnsureTenantAsync<Order>(item.OrderId, tenant, ct);
 
-                    if (item.ProductId.HasValue)
+                    // Produto/serviço são copiados para o item na inclusão; depois disso o item é apenas recalculado,
+                    // mesmo que o produto tenha sido excluído logicamente.
+                    if (entry.State == EntityState.Added && item.ProductId.HasValue)
                         await EnsureTenantAsync<Product>(item.ProductId.Value, tenant, ct);
 
-                    if (item.ServiceId.HasValue)
+                    if (entry.State == EntityState.Added && item.ServiceId.HasValue)
                         await EnsureTenantAsync<StoreCommerce.Domain.Entity.Service>(item.ServiceId.Value, tenant, ct);
 
                     break;

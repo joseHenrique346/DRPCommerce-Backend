@@ -6,6 +6,12 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
 {
+    #region Constants
+    public const int CodeMinLength = 3;
+    public const int CodeMaxLength = 50;
+    public const decimal MaxPercentage = 100m;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public string Code { get; private set; }
@@ -34,7 +40,7 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     #region Constructor
     protected Coupon() { }
 
-    private Coupon(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+    private Coupon(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
         EnterpriseId = enterpriseId;
         Code = code;
@@ -43,7 +49,7 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         MinOrderValue = minOrderValue;
         MaxDiscountCap = maxDiscountCap;
         MaxUses = maxUses;
-        UsedCount = usedCount;
+        UsedCount = 0;
         IsActive = isActive;
         IsSingleUse = isSingleUse;
         StartsAt = startsAt;
@@ -53,32 +59,20 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Functions
-    public static Coupon Create(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, int usedCount, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
+    public static Coupon Create(long enterpriseId, string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, bool isActive, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
-        BaseValidate.ValidateNotNullOrEmpty(code, nameof(Code));
-        BaseValidate.ValidateLength(code, 3, 50, nameof(Code));
-        BaseValidate.ValidatePositive(couponTypeId, nameof(CouponTypeId));
-        BaseValidate.ValidatePositive(discountValue, nameof(DiscountValue));
-        BaseValidate.ValidatePositiveOrZero(minOrderValue, nameof(MinOrderValue));
-        BaseValidate.ValidatePositiveOrZero(maxDiscountCap, nameof(MaxDiscountCap));
-        BaseValidate.ValidateNullablePositive(maxUses, nameof(MaxUses));
-        BaseValidate.ValidatePositiveOrZero(usedCount, nameof(UsedCount));
-        BaseValidate.ValidateGreaterThan(expiresAt, startsAt, nameof(ExpiresAt));
+        ValidateDetails(code, couponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, startsAt, expiresAt);
 
-        return new Coupon(enterpriseId, code, couponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, usedCount, isActive, isSingleUse, startsAt, expiresAt);
+        return new Coupon(enterpriseId, code, couponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, isActive, isSingleUse, startsAt, expiresAt);
     }
 
     public void UpdateDetails(string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, bool isSingleUse, DateTime startsAt, DateTime expiresAt)
     {
-        BaseValidate.ValidateNotNullOrEmpty(code, nameof(Code));
-        BaseValidate.ValidateLength(code, 3, 50, nameof(Code));
-        BaseValidate.ValidatePositive(couponTypeId, nameof(CouponTypeId));
-        BaseValidate.ValidatePositive(discountValue, nameof(DiscountValue));
-        BaseValidate.ValidatePositiveOrZero(minOrderValue, nameof(MinOrderValue));
-        BaseValidate.ValidatePositiveOrZero(maxDiscountCap, nameof(MaxDiscountCap));
-        BaseValidate.ValidateNullablePositive(maxUses, nameof(MaxUses));
-        BaseValidate.ValidateGreaterThan(expiresAt, startsAt, nameof(ExpiresAt));
+        ValidateDetails(code, couponTypeId, discountValue, minOrderValue, maxDiscountCap, maxUses, startsAt, expiresAt);
+
+        if (maxUses.HasValue && maxUses.Value < UsedCount)
+            throw new ArgumentException($"{nameof(MaxUses)} cannot be lower than {nameof(UsedCount)}.");
 
         Code = code;
         CouponTypeId = couponTypeId;
@@ -91,10 +85,59 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         ExpiresAt = expiresAt;
     }
 
+    public void SetActive(bool active) => IsActive = active;
+
+    public bool IsPercentage => CouponTypeId == CouponType.Percentage.Id;
+
+    /// <summary>
+    /// Indica se o cupom pode ser aplicado no momento informado (ativo, vigente e com usos disponíveis).
+    /// </summary>
+    public bool IsUsable(DateTime now) =>
+        IsActive && !IsDeleted && StartsAt <= now && ExpiresAt > now && (!MaxUses.HasValue || UsedCount < MaxUses.Value);
+
+    /// <summary>
+    /// Calcula o desconto sobre o subtotal. Retorna zero quando o subtotal não atinge o valor mínimo do pedido.
+    /// MaxDiscountCap igual a zero significa desconto percentual sem teto.
+    /// </summary>
+    public decimal CalculateDiscount(decimal subTotal)
+    {
+        if (subTotal <= 0 || subTotal < MinOrderValue)
+            return 0;
+
+        var discount = IsPercentage
+            ? Math.Round(subTotal * DiscountValue / 100m, 2, MidpointRounding.AwayFromZero)
+            : DiscountValue;
+
+        if (IsPercentage && MaxDiscountCap > 0)
+            discount = Math.Min(discount, MaxDiscountCap);
+
+        return Math.Min(discount, subTotal);
+    }
+
     public void SoftDelete()
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
+    }
+
+    private static void ValidateDetails(string code, long couponTypeId, decimal discountValue, decimal minOrderValue, decimal maxDiscountCap, int? maxUses, DateTime startsAt, DateTime expiresAt)
+    {
+        BaseValidate.ValidateNotNullOrEmpty(code, nameof(Code));
+        BaseValidate.ValidateLength(code, CodeMinLength, CodeMaxLength, nameof(Code));
+        BaseValidate.ValidatePositive(couponTypeId, nameof(CouponTypeId));
+
+        if (!BaseStaticEntity.GetAll<CouponType>().Any(type => type.Id == couponTypeId))
+            throw new ArgumentException($"{nameof(CouponTypeId)} is invalid.");
+
+        BaseValidate.ValidatePositive(discountValue, nameof(DiscountValue));
+
+        if (couponTypeId == CouponType.Percentage.Id && discountValue > MaxPercentage)
+            throw new ArgumentException($"{nameof(DiscountValue)} cannot be greater than {MaxPercentage}% for percentage coupons.");
+
+        BaseValidate.ValidatePositiveOrZero(minOrderValue, nameof(MinOrderValue));
+        BaseValidate.ValidatePositiveOrZero(maxDiscountCap, nameof(MaxDiscountCap));
+        BaseValidate.ValidateNullablePositive(maxUses, nameof(MaxUses));
+        BaseValidate.ValidateGreaterThan(expiresAt, startsAt, nameof(ExpiresAt));
     }
     #endregion
 }
