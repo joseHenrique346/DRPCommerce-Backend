@@ -1,4 +1,5 @@
 using MediatR;
+using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
@@ -12,6 +13,7 @@ public class CreateListOrderCommandHandler(
     ITenantProvider tenantProvider,
     StoreSettingsReader storeSettings,
     CouponEligibilityService eligibility,
+    ICurrentIdentity actor,
     TimeProvider time)
     : IRequestHandler<CreateListOrderCommand, Result<List<Order>>>
 {
@@ -29,6 +31,7 @@ public class CreateListOrderCommandHandler(
         foreach (var command in request.commands)
         {
             var order = Order.Create(enterpriseId, command.customerId, command.shippingAddressLine, command.shippingCity, command.shippingStateId, command.shippingZipCode, command.notes);
+            order.RecordCreation(OrderChangeSource.Backoffice, actor.UserId, now);
 
             if (command.couponId is long couponId)
             {

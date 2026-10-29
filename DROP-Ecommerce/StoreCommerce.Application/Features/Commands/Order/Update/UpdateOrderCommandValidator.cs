@@ -11,14 +11,6 @@ public class UpdateOrderCommandValidator : AbstractValidator<UpdateOrderCommand>
         RuleFor(order => order.id)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
-        RuleFor(order => order.statusId)
-            .Must(statusId => BaseStaticEntity.GetAll<OrderStatus>().Any(status => status.Id == statusId))
-            .WithMessage("{PropertyName} inválido.");
-
-        RuleFor(order => order.paymentStatusId)
-            .Must(statusId => BaseStaticEntity.GetAll<OrderPaymentStatus>().Any(status => status.Id == statusId))
-            .WithMessage("{PropertyName} inválido.");
-
         RuleFor(order => order.couponId)
             .GreaterThan(0).When(order => order.couponId.HasValue)
             .WithMessage("{PropertyName} deve ser maior que zero quando fornecido.");

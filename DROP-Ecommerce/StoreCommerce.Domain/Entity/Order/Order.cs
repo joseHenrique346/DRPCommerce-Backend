@@ -11,6 +11,7 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public const int ShippingCityMaxLength = 100;
     public const int ShippingZipCodeMaxLength = 20;
     public const int NotesMaxLength = 500;
+    public const int IdempotencyKeyMaxLength = 64;
     #endregion
 
     #region Properties
@@ -29,6 +30,11 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public long ShippingStateId { get; private set; }
     public string ShippingZipCode { get; private set; }
     public string Notes { get; private set; }
+    public string? IdempotencyKey { get; private set; }
+    public long? PaymentMethodId { get; private set; }
+    public DateTime? PaymentExpiresAt { get; private set; }
+    public bool IsLocked { get; private set; }
+    public long? StockReservationId { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
 
@@ -39,6 +45,9 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public OrderStatus OrderStatus { get; private set; }
     public OrderPaymentStatus OrderPaymentStatus { get; private set; }
     public State ShippingState { get; private set; }
+    public StockReservation? StockReservation { get; private set; }
+    private readonly List<OrderStatusHistory> _listStatusHistory = [];
+    public IReadOnlyCollection<OrderStatusHistory> ListStatusHistory => _listStatusHistory.AsReadOnly();
     private readonly List<Invoice> _listInvoice = [];
     public IReadOnlyCollection<Invoice> ListInvoice => _listInvoice.AsReadOnly();
     private readonly List<OrderItem> _listOrderItem = [];
@@ -86,15 +95,143 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         return new Order(enterpriseId, customerId, shippingAddressLine, shippingCity, shippingStateId, shippingZipCode, notes);
     }
 
-    public bool IsEditable => OrderStatusId == OrderStatus.Pending.Id;
+    /// <summary>
+    /// Cria o pedido do checkout da vitrine. Itens e cupom são incluídos em seguida e o pedido é fechado por LockForPayment.
+    /// </summary>
+    public static Order CreateCheckout(long enterpriseId, long customerId, string shippingAddressLine, string shippingCity, long shippingStateId,
+        string shippingZipCode, string notes, string idempotencyKey, long paymentMethodId, DateTime paymentExpiresAt, DateTime now)
+    {
+        BaseValidate.ValidateNotNullOrEmpty(idempotencyKey, nameof(IdempotencyKey));
+        BaseValidate.ValidateMaxLength(idempotencyKey, IdempotencyKeyMaxLength, nameof(IdempotencyKey));
+        BaseValidate.ValidateGreaterThan(paymentExpiresAt, now, nameof(PaymentExpiresAt));
+
+        if (!BaseStaticEntity.GetAll<TransactionMethod>().Any(method => method.Id == paymentMethodId))
+            throw new ArgumentException("Forma de pagamento inválida.");
+
+        var order = Create(enterpriseId, customerId, shippingAddressLine, shippingCity, shippingStateId, shippingZipCode, notes);
+        order.IdempotencyKey = idempotencyKey.Trim();
+        order.PaymentMethodId = paymentMethodId;
+        order.PaymentExpiresAt = paymentExpiresAt;
+        order.RecordCreation(OrderChangeSource.Customer, customerId, now);
+
+        return order;
+    }
+
+    public void RecordCreation(OrderChangeSource source, long? actorId, DateTime now)
+    {
+        if (_listStatusHistory.Count == 0)
+            _listStatusHistory.Add(OrderStatusHistory.Create(this, null, null, source, actorId, "Pedido criado", now));
+    }
 
     /// <summary>
-    /// Status em que o pedido conta como compra concluída: consome o cupom e entra no histórico do cliente.
+    /// Pedido pendente que ainda aceita itens e cupom. Pedidos do checkout ficam fechados enquanto aguardam pagamento,
+    /// porque o valor cobrado e o estoque reservado precisam continuar iguais.
     /// </summary>
-    public static bool ConsumesCoupon(long orderStatusId) =>
-        orderStatusId == OrderStatus.Confirmed.Id || orderStatusId == OrderStatus.Processing.Id ||
-        orderStatusId == OrderStatus.Shipped.Id || orderStatusId == OrderStatus.Delivered.Id;
+    public bool IsEditable => OrderStatusId == OrderStatus.Pending.Id && !IsLocked;
 
+    public bool IsAwaitingPayment => OrderStatusId == OrderStatus.Pending.Id && OrderPaymentStatusId == OrderPaymentStatus.Pending.Id;
+
+    public bool IsPaid => OrderPaymentStatusId == OrderPaymentStatus.Paid.Id;
+
+    public bool IsCancelled => OrderStatusId == OrderStatus.Cancelled.Id;
+
+    public bool CanBeCancelled =>
+        OrderStatusId == OrderStatus.Pending.Id || OrderStatusId == OrderStatus.Confirmed.Id || OrderStatusId == OrderStatus.Processing.Id;
+
+    public void AttachStockReservation(StockReservation reservation)
+    {
+        BaseValidate.ValidateNotNull(reservation, nameof(StockReservation));
+
+        if (reservation.EnterpriseId != EnterpriseId)
+            throw new ArgumentException("Reserva não pertence à loja do pedido.");
+
+        StockReservation = reservation;
+        StockReservationId = reservation.Id;
+    }
+
+    /// <summary>
+    /// Fecha o pedido do checkout para pagamento: itens, cupom e valores não mudam mais.
+    /// </summary>
+    public void LockForPayment()
+    {
+        if (!IsAwaitingPayment || _listOrderItem.Count == 0 || TotalAmount < 0)
+            throw new ArgumentException("O pedido precisa estar pendente e ter itens para aguardar pagamento.");
+
+        IsLocked = true;
+    }
+
+    /// <summary>
+    /// Pagamento aprovado: o pedido passa a Confirmado/Pago.
+    /// </summary>
+    public void ConfirmPayment(StoreSettings settings, OrderChangeSource source, long? actorId, string? reason, DateTime now)
+    {
+        EnsureSettings(settings);
+
+        if (!IsAwaitingPayment)
+            throw new ArgumentException("Somente pedidos pendentes aguardando pagamento podem ser confirmados.");
+
+        if (_listOrderItem.Count == 0)
+            throw new ArgumentException("O pedido não possui itens.");
+
+        if (!settings.MeetsMinOrderValue(SubTotal))
+            throw new ArgumentException("O pedido não atinge o valor mínimo da loja.");
+
+        IsLocked = true;
+        Transition(OrderStatus.Confirmed.Id, OrderPaymentStatus.Paid.Id, source, actorId, reason ?? "Pagamento confirmado", now);
+    }
+
+    public void StartProcessing(OrderChangeSource source, long? actorId, DateTime now) =>
+        Advance(OrderStatus.Confirmed.Id, OrderStatus.Processing.Id, source, actorId, "Pedido em separação", now);
+
+    public void MarkShipped(OrderChangeSource source, long? actorId, string? reason, DateTime now) =>
+        Advance(OrderStatus.Processing.Id, OrderStatus.Shipped.Id, source, actorId, reason ?? "Pedido enviado", now);
+
+    public void MarkDelivered(OrderChangeSource source, long? actorId, DateTime now) =>
+        Advance(OrderStatus.Shipped.Id, OrderStatus.Delivered.Id, source, actorId, "Pedido entregue", now);
+
+    /// <summary>
+    /// Cancela pedidos pendentes, confirmados ou em separação. A devolução de estoque, cupom e pagamento é feita pelo fluxo do pedido.
+    /// </summary>
+    public void Cancel(string reason, OrderChangeSource source, long? actorId, DateTime now)
+    {
+        BaseValidate.ValidateNotNullOrEmpty(reason, "Motivo");
+
+        if (!CanBeCancelled)
+            throw new ArgumentException("Somente pedidos pendentes, confirmados ou em separação podem ser cancelados.");
+
+        IsLocked = true;
+        Transition(OrderStatus.Cancelled.Id, OrderPaymentStatusId, source, actorId, reason, now);
+    }
+
+    /// <summary>
+    /// Pagamento recusado ou cancelado no gateway: o pedido pendente é cancelado.
+    /// </summary>
+    public void MarkPaymentFailed(string reason, OrderChangeSource source, long? actorId, DateTime now)
+    {
+        if (!IsAwaitingPayment)
+            throw new ArgumentException("Somente pedidos aguardando pagamento podem ter o pagamento recusado.");
+
+        IsLocked = true;
+        Transition(OrderStatus.Cancelled.Id, OrderPaymentStatus.Failed.Id, source, actorId, reason, now);
+    }
+
+    /// <summary>
+    /// Registra o estorno total do pagamento de um pedido cancelado (inclusive pagamento aprovado depois do cancelamento).
+    /// </summary>
+    public void RegisterFullRefund(OrderChangeSource source, long? actorId, string reason, DateTime now)
+    {
+        if (OrderPaymentStatusId == OrderPaymentStatus.FullRefund.Id)
+            return;
+
+        if (!IsCancelled)
+            throw new ArgumentException("Somente pedidos cancelados têm o pagamento estornado por este fluxo.");
+
+        Transition(OrderStatusId, OrderPaymentStatus.FullRefund.Id, source, actorId, reason, now);
+    }
+
+    /// <summary>
+    /// Status em que o pedido conta como compra concluída no histórico do cliente (condições de cupom).
+    /// </summary>
     public static IReadOnlyList<long> CompletedStatusIds { get; } =
         [OrderStatus.Confirmed.Id, OrderStatus.Processing.Id, OrderStatus.Shipped.Id, OrderStatus.Delivered.Id];
 
@@ -102,32 +239,6 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     /// Quantidade total de unidades do pedido (soma das quantidades dos itens).
     /// </summary>
     public int TotalQuantity => _listOrderItem.Sum(item => item.Quantity);
-
-    /// <summary>
-    /// Indica se o pedido pode sair de Pendente para o status informado: cancelar é sempre permitido;
-    /// os demais exigem itens e subtotal igual ou maior que o pedido mínimo da loja.
-    /// </summary>
-    public bool CanLeavePending(long orderStatusId, StoreSettings settings) =>
-        orderStatusId == OrderStatus.Pending.Id ||
-        orderStatusId == OrderStatus.Cancelled.Id ||
-        (_listOrderItem.Count > 0 && settings.MeetsMinOrderValue(SubTotal));
-
-    public void UpdateStatus(long orderStatusId, long orderPaymentStatusId, StoreSettings settings)
-    {
-        EnsureSettings(settings);
-
-        if (!BaseStaticEntity.GetAll<OrderStatus>().Any(status => status.Id == orderStatusId))
-            throw new ArgumentException($"{nameof(OrderStatusId)} is invalid.");
-
-        if (!BaseStaticEntity.GetAll<OrderPaymentStatus>().Any(status => status.Id == orderPaymentStatusId))
-            throw new ArgumentException($"{nameof(OrderPaymentStatusId)} is invalid.");
-
-        if (IsEditable && !CanLeavePending(orderStatusId, settings))
-            throw new ArgumentException("O pedido precisa ter itens e atingir o valor mínimo da loja para sair de Pendente.");
-
-        OrderStatusId = orderStatusId;
-        OrderPaymentStatusId = orderPaymentStatusId;
-    }
 
     public void UpdateShippingAddress(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
     {
@@ -304,6 +415,27 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         _listOrderItem.FirstOrDefault(item => item.Id == orderItemId)
             ?? throw new ArgumentException("Item não pertence ao pedido.");
 
+    private void Advance(long expectedStatusId, long nextStatusId, OrderChangeSource source, long? actorId, string reason, DateTime now)
+    {
+        if (OrderStatusId != expectedStatusId)
+        {
+            var expected = BaseStaticEntity.GetAll<OrderStatus>().First(status => status.Id == expectedStatusId).Description;
+            throw new ArgumentException($"Esta etapa exige o pedido no status {expected}.");
+        }
+
+        Transition(nextStatusId, OrderPaymentStatusId, source, actorId, reason, now);
+    }
+
+    private void Transition(long statusId, long paymentStatusId, OrderChangeSource source, long? actorId, string reason, DateTime now)
+    {
+        var fromStatus = OrderStatusId;
+        var fromPayment = OrderPaymentStatusId;
+
+        OrderStatusId = statusId;
+        OrderPaymentStatusId = paymentStatusId;
+        _listStatusHistory.Add(OrderStatusHistory.Create(this, fromStatus, fromPayment, source, actorId, reason, now));
+    }
+
     private void EnsureSettings(StoreSettings settings)
     {
         BaseValidate.ValidateNotNull(settings, nameof(StoreSettings));
@@ -321,7 +453,7 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     private void EnsureEditable()
     {
         if (!IsEditable)
-            throw new ArgumentException("Somente pedidos pendentes podem ter itens ou cupom alterados.");
+            throw new ArgumentException("Somente pedidos pendentes que ainda não foram enviados para pagamento podem ter itens ou cupom alterados.");
     }
 
     private static void ValidateShippingAddress(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)

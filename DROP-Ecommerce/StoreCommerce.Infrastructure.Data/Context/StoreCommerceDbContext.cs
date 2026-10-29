@@ -17,10 +17,12 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
     private readonly InventoryWriteScope _inventoryWrites;
     private readonly StoreCommerce.Application.Carts.CartWriteScope _cartWrites;
+    private readonly StoreCommerce.Application.Orders.OrderWorkflowScope _orderWorkflow;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
-        InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites)
+        InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites,
+        StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -29,6 +31,7 @@ public partial class StoreCommerceDbContext : DbContext
         _httpAccessor = httpAccessor;
         _inventoryWrites = inventoryWrites;
         _cartWrites = cartWrites;
+        _orderWorkflow = orderWorkflow;
     }
 
     #region DbSets
@@ -48,6 +51,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
     public DbSet<CouponRedemption> CouponRedemptions => Set<CouponRedemption>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Service> Services => Set<Service>();
@@ -144,6 +148,7 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<CouponRedemption>(modelBuilder);
         ApplyTenantFilter<Cart>(modelBuilder);
         ApplyTenantFilter<CartItem>(modelBuilder);
+        ApplyTenantFilter<OrderStatusHistory>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
 
         // Dependents of filtered aggregates must use the same visibility rules.

@@ -26,6 +26,16 @@ public sealed class StoreSettingsReader(
             ?? StoreSettings.CreateDefault(enterpriseId);
     }
 
+    /// <summary>
+    /// Mesma leitura de GetCurrentAsync para uma loja informada, sem depender da requisição (worker e webhook de pagamento).
+    /// </summary>
+    public async Task<StoreSettings> GetForEnterpriseAsync(long enterpriseId, CancellationToken cancellationToken)
+    {
+        return await settingsRepository.FindAsync(settings => settings.EnterpriseId == enterpriseId, cancellationToken,
+                ignoreQueryFilters: true, tracking: false)
+            ?? StoreSettings.CreateDefault(enterpriseId);
+    }
+
     public Task<bool> IsStoreActiveAsync(CancellationToken cancellationToken)
     {
         var enterpriseId = tenantProvider.GetEnterpriseId();

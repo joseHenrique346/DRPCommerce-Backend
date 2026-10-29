@@ -225,6 +225,12 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
         UsedCount++;
     }
 
+    /// <summary>
+    /// Conta o uso de um pedido com pagamento aprovado. As regras já foram exigidas no checkout; depois que o cliente pagou,
+    /// o desconto é honrado mesmo que o cupom tenha expirado ou esgotado enquanto o pagamento era processado.
+    /// </summary>
+    public void RegisterConfirmedUse() => UsedCount++;
+
     public void ReleaseUse()
     {
         if (UsedCount > 0)

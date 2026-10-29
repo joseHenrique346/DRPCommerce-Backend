@@ -65,19 +65,6 @@ public class UpdateListOrderCommandHandler(
                 }
             }
 
-            // O status é aplicado por último para que a troca de cupom ocorra enquanto o pedido ainda está pendente.
-            if (order.IsEditable && !order.CanLeavePending(command.statusId, settings))
-                return Result<List<Order>>.Validation("Order.MinOrderValue",
-                    $"O pedido {order.Id} precisa ter itens e subtotal de pelo menos {settings.MinOrderValue:0.00} para sair de Pendente.");
-
-            order.UpdateStatus(command.statusId, command.paymentStatusId, settings);
-
-            // Registra o uso do cupom quando o pedido passa a contar como compra e devolve o uso ao cancelar/reembolsar.
-            var redemptionError = await eligibility.SyncRedemptionAsync(order, now, cancellationToken);
-
-            if (redemptionError is not null)
-                return Result<List<Order>>.Failure(redemptionError);
-
             result.Add(order);
         }
 

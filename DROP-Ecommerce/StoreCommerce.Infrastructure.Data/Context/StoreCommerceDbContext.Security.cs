@@ -42,6 +42,9 @@ public partial class StoreCommerceDbContext
         if (changes.Count == 0)
             return;
 
+        if (GuardOrderWorkflowWrites(changes))
+            return;
+
         if (GuardInventoryWrites(changes))
             return;
 

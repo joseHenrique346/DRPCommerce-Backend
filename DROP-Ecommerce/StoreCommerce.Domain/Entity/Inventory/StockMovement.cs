@@ -8,7 +8,8 @@ public enum StockMovementType
     Reservation = 2,
     Release = 3,
     Commit = 4,
-    Expiration = 5
+    Expiration = 5,
+    Return = 6
 }
 
 public class StockMovement : BaseEntity, ITenantEntity

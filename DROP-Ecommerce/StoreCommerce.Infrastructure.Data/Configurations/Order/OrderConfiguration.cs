@@ -25,6 +25,29 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.Notes).HasMaxLength(Order.NotesMaxLength);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
+        builder.Property(e => e.IdempotencyKey).HasMaxLength(Order.IdempotencyKeyMaxLength);
+
+        builder.HasOne(e => e.StockReservation)
+            .WithMany()
+            .HasForeignKey(e => e.StockReservationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<StoreCommerce.Domain.StaticEntity.TransactionMethod>()
+            .WithMany()
+            .HasForeignKey(e => e.PaymentMethodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.ListStatusHistory)
+            .WithOne(e => e.Order)
+            .HasForeignKey(e => e.OrderId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.Navigation(e => e.ListStatusHistory).HasField("_listStatusHistory");
+
+        // Mesma chave de checkout do mesmo cliente devolve o mesmo pedido.
+        builder.HasIndex(e => new { e.EnterpriseId, e.CustomerId, e.IdempotencyKey }).IsUnique().HasFilter("idempotency_key IS NOT NULL");
+
+        // Busca dos pedidos pendentes com pagamento vencido (worker de expiração).
+        builder.HasIndex(e => new { e.OrderStatusId, e.PaymentExpiresAt });
 
         builder.HasOne(e => e.Enterprise)
             .WithMany(e => e.ListOrder)

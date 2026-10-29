@@ -2034,11 +2034,20 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("enterprise_id");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_locked");
 
                     b.Property<string>("Notes")
                         .IsRequired()
@@ -2053,6 +2062,14 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<long>("OrderStatusId")
                         .HasColumnType("bigint")
                         .HasColumnName("order_status_id");
+
+                    b.Property<DateTime?>("PaymentExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_expires_at");
+
+                    b.Property<long?>("PaymentMethodId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_method_id");
 
                     b.Property<string>("ShippingAddressLine")
                         .IsRequired()
@@ -2080,6 +2097,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("shipping_zip_code");
+
+                    b.Property<long?>("StockReservationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("stock_reservation_id");
 
                     b.Property<decimal>("SubTotal")
                         .HasPrecision(18, 2)
@@ -2118,8 +2139,22 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasIndex("OrderStatusId")
                         .HasDatabaseName("ix_pedido_order_status_id");
 
+                    b.HasIndex("PaymentMethodId")
+                        .HasDatabaseName("ix_pedido_payment_method_id");
+
                     b.HasIndex("ShippingStateId")
                         .HasDatabaseName("ix_pedido_shipping_state_id");
+
+                    b.HasIndex("StockReservationId")
+                        .HasDatabaseName("ix_pedido_stock_reservation_id");
+
+                    b.HasIndex("OrderStatusId", "PaymentExpiresAt")
+                        .HasDatabaseName("ix_pedido_order_status_id_payment_expires_at");
+
+                    b.HasIndex("EnterpriseId", "CustomerId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pedido_enterprise_id_customer_id_idempotency_key")
+                        .HasFilter("idempotency_key IS NOT NULL");
 
                     b.ToTable("pedido", (string)null);
                 });
@@ -2215,6 +2250,91 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_item_pedido_product_id_product_variant_id");
 
                     b.ToTable("item_pedido", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.OrderStatusHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("ActorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<long?>("FromPaymentStatusId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("from_payment_status_id");
+
+                    b.Property<long?>("FromStatusId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("from_status_id");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("source");
+
+                    b.Property<long>("ToPaymentStatusId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("to_payment_status_id");
+
+                    b.Property<long>("ToStatusId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("to_status_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_historico_status_pedido");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_historico_status_pedido_enterprise_id");
+
+                    b.HasIndex("FromPaymentStatusId")
+                        .HasDatabaseName("ix_historico_status_pedido_from_payment_status_id");
+
+                    b.HasIndex("FromStatusId")
+                        .HasDatabaseName("ix_historico_status_pedido_from_status_id");
+
+                    b.HasIndex("ToPaymentStatusId")
+                        .HasDatabaseName("ix_historico_status_pedido_to_payment_status_id");
+
+                    b.HasIndex("ToStatusId")
+                        .HasDatabaseName("ix_historico_status_pedido_to_status_id");
+
+                    b.HasIndex("OrderId", "ChangedAt")
+                        .HasDatabaseName("ix_historico_status_pedido_order_id_changed_at");
+
+                    b.ToTable("historico_status_pedido", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.OwnershipTransfer", b =>
@@ -5286,12 +5406,24 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_pedido_status_pedido_order_status_id");
 
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.TransactionMethod", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_pedido_metodo_transacao_payment_method_id");
+
                     b.HasOne("StoreCommerce.Domain.StaticEntity.State", "ShippingState")
                         .WithMany()
                         .HasForeignKey("ShippingStateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_pedido_estado_shipping_state_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.StockReservation", "StockReservation")
+                        .WithMany()
+                        .HasForeignKey("StockReservationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_pedido_reserva_estoque_stock_reservation_id");
 
                     b.Navigation("Coupon");
 
@@ -5304,6 +5436,8 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("OrderStatus");
 
                     b.Navigation("ShippingState");
+
+                    b.Navigation("StockReservation");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.OrderItem", b =>
@@ -5341,6 +5475,44 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ProductVariant");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.OrderStatusHistory", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.OrderPaymentStatus", null)
+                        .WithMany()
+                        .HasForeignKey("FromPaymentStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_historico_status_pedido_status_pagamento_pedido_from_paymen~");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.OrderStatus", null)
+                        .WithMany()
+                        .HasForeignKey("FromStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_historico_status_pedido_status_pedido_from_status_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Order", "Order")
+                        .WithMany("ListStatusHistory")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_historico_status_pedido_pedido_order_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.OrderPaymentStatus", null)
+                        .WithMany()
+                        .HasForeignKey("ToPaymentStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_historico_status_pedido_status_pagamento_pedido_to_payment_~");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.OrderStatus", null)
+                        .WithMany()
+                        .HasForeignKey("ToStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_historico_status_pedido_status_pedido_to_status_id");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.OwnershipTransfer", b =>
@@ -5822,6 +5994,8 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListOrderItem");
 
                     b.Navigation("ListShipment");
+
+                    b.Navigation("ListStatusHistory");
 
                     b.Navigation("ListTransaction");
                 });
