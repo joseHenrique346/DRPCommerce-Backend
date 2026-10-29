@@ -52,6 +52,18 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         return orders;
     }
 
+    public async Task<(int CompletedOrders, decimal TotalSpent)> GetCustomerPurchaseSummaryAsync(long customerId, long? excludeOrderId, CancellationToken cancellationToken = default)
+    {
+        var statuses = Order.CompletedStatusIds.ToList();
+        var summary = await _dbSet.AsNoTracking()
+            .Where(e => e.CustomerId == customerId && statuses.Contains(e.OrderStatusId) && (excludeOrderId == null || e.Id != excludeOrderId))
+            .GroupBy(e => e.CustomerId)
+            .Select(group => new { Count = group.Count(), Total = group.Sum(e => e.TotalAmount) })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return summary is null ? (0, 0) : (summary.Count, summary.Total);
+    }
+
     #endregion
 
     #endregion

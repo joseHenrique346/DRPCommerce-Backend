@@ -44,6 +44,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Shipment> Shipments => Set<Shipment>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<CouponRedemption> CouponRedemptions => Set<CouponRedemption>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Enterprise> Enterprises => Set<Enterprise>();
@@ -63,6 +64,8 @@ public partial class StoreCommerceDbContext : DbContext
 
     // Static Entities
     public DbSet<CouponType> CouponTypes => Set<CouponType>();
+    public DbSet<CouponConditionType> CouponConditionTypes => Set<CouponConditionType>();
+    public DbSet<CouponConditionOperator> CouponConditionOperators => Set<CouponConditionOperator>();
     public DbSet<DocumentStatus> DocumentStatuses => Set<DocumentStatus>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<InvoiceStatus> InvoiceStatuses => Set<InvoiceStatus>();
@@ -134,6 +137,7 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<Invoice>(modelBuilder);
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);
+        ApplyTenantFilter<CouponRedemption>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
 
         // Dependents of filtered aggregates must use the same visibility rules.

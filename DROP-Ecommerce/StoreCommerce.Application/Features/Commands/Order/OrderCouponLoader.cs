@@ -5,7 +5,7 @@ using StoreCommerce.Domain.Interfaces;
 namespace StoreCommerce.Application.Features.Commands;
 
 /// <summary>
-/// Carrega e valida os cupons informados nos comandos de pedido.
+/// Carrega os cupons informados nos comandos de pedido (com as condições) e valida a vinculação ao pedido.
 /// </summary>
 internal static class OrderCouponLoader
 {
@@ -19,14 +19,17 @@ internal static class OrderCouponLoader
         return (await repository.GetListByListIdAsync(ids, cancellationToken)).ToDictionary(coupon => coupon.Id);
     }
 
-    public static Error? Validate(IReadOnlyDictionary<long, Coupon> coupons, long couponId, DateTime now)
+    /// <summary>
+    /// Valida a vinculação do cupom ao pedido do cliente e devolve o histórico usado, para aplicar o cupom sem nova consulta.
+    /// </summary>
+    public static async Task<(Error? Error, CouponCustomerHistory? History)> ValidateAsync(IReadOnlyDictionary<long, Coupon> coupons, long couponId,
+        long customerId, long? orderId, CouponEligibilityService eligibility, DateTime now, CancellationToken cancellationToken)
     {
         if (!coupons.TryGetValue(couponId, out var coupon))
-            return Error.NotFound("Coupon.NotFound", $"Coupon com id {couponId} não encontrado.");
+            return (Error.NotFound("Coupon.NotFound", $"Coupon com id {couponId} não encontrado."), null);
 
-        if (!coupon.IsUsable(now))
-            return Error.Validation("Coupon.Unavailable", "Cupom inativo, fora da vigência ou sem usos disponíveis.");
+        var history = await eligibility.GetHistoryAsync(couponId, customerId, orderId, cancellationToken);
 
-        return null;
+        return (CouponEligibilityService.ValidateForApply(coupon, history, now), history);
     }
 }

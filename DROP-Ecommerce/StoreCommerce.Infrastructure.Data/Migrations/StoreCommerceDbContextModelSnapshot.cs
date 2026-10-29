@@ -811,11 +811,6 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("max_uses");
 
-                    b.Property<decimal>("MinOrderValue")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("min_order_value");
-
                     b.Property<DateTime>("StartsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("starts_at");
@@ -825,6 +820,7 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("UsedCount")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
                         .HasColumnName("used_count");
 
@@ -837,7 +833,78 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasIndex("EnterpriseId")
                         .HasDatabaseName("ix_cupom_enterprise_id");
 
+                    b.HasIndex("EnterpriseId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cupom_enterprise_id_code")
+                        .HasFilter("is_deleted = FALSE");
+
                     b.ToTable("cupom", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CouponRedemption", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CouponId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("coupon_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("order_id");
+
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("redeemed_at");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_resgate_cupom");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_resgate_cupom_customer_id");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_resgate_cupom_enterprise_id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_resgate_cupom_order_id")
+                        .HasFilter("released_at IS NULL");
+
+                    b.HasIndex("CouponId", "CustomerId")
+                        .HasDatabaseName("ix_resgate_cupom_coupon_id_customer_id");
+
+                    b.ToTable("resgate_cupom", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Customer", b =>
@@ -3524,6 +3591,101 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("usuario_refresh_token", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.CouponConditionOperator", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_operador_condicao_cupom");
+
+                    b.ToTable("operador_condicao_cupom", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Description = "Igual a"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Description = "Maior que"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Description = "Maior ou igual a"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Description = "Menor que"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Description = "Menor ou igual a"
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            Description = "Entre (inclusive)"
+                        },
+                        new
+                        {
+                            Id = 7L,
+                            Description = "Maior que e menor que"
+                        });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.CouponConditionType", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tipo_condicao_cupom");
+
+                    b.ToTable("tipo_condicao_cupom", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Description = "Valor do pedido"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Description = "Quantidade de itens do pedido"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Description = "Compras anteriores do cliente"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Description = "Total já gasto pelo cliente"
+                        });
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.CouponType", b =>
                 {
                     b.Property<long>("Id")
@@ -4418,9 +4580,105 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_cupom_empresa_enterprise_id");
 
+                    b.OwnsMany("StoreCommerce.Domain.Entity.CouponCondition", "ListCondition", b1 =>
+                        {
+                            b1.Property<long>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasColumnName("id");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<long>("Id"));
+
+                            b1.Property<long>("CouponConditionOperatorId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("coupon_condition_operator_id");
+
+                            b1.Property<long>("CouponConditionTypeId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("coupon_condition_type_id");
+
+                            b1.Property<long>("CouponId")
+                                .HasColumnType("bigint")
+                                .HasColumnName("coupon_id");
+
+                            b1.Property<decimal?>("SecondValue")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("second_value");
+
+                            b1.Property<decimal>("Value")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("value");
+
+                            b1.HasKey("Id")
+                                .HasName("pk_condicao_cupom");
+
+                            b1.HasIndex("CouponConditionOperatorId")
+                                .HasDatabaseName("ix_condicao_cupom_coupon_condition_operator_id");
+
+                            b1.HasIndex("CouponConditionTypeId")
+                                .HasDatabaseName("ix_condicao_cupom_coupon_condition_type_id");
+
+                            b1.HasIndex("CouponId")
+                                .HasDatabaseName("ix_condicao_cupom_coupon_id");
+
+                            b1.ToTable("condicao_cupom", (string)null);
+
+                            b1.HasOne("StoreCommerce.Domain.StaticEntity.CouponConditionOperator", null)
+                                .WithMany()
+                                .HasForeignKey("CouponConditionOperatorId")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("fk_condicao_cupom_operador_condicao_cupom_coupon_condition_ope~");
+
+                            b1.HasOne("StoreCommerce.Domain.StaticEntity.CouponConditionType", null)
+                                .WithMany()
+                                .HasForeignKey("CouponConditionTypeId")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("fk_condicao_cupom_tipo_condicao_cupom_coupon_condition_type_id");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CouponId")
+                                .HasConstraintName("fk_condicao_cupom_cupom_coupon_id");
+                        });
+
                     b.Navigation("CouponType");
 
                     b.Navigation("Enterprise");
+
+                    b.Navigation("ListCondition");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CouponRedemption", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Coupon", "Coupon")
+                        .WithMany()
+                        .HasForeignKey("CouponId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_resgate_cupom_cupom_coupon_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_resgate_cupom_cliente_customer_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_resgate_cupom_pedido_order_id");
+
+                    b.Navigation("Coupon");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Customer", b =>

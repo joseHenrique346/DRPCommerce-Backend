@@ -89,6 +89,16 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public bool IsEditable => OrderStatusId == OrderStatus.Pending.Id;
 
     /// <summary>
+    /// Status em que o pedido conta como compra concluída: consome o cupom e entra no histórico do cliente.
+    /// </summary>
+    public static bool ConsumesCoupon(long orderStatusId) =>
+        orderStatusId == OrderStatus.Confirmed.Id || orderStatusId == OrderStatus.Processing.Id ||
+        orderStatusId == OrderStatus.Shipped.Id || orderStatusId == OrderStatus.Delivered.Id;
+
+    public static IReadOnlyList<long> CompletedStatusIds { get; } =
+        [OrderStatus.Confirmed.Id, OrderStatus.Processing.Id, OrderStatus.Shipped.Id, OrderStatus.Delivered.Id];
+
+    /// <summary>
     /// Quantidade total de unidades do pedido (soma das quantidades dos itens).
     /// </summary>
     public int TotalQuantity => _listOrderItem.Sum(item => item.Quantity);
@@ -132,8 +142,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
     /// <summary>
     /// Aplica (ou remove, quando nulo) o cupom do pedido e recalcula os valores.
+    /// Disponibilidade e condições do cliente são exigidas na aplicação; as condições do pedido (valor e quantidade)
+    /// apenas zeram o desconto enquanto não forem atendidas e são exigidas quando o pedido sai de Pendente.
     /// </summary>
-    public void ApplyCoupon(Coupon? coupon, DateTime now, StoreSettings settings)
+    public void ApplyCoupon(Coupon? coupon, CouponCustomerHistory? history, DateTime now, StoreSettings settings)
     {
         EnsureEditable();
         EnsureSettings(settings);
@@ -143,8 +155,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
             if (coupon.EnterpriseId != EnterpriseId)
                 throw new ArgumentException("Cupom não pertence à loja do pedido.");
 
-            if (coupon.Id != CouponId && !coupon.IsUsable(now))
-                throw new ArgumentException("Cupom inativo, fora da vigência ou sem usos disponíveis.");
+            var failure = coupon.Id == CouponId ? null : coupon.CheckAvailability(now, history) ?? coupon.CheckCustomerConditions(history);
+
+            if (failure is not null)
+                throw new ArgumentException(failure.Message);
         }
 
         Coupon = coupon;
@@ -231,7 +245,7 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
             throw new InvalidOperationException("O cupom do pedido precisa estar carregado para recalcular os valores.");
 
         SubTotal = _listOrderItem.Sum(item => item.GrossAmount);
-        DiscountAmount = Coupon?.CalculateDiscount(SubTotal) ?? 0;
+        DiscountAmount = Coupon?.CalculateDiscount(SubTotal, TotalQuantity) ?? 0;
         AllocateDiscount();
         TotalAmount = SubTotal - DiscountAmount + ShippingCost + TaxAmount;
     }

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentValidation;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.StaticEntity;
@@ -13,7 +14,10 @@ public class UpdateCouponCommandValidator : AbstractValidator<UpdateCouponComman
 
         RuleFor(coupon => coupon.code)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .Length(Coupon.CodeMinLength, Coupon.CodeMaxLength).WithMessage("{PropertyName} deve ter entre {MinLength} e {MaxLength} caracteres.");
+            .Must(code => Coupon.NormalizeCode(code).Length is >= Coupon.CodeMinLength and <= Coupon.CodeMaxLength)
+            .WithMessage($"{{PropertyName}} deve ter entre {Coupon.CodeMinLength} e {Coupon.CodeMaxLength} caracteres, sem contar espaços.")
+            .Must(code => Regex.IsMatch(Coupon.NormalizeCode(code), Coupon.CodePattern))
+            .WithMessage("{PropertyName} aceita apenas letras sem acento, números, hífen e sublinhado.");
 
         RuleFor(coupon => coupon.typeId)
             .Must(typeId => BaseStaticEntity.GetAll<CouponType>().Any(type => type.Id == typeId))
@@ -25,9 +29,6 @@ public class UpdateCouponCommandValidator : AbstractValidator<UpdateCouponComman
         RuleFor(coupon => coupon.discountValue)
             .LessThanOrEqualTo(Coupon.MaxPercentage).When(coupon => coupon.typeId == CouponType.Percentage.Id)
             .WithMessage("{PropertyName} não pode ser maior que 100% em cupons percentuais.");
-
-        RuleFor(coupon => coupon.minOrderValue)
-            .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
 
         RuleFor(coupon => coupon.maxDiscountCap)
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
@@ -42,5 +43,13 @@ public class UpdateCouponCommandValidator : AbstractValidator<UpdateCouponComman
         RuleFor(coupon => coupon.expiresAt)
             .NotEqual(default(DateTime)).WithMessage("{PropertyName} deve ser uma data válida.")
             .GreaterThan(coupon => coupon.startsAt).WithMessage("{PropertyName} deve ser posterior a StartsAt.");
+
+        RuleFor(coupon => coupon.conditions)
+            .Must(conditions => conditions is null || conditions.Count <= Coupon.MaxConditions)
+            .WithMessage($"Informe no máximo {Coupon.MaxConditions} condições.")
+            .Must(conditions => conditions is null || conditions.Select(condition => condition.TypeId).Distinct().Count() == conditions.Count)
+            .WithMessage("Use no máximo uma condição de cada tipo.");
+
+        RuleForEach(coupon => coupon.conditions).SetValidator(new CouponConditionRequestValidator());
     }
 }

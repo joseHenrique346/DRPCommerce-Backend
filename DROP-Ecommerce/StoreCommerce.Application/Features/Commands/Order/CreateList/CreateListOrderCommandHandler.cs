@@ -11,6 +11,7 @@ public class CreateListOrderCommandHandler(
     IUnitOfWork unitOfWork,
     ITenantProvider tenantProvider,
     StoreSettingsReader storeSettings,
+    CouponEligibilityService eligibility,
     TimeProvider time)
     : IRequestHandler<CreateListOrderCommand, Result<List<Order>>>
 {
@@ -31,12 +32,12 @@ public class CreateListOrderCommandHandler(
 
             if (command.couponId is long couponId)
             {
-                var error = OrderCouponLoader.Validate(coupons, couponId, now);
+                var (error, history) = await OrderCouponLoader.ValidateAsync(coupons, couponId, command.customerId, null, eligibility, now, cancellationToken);
 
                 if (error is not null)
                     return Result<List<Order>>.Failure(error);
 
-                order.ApplyCoupon(coupons[couponId], now, settings);
+                order.ApplyCoupon(coupons[couponId], history, now, settings);
             }
 
             orders.Add(order);

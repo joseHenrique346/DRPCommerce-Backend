@@ -139,6 +139,15 @@ public partial class StoreCommerceDbContext
                     }
 
                     break;
+                case CouponRedemption redemption when entry.State == EntityState.Added:
+                    await EnsureTenantAsync<Order>(redemption.OrderId, tenant, ct);
+                    await EnsureTenantAsync<Customer>(redemption.CustomerId, tenant, ct);
+
+                    if (!await Orders.AnyAsync(Order => Order.Id == redemption.OrderId && Order.CustomerId == redemption.CustomerId &&
+                            Order.CouponId == redemption.CouponId, ct))
+                        throw new SecurityFailure(400, "Security.InvalidRelationship", "Resgate incompatível com o pedido.");
+
+                    break;
                 case Employee e:
                     await EnsureTenantAsync<EnterpriseMembership>(e.EnterpriseMembershipId, tenant, ct);
                     await EnsureTenantAsync<EmployeePosition>(e.PositionId, tenant, ct);

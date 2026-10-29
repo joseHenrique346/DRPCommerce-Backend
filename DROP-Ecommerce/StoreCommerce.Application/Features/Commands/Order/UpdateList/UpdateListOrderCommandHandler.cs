@@ -10,6 +10,7 @@ public class UpdateListOrderCommandHandler(
     IRepository<Coupon> couponRepository,
     IUnitOfWork unitOfWork,
     StoreSettingsReader storeSettings,
+    CouponEligibilityService eligibility,
     TimeProvider time)
     : IRequestHandler<UpdateListOrderCommand, Result<List<Order>>>
 {
@@ -51,16 +52,16 @@ public class UpdateListOrderCommandHandler(
 
                 if (command.couponId is long couponId)
                 {
-                    var error = OrderCouponLoader.Validate(coupons, couponId, now);
+                    var (error, history) = await OrderCouponLoader.ValidateAsync(coupons, couponId, order.CustomerId, order.Id, eligibility, now, cancellationToken);
 
                     if (error is not null)
                         return Result<List<Order>>.Failure(error);
 
-                    order.ApplyCoupon(coupons[couponId], now, settings);
+                    order.ApplyCoupon(coupons[couponId], history, now, settings);
                 }
                 else
                 {
-                    order.ApplyCoupon(null, now, settings);
+                    order.ApplyCoupon(null, null, now, settings);
                 }
             }
 
@@ -70,6 +71,13 @@ public class UpdateListOrderCommandHandler(
                     $"O pedido {order.Id} precisa ter itens e subtotal de pelo menos {settings.MinOrderValue:0.00} para sair de Pendente.");
 
             order.UpdateStatus(command.statusId, command.paymentStatusId, settings);
+
+            // Registra o uso do cupom quando o pedido passa a contar como compra e devolve o uso ao cancelar/reembolsar.
+            var redemptionError = await eligibility.SyncRedemptionAsync(order, now, cancellationToken);
+
+            if (redemptionError is not null)
+                return Result<List<Order>>.Failure(redemptionError);
+
             result.Add(order);
         }
 
