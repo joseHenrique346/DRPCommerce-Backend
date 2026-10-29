@@ -23,6 +23,16 @@ public class ProductRepository : Repository<Product>, IProductRepository
         return await _dbSet.Where(e => e.CategoryId == categoryId).ToListAsync(cancellationToken);
     }
 
+    public Task<List<Product>> GetStorefrontAsync(IReadOnlyCollection<long> categoryIds, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        return Context.Products.AsNoTracking()
+            .Where(Product => Product.IsActive && categoryIds.Contains(Product.CategoryId))
+            .OrderBy(Product => Product.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
     #endregion
 
     #endregion

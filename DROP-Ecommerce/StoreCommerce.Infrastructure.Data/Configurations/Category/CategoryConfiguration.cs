@@ -42,5 +42,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.ParentCategoryId);
+        builder.HasIndex(Category => new { Category.EnterpriseId, Category.Slug })
+            .IsUnique()
+            .HasFilter("is_deleted = FALSE");
     }
 }

@@ -66,7 +66,7 @@ public partial class StoreCommerceDbContext
 
             switch (entry.Entity)
             {
-                case Category category when category.ParentCategoryId.HasValue:
+                case Category category when !category.IsDeleted && category.ParentCategoryId.HasValue:
                     await EnsureTenantAsync<Category>(category.ParentCategoryId.Value, tenant, ct);
                     break;
                 case Product p:

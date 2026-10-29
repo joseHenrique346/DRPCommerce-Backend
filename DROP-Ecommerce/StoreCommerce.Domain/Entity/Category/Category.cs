@@ -1,5 +1,8 @@
 using StoreCommerce.Domain.Entity.Base;
 using StoreCommerce.Domain.Interfaces;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -10,6 +13,8 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     public const int SlugMaxLength = 100;
     public const int DescriptionMaxLength = 500;
     public const int ImageUrlMaxLength = 500;
+    public const int MaximumDepth = 3;
+    public const string SlugPattern = "^[a-z0-9]+(?:-[a-z0-9]+)*$";
     #endregion
 
     #region Properties
@@ -38,7 +43,9 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Constructors
-    protected Category() { }
+    protected Category()
+    {
+    }
 
     private Category(long enterpriseId, long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder, bool isActive)
     {
@@ -54,28 +61,29 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Functions
-    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder, bool isActive)
+    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string? slug, string description, string imageUrl, int displayOrder, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
-        BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
-        BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
-        BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
-        BaseValidate.ValidateMaxLength(slug, SlugMaxLength, nameof(Slug));
-        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
-        BaseValidate.ValidateMaxLength(imageUrl, ImageUrlMaxLength, nameof(ImageUrl));
-        BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
+        var category = new Category(enterpriseId, null, string.Empty, string.Empty, string.Empty, string.Empty, 0, isActive);
+        category.UpdateDetails(parentCategoryId, name, slug, description, imageUrl, displayOrder, isActive);
 
-        return new Category(enterpriseId, parentCategoryId, name, slug, description, imageUrl, displayOrder, isActive);
+        return category;
     }
 
-    public void UpdateDetails(long? parentCategoryId, string name, string slug, string description, string imageUrl, int displayOrder, bool isActive)
+    public void UpdateDetails(long? parentCategoryId, string name, string? slug, string description, string imageUrl, int displayOrder, bool isActive)
     {
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
         BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
-        BaseValidate.ValidateNotNullOrEmpty(slug, nameof(Slug));
+        slug = ResolveSlug(name, slug);
         BaseValidate.ValidateMaxLength(slug, SlugMaxLength, nameof(Slug));
+
+        if (!Regex.IsMatch(slug, SlugPattern, RegexOptions.CultureInvariant))
+            throw new ArgumentException("O slug deve conter apenas letras minúsculas, números e hífens.", nameof(slug));
+
+        if (Id > 0 && parentCategoryId == Id)
+            throw new ArgumentException("A categoria não pode ser sua própria categoria pai.", nameof(parentCategoryId));
+
         BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
         BaseValidate.ValidateMaxLength(imageUrl, ImageUrlMaxLength, nameof(ImageUrl));
         BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
@@ -89,7 +97,34 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         IsActive = isActive;
     }
 
-    public void SetActive(bool active) => IsActive = active;
+    public void SetActive(bool active)
+    {
+        IsActive = active;
+    }
+
+    public void SetDisplayOrder(int displayOrder)
+    {
+        BaseValidate.ValidatePositiveOrZero(displayOrder, nameof(DisplayOrder));
+
+        DisplayOrder = displayOrder;
+    }
+
+    private static string ResolveSlug(string name, string? slug)
+    {
+        if (!string.IsNullOrWhiteSpace(slug))
+            return slug;
+
+        var normalized = name.Normalize(NormalizationForm.FormD);
+        var characters = normalized.Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark);
+        var value = Regex.Replace(new string(characters.ToArray()).ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+
+        if (value.Length > SlugMaxLength)
+            value = value[..SlugMaxLength].TrimEnd('-');
+
+        BaseValidate.ValidateNotNullOrEmpty(value, nameof(Slug));
+
+        return value;
+    }
 
     public void SoftDelete()
     {

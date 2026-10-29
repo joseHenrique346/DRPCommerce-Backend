@@ -16,9 +16,9 @@ public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCo
             .MaximumLength(Category.NameMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(category => category.slug)
-            .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
             .MaximumLength(Category.SlugMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.")
-            .Matches(@"^[a-z0-9]+(?:-[a-z0-9]+)*$").WithMessage("{PropertyName} deve conter apenas letras minúsculas, números e hífens.");
+            .Matches(Category.SlugPattern).WithMessage("{PropertyName} deve conter apenas letras minúsculas, números e hífens.")
+            .When(category => !string.IsNullOrWhiteSpace(category.slug));
 
         RuleFor(category => category.description)
             .MaximumLength(Category.DescriptionMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
