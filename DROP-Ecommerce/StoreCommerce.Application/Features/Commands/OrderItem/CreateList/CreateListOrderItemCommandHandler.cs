@@ -11,10 +11,11 @@ namespace StoreCommerce.Application.Features.Commands;
 /// </summary>
 public class CreateListOrderItemCommandHandler(
     IOrderRepository orderRepository,
-    IRepository<Product> productRepository,
+    IProductRepository productRepository,
     IRepository<Service> serviceRepository,
     IUnitOfWork unitOfWork,
-    StoreSettingsReader storeSettings)
+    StoreSettingsReader storeSettings,
+    CategoryCatalogReader categoryReader)
     : IRequestHandler<CreateListOrderItemCommand, Result<List<OrderItem>>>
 {
     public async Task<Result<List<OrderItem>>> Handle(CreateListOrderItemCommand request, CancellationToken cancellationToken)
@@ -23,6 +24,12 @@ public class CreateListOrderItemCommandHandler(
             return Result<List<OrderItem>>.Failure(StoreSettingsReader.InactiveStoreError);
 
         var settings = await storeSettings.GetCurrentAsync(cancellationToken);
+        var categoryResult = await categoryReader.ReadAsync(true, cancellationToken);
+
+        if (categoryResult.IsFailure)
+            return Result<List<OrderItem>>.Failure(categoryResult.Errors);
+
+        var visibleCategories = categoryResult.Content!.Select(Category => Category.Id).ToHashSet();
         var commands = request.commands;
         var orders = (await orderRepository.GetListWithItemsAsync(commands.Select(command => command.orderId).Distinct().ToList(), cancellationToken))
             .ToDictionary(order => order.Id);
@@ -48,10 +55,17 @@ public class CreateListOrderItemCommandHandler(
                 if (!products.TryGetValue(productId, out var product))
                     return Result<List<OrderItem>>.NotFound("Product.NotFound", $"Product com id {productId} não encontrado.");
 
-                if (!product.IsActive)
+                if (!product.IsActive || !visibleCategories.Contains(product.CategoryId))
                     return Result<List<OrderItem>>.Validation("Product.Inactive", $"O produto {productId} está inativo.");
 
-                item = order.AddProductItem(product, command.quantity, settings);
+                var variant = command.productVariantId.HasValue
+                    ? product.ListProductVariant.SingleOrDefault(Variant => Variant.Id == command.productVariantId)
+                    : product.ListProductVariant.SingleOrDefault(Variant => Variant.IsDefault && !product.HasVariants);
+
+                if (variant is null || !variant.IsActive || variant.IsDeleted)
+                    return Result<List<OrderItem>>.Validation("ProductVariant.Required", "Selecione um SKU ativo pertencente ao produto.");
+
+                item = order.AddProductItem(product, variant, command.quantity, settings);
             }
             else
             {

@@ -156,12 +156,30 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     {
         BaseValidate.ValidateNotNull(product, nameof(Product));
 
+        if (product.HasVariants)
+            throw new ArgumentException("Selecione uma variante do produto.");
+
+        var variant = product.ListProductVariant.Single(Variant => Variant.IsDefault && !Variant.IsDeleted);
+
+        return AddProductItem(product, variant, quantity, settings);
+    }
+
+    public OrderItem AddProductItem(Product product, ProductVariant variant, int quantity, StoreSettings settings)
+    {
+        BaseValidate.ValidateNotNull(product, nameof(Product));
+        BaseValidate.ValidateNotNull(variant, nameof(ProductVariant));
+
         if (product.EnterpriseId != EnterpriseId || product.IsDeleted || !product.IsActive)
             throw new ArgumentException("Produto inexistente, inativo ou de outra loja.");
 
-        var existing = _listOrderItem.FirstOrDefault(item => item.ProductId == product.Id);
+        if (variant.ProductId != product.Id || variant.EnterpriseId != EnterpriseId || variant.IsDeleted || !variant.IsActive ||
+            (product.HasVariants && variant.IsDefault))
+            throw new ArgumentException("Variante indisponível ou incompatível com o produto.");
 
-        return AddOrMergeItem(existing, () => OrderItem.Create(this, product.Id, null, product.Name, product.SKU, quantity, product.Price), quantity, settings);
+        var existing = _listOrderItem.FirstOrDefault(item => item.ProductVariantId == variant.Id);
+
+        return AddOrMergeItem(existing, () => OrderItem.Create(this, product.Id, null, product.Name, variant.SKU,
+            quantity, variant.Price ?? product.Price, variant), quantity, settings);
     }
 
     public OrderItem AddServiceItem(Service service, int quantity, StoreSettings settings)

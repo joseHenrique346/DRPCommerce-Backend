@@ -5,7 +5,7 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class GetStorefrontProductsQueryHandler(CategoryCatalogReader categories, IProductRepository products)
+public sealed class GetStorefrontProductsQueryHandler(CategoryCatalogReader categories, IProductRepository products, StoreSettingsReader settings)
     : IRequestHandler<GetStorefrontProductsQuery, Result<List<StorefrontProductResponse>>>
 {
     public async Task<Result<List<StorefrontProductResponse>>> Handle(GetStorefrontProductsQuery request, CancellationToken cancellationToken)
@@ -19,8 +19,9 @@ public sealed class GetStorefrontProductsQueryHandler(CategoryCatalogReader cate
         var items = await products.GetStorefrontAsync(ids, Math.Clamp(request.Page, 1, 100000),
             Math.Clamp(request.PageSize, 1, 100), cancellationToken);
 
-        return Result<List<StorefrontProductResponse>>.Success(items.Select(Product => new StorefrontProductResponse(
-            Product.Id, Product.Name, Product.Slug, Product.Description,
-            Product.Price, Product.Brand, Product.ImageUrls, Product.CategoryId)).ToList());
+        var policy = await settings.GetCurrentAsync(cancellationToken);
+
+        return Result<List<StorefrontProductResponse>>.Success(items.Select(Product =>
+            StorefrontProductResponse.FromEntity(Product, policy.AllowBackorder)).ToList());
     }
 }

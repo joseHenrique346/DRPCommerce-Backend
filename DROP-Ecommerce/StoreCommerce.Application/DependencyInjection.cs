@@ -19,6 +19,11 @@ public static class DependencyInjection
         services.AddScoped<IdentityHandlerContext>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CategoryCatalogReader>();
+        services.AddScoped<CatalogWriteContext>();
+        services.AddScoped<ProductCatalogWriter>();
+        services.AddScoped<ProductVariantWriter>();
+        services.AddScoped<ProductSearchReader>();
+        services.AddScoped<Inventory.InventoryService>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;

@@ -5,5 +5,5 @@ namespace StoreCommerce.Application.Identity;
 public interface IIdentityUnitOfWork : IUnitOfWork
 {
     IIdentityTransaction? CurrentTransaction { get; }
-    Task<IIdentityTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
+    new Task<IIdentityTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
 }

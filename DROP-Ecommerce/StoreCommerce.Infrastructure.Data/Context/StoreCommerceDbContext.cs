@@ -1,6 +1,7 @@
 using SharedCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
+using StoreCommerce.Application.Inventory;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
@@ -14,20 +15,27 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly AppearanceWriteScope _appearanceWrites;
     private readonly IIdentityOperationScope _identityScope;
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
+    private readonly InventoryWriteScope _inventoryWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
-        IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites)
+        IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
+        InventoryWriteScope inventoryWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
         _appearanceWrites = appearanceWrites;
         _identityScope = identityScope;
         _httpAccessor = httpAccessor;
+        _inventoryWrites = inventoryWrites;
     }
 
     #region DbSets
 
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<StockReservation> StockReservations => Set<StockReservation>();
+    public DbSet<StockReservationLine> StockReservationLines => Set<StockReservationLine>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Customer> Customers => Set<Customer>();
@@ -103,6 +111,11 @@ public partial class StoreCommerceDbContext : DbContext
 
         // Entities with BOTH ITenantEntity + ISoftDeletable
         ApplyTenantAndSoftDeleteFilter<Product>(modelBuilder);
+        modelBuilder.Entity<ProductVariant>().HasQueryFilter(ProductVariant =>
+            ProductVariant.EnterpriseId == _tenantProvider.GetEnterpriseId() && !ProductVariant.IsDeleted && !ProductVariant.Product.IsDeleted);
+        modelBuilder.Entity<StockReservation>().HasQueryFilter(StockReservation => StockReservation.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<StockReservationLine>().HasQueryFilter(StockReservationLine => StockReservationLine.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<StockMovement>().HasQueryFilter(StockMovement => StockMovement.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantAndSoftDeleteFilter<Order>(modelBuilder);
         ApplyTenantAndSoftDeleteFilter<Customer>(modelBuilder);
         ApplyTenantAndSoftDeleteFilter<Coupon>(modelBuilder);

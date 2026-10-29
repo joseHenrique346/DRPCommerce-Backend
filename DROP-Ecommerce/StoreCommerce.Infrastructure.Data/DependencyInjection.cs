@@ -37,6 +37,10 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IRepository<StoreCommerce.Domain.Entity.Product>>(Provider => Provider.GetRequiredService<IProductRepository>());
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<StoreCommerce.Application.Inventory.InventoryWriteScope>();
+        services.AddHostedService<Workers.StockReservationExpirationWorker>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();

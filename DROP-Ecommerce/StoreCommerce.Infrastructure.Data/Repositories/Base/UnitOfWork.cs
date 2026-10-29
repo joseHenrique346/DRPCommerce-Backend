@@ -37,4 +37,9 @@ public class UnitOfWork : IIdentityUnitOfWork
 
         return new IdentityTransaction(transaction);
     }
+
+    async Task<IStoreTransaction> IUnitOfWork.BeginTransactionAsync(CancellationToken cancellationToken)
+    {
+        return await BeginTransactionAsync(cancellationToken);
+    }
 }

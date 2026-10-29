@@ -34,10 +34,21 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
             .MaximumLength(Product.BarCodeMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(product => product.price)
-            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
+            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.")
+            .PrecisionScale(18, 2, true);
 
         RuleFor(product => product.costPrice)
-            .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");
+            .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.")
+            .LessThanOrEqualTo(product => product.price).WithMessage("O custo não pode ser maior que o preço de venda.")
+            .PrecisionScale(18, 2, true);
+
+        When(product => !product.isDigital, () =>
+        {
+            RuleFor(product => product.weight).GreaterThan(0);
+            RuleFor(product => product.height).GreaterThan(0);
+            RuleFor(product => product.width).GreaterThan(0);
+            RuleFor(product => product.length).GreaterThan(0);
+        });
 
         RuleFor(product => product.weight)
             .GreaterThanOrEqualTo(0).WithMessage("{PropertyName} não pode ser negativo.");

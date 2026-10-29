@@ -42,6 +42,9 @@ public partial class StoreCommerceDbContext
         if (changes.Count == 0)
             return;
 
+        if (GuardInventoryWrites(changes))
+            return;
+
         var tenant = _tenantProvider.GetEnterpriseId();
         var principal = _httpAccessor.HttpContext?.User ?? throw new SecurityFailure(401, "Security.AuthenticationRequired", "Autenticação necessária.");
 
@@ -66,10 +69,31 @@ public partial class StoreCommerceDbContext
 
             switch (entry.Entity)
             {
+                case ProductVariant variant:
+                    if (entry.State == EntityState.Added && ChangeTracker.Entries<Product>()
+                        .Any(Product => ReferenceEquals(Product.Entity, variant.Product) && Product.State == EntityState.Added))
+                    {
+                        if (variant.Product.EnterpriseId != tenant)
+                            throw new SecurityFailure(403, "Security.TenantMismatch", "SKU de outra loja.");
+                    }
+                    else
+                    {
+                        await EnsureTenantAsync<Product>(variant.ProductId, tenant, ct);
+                    }
+
+                    if (entry.State == EntityState.Modified &&
+                        (entry.Property(nameof(ProductVariant.Price)).IsModified || entry.Property(nameof(ProductVariant.CostPrice)).IsModified) &&
+                        !SecurityNames.HasPermission(principal, PermissionCodes.ProductsChangePrice))
+                        throw new SecurityFailure(403, "Security.PricePermissionRequired", "Permissão para alterar preço de SKU necessária.");
+
+                    break;
                 case Category category when !category.IsDeleted && category.ParentCategoryId.HasValue:
                     await EnsureTenantAsync<Category>(category.ParentCategoryId.Value, tenant, ct);
                     break;
                 case Product p:
+                    if (p.IsDeleted)
+                        break;
+
                     await EnsureTenantAsync<Category>(p.CategoryId, tenant, ct);
 
                     if (p.SupplierId.HasValue)
@@ -130,6 +154,11 @@ public partial class StoreCommerceDbContext
                     break;
                 case OrderItem item:
                     await EnsureTenantAsync<Order>(item.OrderId, tenant, ct);
+
+                    if (entry.State == EntityState.Added && item.ProductVariantId.HasValue &&
+                        !await ProductVariants.AnyAsync(Variant => Variant.Id == item.ProductVariantId && Variant.ProductId == item.ProductId &&
+                            Variant.EnterpriseId == tenant, ct))
+                        throw new SecurityFailure(400, "ProductVariant.InvalidRelationship", "A variante não pertence ao produto e à loja do pedido.");
 
                     // Produto/serviço são copiados para o item na inclusão; depois disso o item é apenas recalculado,
                     // mesmo que o produto tenha sido excluído logicamente.

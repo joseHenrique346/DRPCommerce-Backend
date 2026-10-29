@@ -1,22 +1,11 @@
-using StoreCommerce.Application.Features.Commands.Base.Handlers;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class UpdateListProductCommandHandler(IRepository<Product> repository, IUnitOfWork unitOfWork)
-    : BaseUpdateListHandler<UpdateProductCommand, UpdateListProductCommand, Product>(repository, unitOfWork)
+public sealed class UpdateListProductCommandHandler(ProductCatalogWriter writer) : CatalogRequestHandler<UpdateListProductCommand, List<Product>>
 {
-    protected override IReadOnlyCollection<UpdateProductCommand> GetCommandList(UpdateListProductCommand request) => request.commands;
-
-    protected override long GetById(UpdateProductCommand command) => command.id;
-
-    protected override void ApplyChanges(Product entity, UpdateProductCommand command)
+    protected override Task<List<Product>> ExecuteAsync(UpdateListProductCommand request, CancellationToken ct)
     {
-        entity.UpdateDetails(command.name, command.slug, command.description, command.sku, command.barCode, command.brand, command.imageUrls, command.isDigital);
-        entity.UpdatePricing(command.price, command.costPrice);
-        entity.UpdateDimensions(command.weight, command.height, command.width, command.length);
-        entity.UpdateCategory(command.categoryId, command.supplierId);
-        entity.SetActive(command.isActive);
+        return writer.UpdateAsync(request.commands, ct);
     }
 }

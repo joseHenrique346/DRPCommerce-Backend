@@ -24,5 +24,8 @@ public class CreateOrderItemCommandValidator : AbstractValidator<CreateOrderItem
 
         RuleFor(orderItem => orderItem.quantity)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
+
+        RuleFor(Item => Item.productVariantId).GreaterThan(0).When(Item => Item.productVariantId.HasValue);
+        RuleFor(Item => Item.productId).NotNull().When(Item => Item.productVariantId.HasValue);
     }
 }

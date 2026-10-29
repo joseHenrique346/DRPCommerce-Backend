@@ -1,6 +1,5 @@
 namespace StoreCommerce.Application.Identity;
 
-public interface IIdentityTransaction : IAsyncDisposable
+public interface IIdentityTransaction : StoreCommerce.Domain.Interfaces.IStoreTransaction
 {
-    Task CommitAsync(CancellationToken cancellationToken);
 }

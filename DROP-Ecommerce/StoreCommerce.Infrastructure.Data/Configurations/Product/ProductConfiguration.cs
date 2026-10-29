@@ -12,6 +12,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.HasAlternateKey(Product => new { Product.EnterpriseId, Product.Id });
 
         builder.Property(e => e.Name).HasMaxLength(Product.NameMaxLength);
         builder.Property(e => e.Slug).HasMaxLength(Product.SlugMaxLength);
@@ -53,5 +54,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.CategoryId);
         builder.HasIndex(e => e.SupplierId);
+        builder.HasIndex(Product => new { Product.EnterpriseId, Product.Slug }).IsUnique().HasFilter("is_deleted = FALSE");
+        builder.HasIndex(Product => new { Product.EnterpriseId, Product.SKU }).IsUnique().HasFilter("is_deleted = FALSE");
     }
 }

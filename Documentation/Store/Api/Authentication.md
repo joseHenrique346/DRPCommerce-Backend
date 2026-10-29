@@ -174,12 +174,13 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 
 | Módulo | Leitura | Escrita |
 |---|---|---|
-| Produtos | products.view | products.create, products.edit ou products.delete |
+| Produtos / variantes | products.view | products.create, products.edit ou products.delete |
 | Categorias | categories.view | categories.manage |
 | Cupons | coupons.view | coupons.manage |
 | Fornecedores | suppliers.manage | suppliers.manage |
 | Configurações da loja | settings.manage | settings.manage |
-| Preço/custo existente | — | products.edit + products.change_price |
+| Preço/custo existente | — | products.change_price nas rotas próprias; no CRUD completo também exige products.edit |
+| Estoque / reservas / movimentações | inventory.manage | inventory.manage |
 | Pedidos / itens | orders.view | orders.manage |
 | Cancelamento de pedidos pelo CRUD | — | orders.manage + orders.cancel |
 | Reembolso de pedidos ou do pagamento pelo CRUD | — | orders.manage + orders.refund |
@@ -192,7 +193,7 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 
 Audit logs do Drop não aceitam mutação manual, inclusive pelo dono. Permissões não são novos códigos arbitrários cadastrados pela loja: a loja configura perfis usando o catálogo reconhecido pelo backend.
 
-`inventory.manage` já integra o catálogo e o mapeamento de estoque, para quando esse módulo for implementado. Esta etapa não cria endpoints de estoque, cancelamento ou reembolso. As alterações de status pelo CRUD existente verificam as permissões específicas, inclusive reembolso parcial/total do pagamento; atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
+`inventory.manage` protege os endpoints de estoque, reservas e movimentações. As rotas e regras estão em [Produtos, variantes e estoque](../Application/ProductsAndInventory.md). Cancelamento e reembolso continuam usando o CRUD existente, com verificação das permissões específicas, inclusive reembolso parcial/total do pagamento; atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
 
 A desativação de funcionário segue o fluxo de identidade reservado ao dono principal: bloqueia o dono principal como alvo, valida funcionário e Membership na loja atual e grava as duas desativações em uma transação. A Membership incrementa `AccessVersion`, fazendo os JWTs anteriores serem rejeitados na próxima validação. A conta global do usuário e os vínculos em outras lojas continuam disponíveis. O endpoint retorna 204 no sucesso, 404 para funcionário fora da loja atual ou inexistente e 409 para tentativa de desativar o dono principal.
 
@@ -238,7 +239,7 @@ O registro de 89 verificações pertence à implementação anterior. Na reorgan
 - RequireConfirmedEmail permanece false para permitir o desenvolvimento sem entrega. Não representa comprovação de titularidade do e-mail; habilite um fluxo seguro antes de usar isso em produção.
 - Não há recuperação administrativa de proprietário por operador da plataforma, SSO ou SuperUser global.
 - Integração de navegador, DNS real, HTTPS/proxy de produção e funcionamento em várias réplicas precisam de validação no ambiente de deploy.
-- Esta entrega trata identidade/autorização. Não cria motor de pagamento, estoque, processamento automático da fila ou um novo checkout comercial. Os CRUDs administrativos não são endpoints de checkout do cliente; novos casos de compra deverão usar o contexto autenticado e os preços canônicos.
+- A etapa de identidade/autorização não criou motor de pagamento, processamento automático da fila ou um novo checkout comercial. O módulo de estoque foi acrescentado no [Processo D](../Application/ProductsAndInventory.md). Os CRUDs administrativos não são endpoints de checkout do cliente; novos casos de compra deverão usar o contexto autenticado e os preços canônicos.
 - Migração de dados legados e expansão da matriz comercial dependem de decisões sobre os dados/operações reais, sem concessão ampla de acesso por padrão.
 
 Referências técnicas: [JWT no ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-9.0), [CSRF](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-9.0), [rate limiting](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-9.0), [rotação de refresh tokens](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14).

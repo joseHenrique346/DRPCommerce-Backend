@@ -5,13 +5,16 @@ namespace StoreCommerce.Domain.Entity;
 public class OrderItem : BaseEntity
 {
     #region Constants
-    public const int ItemNameMaxLength = 200;
+    public const int ItemNameMaxLength = 255;
     public const int SkuMaxLength = 100;
     #endregion
 
     #region Properties
     public long OrderId { get; private set; }
     public long? ProductId { get; private set; }
+    public long? ProductVariantId { get; private set; }
+    public string VariantName { get; private set; } = string.Empty;
+    public string VariantAttributesJson { get; private set; } = "{}";
     public long? ServiceId { get; private set; }
     public string ItemName { get; private set; }
     public string SKU { get; private set; }
@@ -23,6 +26,7 @@ public class OrderItem : BaseEntity
     #region Navigation Properties
     public Order Order { get; private set; }
     public Product? Product { get; private set; }
+    public ProductVariant? ProductVariant { get; private set; }
     public Service? Service { get; private set; }
     #endregion
 
@@ -31,11 +35,15 @@ public class OrderItem : BaseEntity
     #region Constructor
     protected OrderItem() { }
 
-    private OrderItem(Order order, long? productId, long? serviceId, string itemName, string sku, int quantity, decimal unitPrice)
+    private OrderItem(Order order, long? productId, long? serviceId, string itemName, string sku, int quantity, decimal unitPrice, ProductVariant? variant)
     {
         Order = order;
         OrderId = order.Id;
         ProductId = productId;
+        ProductVariant = variant;
+        ProductVariantId = variant?.Id;
+        VariantName = variant?.Name ?? string.Empty;
+        VariantAttributesJson = variant?.AttributesJson ?? "{}";
         ServiceId = serviceId;
         ItemName = itemName;
         SKU = sku;
@@ -54,7 +62,7 @@ public class OrderItem : BaseEntity
 
     // Itens são criados apenas pelo agregado Order (Order.AddProductItem / Order.AddServiceItem),
     // garantindo que nome, SKU e preço sejam copiados do catálogo e que o pedido seja recalculado.
-    internal static OrderItem Create(Order order, long? productId, long? serviceId, string itemName, string sku, int quantity, decimal unitPrice)
+    internal static OrderItem Create(Order order, long? productId, long? serviceId, string itemName, string sku, int quantity, decimal unitPrice, ProductVariant? variant = null)
     {
         BaseValidate.ValidateNotNull(order, nameof(Order));
 
@@ -69,7 +77,7 @@ public class OrderItem : BaseEntity
         BaseValidate.ValidatePositive(quantity, nameof(Quantity));
         BaseValidate.ValidatePositive(unitPrice, nameof(UnitPrice));
 
-        return new OrderItem(order, productId, serviceId, itemName, sku, quantity, unitPrice);
+        return new OrderItem(order, productId, serviceId, itemName, sku, quantity, unitPrice, variant);
     }
 
     internal void UpdateQuantity(int quantity)

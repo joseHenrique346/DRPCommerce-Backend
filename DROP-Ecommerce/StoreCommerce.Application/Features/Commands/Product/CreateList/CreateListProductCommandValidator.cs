@@ -7,6 +7,6 @@ public class CreateListProductCommandValidator : AbstractValidator<CreateListPro
     public CreateListProductCommandValidator()
     {
         RuleFor(product => product.commands).NotEmpty();
-        RuleForEach(product => product.commands).SetValidator(new CreateProductCommandValidator());
+        RuleForEach(product => product.commands).NotNull().SetValidator(new CreateProductCommandValidator());
     }
 }

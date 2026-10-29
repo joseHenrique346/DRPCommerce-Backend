@@ -71,6 +71,9 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
         var verb = context.HttpContext.Request.Method;
         string? permission = controller switch
         {
+            "Product" or "ProductVariant" when action.StartsWith("UpdatePricing", StringComparison.OrdinalIgnoreCase) => PermissionCodes.ProductsChangePrice,
+            "ProductVariant" => read ? PermissionCodes.ProductsView : verb == "POST" ? PermissionCodes.ProductsCreate :
+                verb == "DELETE" ? PermissionCodes.ProductsDelete : PermissionCodes.ProductsEdit,
             "Product" => read ? PermissionCodes.ProductsView :
                 verb == "POST" ? PermissionCodes.ProductsCreate :
                 verb == "DELETE" ? PermissionCodes.ProductsDelete : PermissionCodes.ProductsEdit,
