@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Features;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Identity;
+using StoreCommerce.Application.Inventory;
+using StoreCommerce.Application.Carts;
 
 namespace StoreCommerce.Application;
 
@@ -19,12 +21,13 @@ public static class DependencyInjection
         services.AddScoped<IdentityHandlerContext>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponEligibilityService>();
+        services.AddScoped<CartService>();
         services.AddScoped<CategoryCatalogReader>();
         services.AddScoped<CatalogWriteContext>();
         services.AddScoped<ProductCatalogWriter>();
         services.AddScoped<ProductVariantWriter>();
         services.AddScoped<ProductSearchReader>();
-        services.AddScoped<Inventory.InventoryService>();
+        services.AddScoped<InventoryService>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;

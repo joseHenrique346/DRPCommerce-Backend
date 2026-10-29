@@ -43,6 +43,7 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "OwnershipTransfer" or
             "OwnershipTransferAcceptance" or
             "StorefrontCustomer" or
+            "StorefrontCart" or
             "StorefrontEnterprise" or
             "StorefrontOrder" or
             "StorefrontProduct" or

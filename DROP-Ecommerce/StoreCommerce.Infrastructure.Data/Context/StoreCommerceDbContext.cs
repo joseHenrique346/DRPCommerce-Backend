@@ -16,10 +16,11 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly IIdentityOperationScope _identityScope;
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpAccessor;
     private readonly InventoryWriteScope _inventoryWrites;
+    private readonly StoreCommerce.Application.Carts.CartWriteScope _cartWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
-        InventoryWriteScope inventoryWrites)
+        InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -27,6 +28,7 @@ public partial class StoreCommerceDbContext : DbContext
         _identityScope = identityScope;
         _httpAccessor = httpAccessor;
         _inventoryWrites = inventoryWrites;
+        _cartWrites = cartWrites;
     }
 
     #region DbSets
@@ -44,6 +46,8 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Shipment> Shipments => Set<Shipment>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<CouponRedemption> CouponRedemptions => Set<CouponRedemption>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Service> Services => Set<Service>();
@@ -138,6 +142,8 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<Document>(modelBuilder);
         ApplyTenantFilter<Supplier>(modelBuilder);
         ApplyTenantFilter<CouponRedemption>(modelBuilder);
+        ApplyTenantFilter<Cart>(modelBuilder);
+        ApplyTenantFilter<CartItem>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
 
         // Dependents of filtered aggregates must use the same visibility rules.

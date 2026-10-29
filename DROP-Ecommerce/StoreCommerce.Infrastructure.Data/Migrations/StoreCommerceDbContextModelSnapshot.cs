@@ -664,6 +664,108 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("papel_acesso_permissao", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Cart", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_carrinho");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_carrinho_customer_id");
+
+                    b.HasIndex("EnterpriseId", "CustomerId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_carrinho_enterprise_id_customer_id");
+
+                    b.ToTable("carrinho", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CartItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CartId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("cart_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsAwaitingStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_awaiting_stock");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_selected");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id");
+
+                    b.Property<long>("ProductVariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_variant_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_item_carrinho");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_item_carrinho_enterprise_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_item_carrinho_product_id");
+
+                    b.HasIndex("ProductVariantId")
+                        .HasDatabaseName("ix_item_carrinho_product_variant_id");
+
+                    b.HasIndex("CartId", "ProductVariantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_item_carrinho_cart_id_product_variant_id");
+
+                    b.ToTable("item_carrinho", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
                 {
                     b.Property<long>("Id")
@@ -4544,6 +4646,55 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("Permission");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Cart", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_carrinho_cliente_customer_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_carrinho_empresa_enterprise_id");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CartItem", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Cart", "Cart")
+                        .WithMany("ListCartItem")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_item_carrinho_carrinho_cart_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_item_carrinho_produto_product_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.ProductVariant", "ProductVariant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_item_carrinho_variante_produto_product_variant_id");
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductVariant");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
@@ -5577,6 +5728,11 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListAccessRolePermission");
 
                     b.Navigation("ListMembershipAccessRole");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.Cart", b =>
+                {
+                    b.Navigation("ListCartItem");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Category", b =>
