@@ -51,6 +51,9 @@ public partial class StoreCommerceDbContext
         if (GuardCartWrites(changes))
             return;
 
+        if (GuardCustomerAddressWrites(changes))
+            return;
+
         var tenant = _tenantProvider.GetEnterpriseId();
         var principal = _httpAccessor.HttpContext?.User ?? throw new SecurityFailure(401, "Security.AuthenticationRequired", "Autenticação necessária.");
 

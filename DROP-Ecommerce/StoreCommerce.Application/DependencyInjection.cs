@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponEligibilityService>();
         services.AddScoped<CartService>();
+        services.AddScoped<CustomerAddressService>();
         services.AddScoped<Orders.OrderLifecycleService>();
         services.AddScoped<Orders.CheckoutService>();
         services.AddScoped<CategoryCatalogReader>();

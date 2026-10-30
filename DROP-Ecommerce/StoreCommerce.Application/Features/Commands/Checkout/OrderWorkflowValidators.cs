@@ -32,7 +32,13 @@ public sealed class CheckoutRequestValidator : AbstractValidator<CheckoutRequest
         RuleFor(request => request.Notes)
             .MaximumLength(Order.NotesMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
-        When(request => !request.UseProfileAddress, () =>
+        RuleFor(request => request.AddressId).GreaterThan(0).When(request => request.AddressId.HasValue)
+            .WithMessage("{PropertyName} deve ser maior que zero.");
+
+        RuleFor(request => request.UseProfileAddress).Equal(false).When(request => request.AddressId.HasValue)
+            .WithMessage("Informe addressId ou useProfileAddress, não os dois.");
+
+        When(request => !request.UseProfileAddress && !request.AddressId.HasValue, () =>
         {
             RuleFor(request => request.ShippingAddressLine)
                 .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")

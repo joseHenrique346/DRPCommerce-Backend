@@ -1219,6 +1219,90 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("cliente_token_acao", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerAddress", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AddressLine")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("address_line");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("label");
+
+                    b.Property<string>("RecipientName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("recipient_name");
+
+                    b.Property<long>("StateId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("state_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("ZipCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("zip_code");
+
+                    b.HasKey("Id")
+                        .HasName("pk_endereco_cliente");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_endereco_cliente_enterprise_id");
+
+                    b.HasIndex("StateId")
+                        .HasDatabaseName("ix_endereco_cliente_state_id");
+
+                    b.HasIndex("CustomerId", "IsDefault")
+                        .HasDatabaseName("ix_endereco_cliente_customer_id_is_default");
+
+                    b.ToTable("endereco_cliente", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerRefreshToken", b =>
                 {
                     b.Property<long>("Id")
@@ -5042,6 +5126,27 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasConstraintName("fk_cliente_token_acao_cliente_enterprise_id_customer_id");
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerAddress", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_endereco_cliente_cliente_customer_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.State", "State")
+                        .WithMany()
+                        .HasForeignKey("StateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_endereco_cliente_estado_state_id");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("State");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.CustomerRefreshToken", b =>

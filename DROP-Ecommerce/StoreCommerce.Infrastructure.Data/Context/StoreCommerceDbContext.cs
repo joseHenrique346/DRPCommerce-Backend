@@ -18,11 +18,13 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly InventoryWriteScope _inventoryWrites;
     private readonly StoreCommerce.Application.Carts.CartWriteScope _cartWrites;
     private readonly StoreCommerce.Application.Orders.OrderWorkflowScope _orderWorkflow;
+    private readonly StoreCommerce.Application.Carts.CustomerAddressWriteScope _customerAddressWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
         InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites,
-        StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow)
+        StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow,
+        StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -32,6 +34,7 @@ public partial class StoreCommerceDbContext : DbContext
         _inventoryWrites = inventoryWrites;
         _cartWrites = cartWrites;
         _orderWorkflow = orderWorkflow;
+        _customerAddressWrites = customerAddressWrites;
     }
 
     #region DbSets
@@ -51,6 +54,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
     public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
     public DbSet<CouponRedemption> CouponRedemptions => Set<CouponRedemption>();
     public DbSet<Category> Categories => Set<Category>();
@@ -148,6 +152,7 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<CouponRedemption>(modelBuilder);
         ApplyTenantFilter<Cart>(modelBuilder);
         ApplyTenantFilter<CartItem>(modelBuilder);
+        ApplyTenantFilter<CustomerAddress>(modelBuilder);
         ApplyTenantFilter<OrderStatusHistory>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
 

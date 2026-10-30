@@ -18,6 +18,7 @@ public sealed class CheckoutService(
     IOrderRepository orders,
     IRepository<Transaction> transactions,
     ICartRepository carts,
+    ICustomerAddressRepository addresses,
     IRepository<Customer> customers,
     ICouponRepository coupons,
     IInventoryRepository inventory,
@@ -83,9 +84,7 @@ public sealed class CheckoutService(
             if (!settings.IsWithinItemLimit(quantity))
                 throw new SecurityFailure(400, "Checkout.MaxItemsExceeded", $"O pedido excede o limite de {settings.MaxItemsPerOrder} itens da loja.");
 
-            var (addressLine, city, stateId, zipCode) = request.UseProfileAddress
-                ? (customer.AddressLine, customer.City, customer.StateId, customer.ZipCode)
-                : (request.ShippingAddressLine!, request.ShippingCity!, request.ShippingStateId!.Value, request.ShippingZipCode!);
+            var (addressLine, city, stateId, zipCode) = await ResolveAddressAsync(request, customer, ct);
 
             var expiresAt = now.AddMinutes(settings.PendingOrderExpirationMinutes);
             var order = Order.CreateCheckout(enterpriseId, customerId, addressLine, city, stateId, zipCode, request.Notes?.Trim() ?? string.Empty,
@@ -117,6 +116,27 @@ public sealed class CheckoutService(
         }
 
         return await CompleteAsync(enterpriseId, customerId, orderId, ct);
+    }
+
+    private async Task<(string AddressLine, string City, long StateId, string ZipCode)> ResolveAddressAsync(CheckoutRequest request, Customer customer,
+        CancellationToken ct)
+    {
+        if (!request.AddressId.HasValue && !request.UseProfileAddress)
+            return (request.ShippingAddressLine!, request.ShippingCity!, request.ShippingStateId!.Value, request.ShippingZipCode!);
+
+        var saved = await addresses.ListForCustomerAsync(customer.EnterpriseId, customer.Id, tracking: false, ct);
+        var address = request.AddressId.HasValue
+            ? saved.FirstOrDefault(item => item.Id == request.AddressId)
+                ?? throw new SecurityFailure(404, "CustomerAddress.NotFound", "Endereço não encontrado.")
+            : saved.FirstOrDefault(item => item.IsDefault);
+
+        if (address is not null)
+            return (address.AddressLine, address.City, address.StateId, address.ZipCode);
+
+        if (string.IsNullOrWhiteSpace(customer.AddressLine) || string.IsNullOrWhiteSpace(customer.City) || string.IsNullOrWhiteSpace(customer.ZipCode))
+            throw new SecurityFailure(400, "Checkout.AddressRequired", "Cadastre um endereço de entrega para finalizar a compra.");
+
+        return (customer.AddressLine, customer.City, customer.StateId, customer.ZipCode);
     }
 
     private async Task ApplyCouponAsync(Order order, string? couponCode, long customerId, StoreSettings settings, DateTime now, CancellationToken ct)

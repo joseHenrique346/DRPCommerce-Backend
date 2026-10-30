@@ -1,4 +1,5 @@
 using StoreCommerce.Api.Controllers.Base;
+using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Contracts.Identity;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Result;
@@ -13,6 +14,26 @@ public class CustomerController : MappedCrudController<Customer, CustomerRespons
 {
     public CustomerController(IMediator mediator) : base(mediator)
     {
+    }
+
+    /// <summary>
+    /// Busca clientes por nome, e-mail ou telefone, situação, UF, período de cadastro e histórico de compras, com paginação.
+    /// Traz quantidade de compras concluídas, total gasto e data da última compra. Os pedidos de um cliente ficam em
+    /// GET api/orders/search?customerId=.
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> GetSearchAsync([FromQuery] SearchCustomersQuery query, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(query, ct));
+    }
+
+    /// <summary>
+    /// Lista os endereços de entrega salvos do cliente.
+    /// </summary>
+    [HttpGet("{id:long}/addresses")]
+    public async Task<IActionResult> GetAddressesAsync(long id, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(new GetCustomerAddressesQuery(id), ct));
     }
 
     protected override CustomerResponse MapEntity(Customer entity) => new(
