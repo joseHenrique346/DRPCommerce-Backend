@@ -90,6 +90,7 @@ public sealed class CheckoutService(
             var expiresAt = now.AddMinutes(settings.PendingOrderExpirationMinutes);
             var order = Order.CreateCheckout(enterpriseId, customerId, addressLine, city, stateId, zipCode, request.Notes?.Trim() ?? string.Empty,
                 key, request.PaymentMethodId, expiresAt, now);
+            order.AssignNumber(await orders.GetNextOrderNumberAsync(enterpriseId, ct));
 
             foreach (var item in selected)
                 order.AddProductItem(item.Product, item.ProductVariant, item.Quantity, settings);

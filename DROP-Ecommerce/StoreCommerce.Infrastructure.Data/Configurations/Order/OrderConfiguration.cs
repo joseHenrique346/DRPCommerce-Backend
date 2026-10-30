@@ -49,6 +49,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         // Busca dos pedidos pendentes com pagamento vencido (worker de expiração).
         builder.HasIndex(e => new { e.OrderStatusId, e.PaymentExpiresAt });
 
+        // Número sequencial por loja, nunca reaproveitado (inclui pedidos excluídos logicamente).
+        builder.HasIndex(e => new { e.EnterpriseId, e.OrderNumber }).IsUnique();
+
         builder.HasOne(e => e.Enterprise)
             .WithMany(e => e.ListOrder)
             .HasForeignKey(e => e.EnterpriseId)

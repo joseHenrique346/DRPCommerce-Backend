@@ -29,7 +29,23 @@ public sealed record CancelOrderRequest(string Reason);
 /// </summary>
 public sealed record ConfirmPaymentRequest(long? TransactionMethodId, string? GatewayReference, string? Note);
 
-public sealed record ShipOrderRequest(string? Note);
+/// <summary>
+/// Dados do envio. Obrigatórios em pedidos com produtos físicos: ShipmentTypeId, EstimatedDelivery e CarrierName
+/// (dispensado na retirada no local).
+/// </summary>
+public sealed record ShipOrderRequest(long? ShipmentTypeId, string? CarrierName, string? TrackingCode, DateTime? EstimatedDelivery, string? Note);
+
+public sealed record ShipmentInfoResponse(
+    long Id, long ShipmentTypeId, string ShipmentType, long StatusId, string Status, string CarrierName, string TrackingCode,
+    DateTime EstimatedDelivery, DateTime? ShippedAt, DateTime? DeliveredAt)
+{
+    public static ShipmentInfoResponse FromEntity(Shipment shipment) => new(
+        shipment.Id, shipment.ShipmentTypeId,
+        BaseStaticEntity.GetAll<ShipmentType>().First(type => type.Id == shipment.ShipmentTypeId).Description,
+        shipment.ShipmentStatusId,
+        BaseStaticEntity.GetAll<ShipmentStatus>().First(status => status.Id == shipment.ShipmentStatusId).Description,
+        shipment.CarrierName, shipment.TrackingCode, shipment.EstimatedDelivery, shipment.ShippedAt, shipment.DeliveredAt);
+}
 
 public sealed record OrderItemDetailResponse(
     long Id, long? ProductId, long? ProductVariantId, long? ServiceId, string ItemName, string VariantName, string SKU,
@@ -55,6 +71,7 @@ public sealed record OrderHistoryResponse(
 
 public sealed record OrderDetailResponse(
     long Id,
+    long Number,
     long CustomerId,
     long StatusId,
     string Status,
@@ -76,6 +93,7 @@ public sealed record OrderDetailResponse(
     DateTime CreatedAt,
     IReadOnlyList<OrderItemDetailResponse> Items,
     PaymentInfoResponse? Payment,
+    IReadOnlyList<ShipmentInfoResponse> Shipments,
     IReadOnlyList<OrderHistoryResponse> History)
 {
     public static OrderDetailResponse FromEntity(OrderEntity order, bool backoffice)
@@ -86,7 +104,7 @@ public sealed record OrderDetailResponse(
             .FirstOrDefault();
 
         return new(
-            order.Id, order.CustomerId, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId),
+            order.Id, order.OrderNumber, order.CustomerId, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId),
             order.OrderPaymentStatusId, OrderLabels.PaymentStatus(order.OrderPaymentStatusId),
             order.SubTotal, order.DiscountAmount, order.ShippingCost, order.TaxAmount, order.TotalAmount, order.CouponId,
             order.ShippingAddressLine, order.ShippingCity, order.ShippingStateId, order.ShippingZipCode, order.Notes,
@@ -95,6 +113,7 @@ public sealed record OrderDetailResponse(
                 item.Id, item.ProductId, item.ProductVariantId, item.ServiceId, item.ItemName, item.VariantName, item.SKU,
                 item.Quantity, item.UnitPrice, item.DiscountAmount, item.TotalPrice)).ToList(),
             payment is null ? null : PaymentFromEntity(payment),
+            order.ListShipment.OrderBy(shipment => shipment.Id).Select(ShipmentInfoResponse.FromEntity).ToList(),
             order.ListStatusHistory.OrderBy(history => history.ChangedAt).ThenBy(history => history.Id)
                 .Select(history => OrderHistoryResponse.FromEntity(history, backoffice)).ToList());
     }
@@ -113,12 +132,25 @@ public sealed record OrderDetailResponse(
 }
 
 public sealed record OrderSummaryResponse(
-    long Id, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal TotalAmount,
+    long Id, long Number, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal TotalAmount,
     DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt)
 {
     public static OrderSummaryResponse FromEntity(OrderEntity order) => new(
-        order.Id, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId), order.OrderPaymentStatusId,
+        order.Id, order.OrderNumber, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId), order.OrderPaymentStatusId,
         OrderLabels.PaymentStatus(order.OrderPaymentStatusId), order.TotalAmount, order.PaymentExpiresAt, order.IsAwaitingPayment, order.CreatedAt);
+}
+
+/// <summary>
+/// Linha da busca de pedidos do backoffice.
+/// </summary>
+public sealed record OrderSearchItemResponse(
+    long Id, long Number, long CustomerId, string CustomerName, long StatusId, string Status, long PaymentStatusId, string PaymentStatus,
+    decimal SubTotal, decimal DiscountAmount, decimal TotalAmount, long? CouponId, long? PaymentMethodId, DateTime CreatedAt)
+{
+    public static OrderSearchItemResponse FromEntity(OrderEntity order, string customerName) => new(
+        order.Id, order.OrderNumber, order.CustomerId, customerName, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId),
+        order.OrderPaymentStatusId, OrderLabels.PaymentStatus(order.OrderPaymentStatusId), order.SubTotal, order.DiscountAmount,
+        order.TotalAmount, order.CouponId, order.PaymentMethodId, order.CreatedAt);
 }
 
 /// <summary>

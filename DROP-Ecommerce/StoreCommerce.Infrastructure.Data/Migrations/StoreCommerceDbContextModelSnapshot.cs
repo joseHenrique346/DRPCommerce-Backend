@@ -2055,6 +2055,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("notes");
 
+                    b.Property<long>("OrderNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("order_number");
+
                     b.Property<long>("OrderPaymentStatusId")
                         .HasColumnType("bigint")
                         .HasColumnName("order_payment_status_id");
@@ -2147,6 +2151,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                     b.HasIndex("StockReservationId")
                         .HasDatabaseName("ix_pedido_stock_reservation_id");
+
+                    b.HasIndex("EnterpriseId", "OrderNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pedido_enterprise_id_order_number");
 
                     b.HasIndex("OrderStatusId", "PaymentExpiresAt")
                         .HasDatabaseName("ix_pedido_order_status_id_payment_expires_at");

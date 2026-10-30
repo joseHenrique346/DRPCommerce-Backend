@@ -32,6 +32,20 @@ public sealed record ConfirmOrderPaymentCommand(long Id, long? TransactionMethod
 
 public sealed record AdvanceOrderCommand(long Id, OrderStep Step, string? Note) : IRequest<Result<OrderDetailResponse>>;
 
+/// <summary>
+/// Em processamento → Enviado, registrando o envio.
+/// </summary>
+public sealed record ShipOrderCommand(long Id, ShipOrderRequest Request) : IRequest<Result<OrderDetailResponse>>;
+
+/// <summary>
+/// Busca de pedidos do backoffice. StatusIds e PaymentStatusIds aceitam vários valores; datas filtram a criação (UTC).
+/// Sort: newest (padrão), oldest, total_desc, total_asc.
+/// </summary>
+public sealed record SearchOrdersQuery(
+    long? Number = null, List<long>? StatusIds = null, List<long>? PaymentStatusIds = null, long? CustomerId = null, long? CouponId = null,
+    DateTime? CreatedFrom = null, DateTime? CreatedTo = null, decimal? MinTotal = null, decimal? MaxTotal = null,
+    string? Sort = null, int Page = 1, int PageSize = 20) : IRequest<Result<PagedResponse<OrderSearchItemResponse>>>;
+
 public sealed record CancelOrderCommand(long Id, string Reason) : IRequest<Result<OrderDetailResponse>>;
 
 // ---- Gateway de pagamento

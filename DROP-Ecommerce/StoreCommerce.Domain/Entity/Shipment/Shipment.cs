@@ -121,6 +121,44 @@ public class Shipment : BaseEntity
         EstimatedDelivery = estimatedDelivery;
     }
 
+    public const string DefaultCountry = "Brasil";
+    public const string PickupCarrier = "Retirada no local";
+
+    /// <summary>
+    /// Envio do pedido criado pelo fluxo "enviar pedido": usa o endereço de entrega do pedido e já nasce como Enviado.
+    /// Na retirada no local, a transportadora é opcional.
+    /// </summary>
+    public static Shipment CreateForOrder(Order order, long shipmentTypeId, string? carrierName, string? trackingCode, DateTime estimatedDelivery, DateTime now)
+    {
+        BaseValidate.ValidateNotNull(order, nameof(Order));
+
+        if (!BaseStaticEntity.GetAll<ShipmentType>().Any(type => type.Id == shipmentTypeId))
+            throw new ArgumentException("Tipo de envio inválido.");
+
+        var carrier = string.IsNullOrWhiteSpace(carrierName) && shipmentTypeId == ShipmentType.Pickup.Id ? PickupCarrier : carrierName?.Trim() ?? string.Empty;
+
+        if (estimatedDelivery.Date < now.Date)
+            throw new ArgumentException("A previsão de entrega não pode estar no passado.");
+
+        var shipment = Create(order.Id, null, shipmentTypeId, carrier, trackingCode?.Trim() ?? string.Empty, ShipmentStatus.Shipped.Id, order.ShippingCost,
+            order.ShippingAddressLine, order.ShippingCity, order.ShippingStateId, order.ShippingZipCode, DefaultCountry, estimatedDelivery, now, null);
+        shipment.Order = order;
+
+        return shipment;
+    }
+
+    public bool IsOpen => ShipmentStatusId != ShipmentStatus.Delivered.Id && ShipmentStatusId != ShipmentStatus.Cancelled.Id &&
+        ShipmentStatusId != ShipmentStatus.Returned.Id;
+
+    public void MarkDelivered(DateTime now)
+    {
+        if (!IsOpen)
+            return;
+
+        ShipmentStatusId = ShipmentStatus.Delivered.Id;
+        DeliveredAt = now;
+    }
+
     public void UpdateStatus(long shipmentStatusId)
     {
         BaseValidate.ValidatePositive(shipmentStatusId, nameof(ShipmentStatusId));

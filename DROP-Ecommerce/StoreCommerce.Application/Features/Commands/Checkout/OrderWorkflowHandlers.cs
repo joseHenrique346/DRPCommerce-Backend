@@ -101,6 +101,47 @@ public sealed class AdvanceOrderCommandHandler(OrderLifecycleService lifecycle, 
     }
 }
 
+public sealed class ShipOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
+    : WorkflowRequestHandler<ShipOrderCommand, OrderDetailResponse>
+{
+    protected override async Task<OrderDetailResponse> ExecuteAsync(ShipOrderCommand request, CancellationToken ct)
+    {
+        var data = request.Request;
+        var details = data.ShipmentTypeId is long typeId
+            ? new ShipmentDetails(typeId, data.CarrierName, data.TrackingCode, DateTime.SpecifyKind(data.EstimatedDelivery!.Value, DateTimeKind.Utc))
+            : null;
+
+        await lifecycle.ShipAsync(tenant.GetEnterpriseId(), request.Id, details, OrderChangeSource.Backoffice, actor.UserId, data.Note, ct);
+
+        return OrderDetailResponse.FromEntity((await orders.GetDetailAsync(request.Id, null, ct))!, backoffice: true);
+    }
+}
+
+/// <summary>
+/// Busca de pedidos do backoffice. O nome do cliente é lido sem o filtro de exclusão, para pedidos de clientes excluídos
+/// continuarem identificados.
+/// </summary>
+public sealed class SearchOrdersQueryHandler(IOrderRepository orders, IRepository<Customer> customers, ITenantProvider tenant)
+    : WorkflowRequestHandler<SearchOrdersQuery, PagedResponse<OrderSearchItemResponse>>
+{
+    protected override async Task<PagedResponse<OrderSearchItemResponse>> ExecuteAsync(SearchOrdersQuery request, CancellationToken ct)
+    {
+        var (items, count) = await orders.SearchAsync(new Domain.Models.OrderSearchCriteria(
+            request.Number, request.StatusIds, request.PaymentStatusIds, request.CustomerId, request.CouponId,
+            request.CreatedFrom, request.CreatedTo, request.MinTotal, request.MaxTotal,
+            request.Sort ?? "newest", request.Page, request.PageSize), ct);
+
+        var enterpriseId = tenant.GetEnterpriseId();
+        var customerIds = items.Select(order => order.CustomerId).Distinct().ToList();
+        var names = (await customers.ListAsync(customer => customerIds.Contains(customer.Id) && customer.EnterpriseId == enterpriseId,
+                customer => new { customer.Id, customer.FullName }, ct, ignoreQueryFilters: true))
+            .ToDictionary(customer => customer.Id, customer => customer.FullName);
+
+        return new(items.Select(order => OrderSearchItemResponse.FromEntity(order, names.GetValueOrDefault(order.CustomerId, string.Empty))).ToList(),
+            count, request.Page, request.PageSize);
+    }
+}
+
 public sealed class CancelOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
     : WorkflowRequestHandler<CancelOrderCommand, OrderDetailResponse>
 {

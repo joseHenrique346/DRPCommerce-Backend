@@ -62,9 +62,63 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             .Include(e => e.StockReservation!).ThenInclude(reservation => reservation.Lines).ThenInclude(line => line.ProductVariant)
             .Include(e => e.ListTransaction)
             .Include(e => e.ListStatusHistory)
+            .Include(e => e.ListShipment)
             .Where(e => e.EnterpriseId == enterpriseId && e.Id == orderId && !e.IsDeleted)
             .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<long> GetNextOrderNumberAsync(long enterpriseId, CancellationToken cancellationToken)
+    {
+        var last = await _context.Orders.IgnoreQueryFilters()
+            .Where(e => e.EnterpriseId == enterpriseId)
+            .MaxAsync(e => (long?)e.OrderNumber, cancellationToken);
+
+        return (last ?? 0) + 1;
+    }
+
+    public async Task<(List<Order> Items, int TotalCount)> SearchAsync(StoreCommerce.Domain.Models.OrderSearchCriteria criteria, CancellationToken cancellationToken)
+    {
+        var query = _dbSet.AsNoTracking();
+
+        if (criteria.OrderNumber.HasValue)
+            query = query.Where(e => e.OrderNumber == criteria.OrderNumber);
+
+        if (criteria.StatusIds is { Count: > 0 } statuses)
+            query = query.Where(e => statuses.Contains(e.OrderStatusId));
+
+        if (criteria.PaymentStatusIds is { Count: > 0 } paymentStatuses)
+            query = query.Where(e => paymentStatuses.Contains(e.OrderPaymentStatusId));
+
+        if (criteria.CustomerId.HasValue)
+            query = query.Where(e => e.CustomerId == criteria.CustomerId);
+
+        if (criteria.CouponId.HasValue)
+            query = query.Where(e => e.CouponId == criteria.CouponId);
+
+        if (criteria.CreatedFrom.HasValue)
+            query = query.Where(e => e.CreatedAt >= criteria.CreatedFrom);
+
+        if (criteria.CreatedTo.HasValue)
+            query = query.Where(e => e.CreatedAt <= criteria.CreatedTo);
+
+        if (criteria.MinTotal.HasValue)
+            query = query.Where(e => e.TotalAmount >= criteria.MinTotal);
+
+        if (criteria.MaxTotal.HasValue)
+            query = query.Where(e => e.TotalAmount <= criteria.MaxTotal);
+
+        var count = await query.CountAsync(cancellationToken);
+        var ordered = criteria.Sort switch
+        {
+            "oldest" => query.OrderBy(e => e.OrderNumber).ThenBy(e => e.Id),
+            "total_desc" => query.OrderByDescending(e => e.TotalAmount).ThenByDescending(e => e.Id),
+            "total_asc" => query.OrderBy(e => e.TotalAmount).ThenBy(e => e.Id),
+            _ => query.OrderByDescending(e => e.OrderNumber).ThenByDescending(e => e.Id)
+        };
+        var items = await ordered.Skip((criteria.Page - 1) * criteria.PageSize).Take(criteria.PageSize).ToListAsync(cancellationToken);
+
+        return (items, count);
     }
 
     public Task<Order?> FindByIdempotencyKeyAsync(long enterpriseId, long customerId, string idempotencyKey, CancellationToken cancellationToken)
@@ -111,6 +165,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             .Include(e => e.ListOrderItem)
             .Include(e => e.ListTransaction)
             .Include(e => e.ListStatusHistory)
+            .Include(e => e.ListShipment)
             .Where(e => e.Id == orderId && (customerId == null || e.CustomerId == customerId))
             .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
@@ -120,7 +175,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         var query = _dbSet.AsNoTracking().Where(e => e.CustomerId == customerId);
         var count = await query.CountAsync(cancellationToken);
-        var items = await query.OrderByDescending(e => e.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        var items = await query.OrderByDescending(e => e.OrderNumber).ThenByDescending(e => e.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
         return (items, count);
     }

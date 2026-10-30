@@ -98,6 +98,69 @@ public sealed class AdvanceOrderCommandValidator : AbstractValidator<AdvanceOrde
     }
 }
 
+public sealed class ShipOrderCommandValidator : AbstractValidator<ShipOrderCommand>
+{
+    public ShipOrderCommandValidator()
+    {
+        RuleFor(command => command.Id).GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
+        RuleFor(command => command.Request).NotNull();
+
+        When(command => command.Request is not null, () =>
+        {
+            RuleFor(command => command.Request.ShipmentTypeId)
+                .Must(typeId => BaseStaticEntity.GetAll<ShipmentType>().Any(type => type.Id == typeId))
+                .When(command => command.Request.ShipmentTypeId.HasValue).WithName("shipmentTypeId").WithMessage("{PropertyName} inválido.");
+
+            RuleFor(command => command.Request.ShipmentTypeId)
+                .NotNull().When(command => command.Request.EstimatedDelivery.HasValue || !string.IsNullOrWhiteSpace(command.Request.CarrierName) ||
+                    !string.IsNullOrWhiteSpace(command.Request.TrackingCode))
+                .WithName("shipmentTypeId").WithMessage("Informe o tipo de envio.");
+
+            RuleFor(command => command.Request.EstimatedDelivery)
+                .NotNull().When(command => command.Request.ShipmentTypeId.HasValue)
+                .WithName("estimatedDelivery").WithMessage("Informe a previsão de entrega.");
+
+            RuleFor(command => command.Request.CarrierName)
+                .NotEmpty().When(command => command.Request.ShipmentTypeId.HasValue && command.Request.ShipmentTypeId != ShipmentType.Pickup.Id)
+                .WithName("carrierName").WithMessage("Informe a transportadora.")
+                .MaximumLength(Shipment.CarrierNameMaxLength).WithName("carrierName").WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
+
+            RuleFor(command => command.Request.TrackingCode)
+                .MaximumLength(Shipment.TrackingCodeMaxLength).WithName("trackingCode").WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
+
+            RuleFor(command => command.Request.Note)
+                .MaximumLength(OrderStatusHistory.ReasonMaxLength).WithName("note").WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
+        });
+    }
+}
+
+public sealed class SearchOrdersQueryValidator : AbstractValidator<SearchOrdersQuery>
+{
+    private static readonly string[] Sorts = ["newest", "oldest", "total_desc", "total_asc"];
+
+    public SearchOrdersQueryValidator()
+    {
+        RuleFor(query => query.Number).GreaterThan(0).When(query => query.Number.HasValue);
+        RuleForEach(query => query.StatusIds)
+            .Must(statusId => BaseStaticEntity.GetAll<OrderStatus>().Any(status => status.Id == statusId)).WithMessage("{PropertyName} inválido.");
+        RuleForEach(query => query.PaymentStatusIds)
+            .Must(statusId => BaseStaticEntity.GetAll<OrderPaymentStatus>().Any(status => status.Id == statusId)).WithMessage("{PropertyName} inválido.");
+        RuleFor(query => query.StatusIds).Must(ids => ids is null || ids.Count <= 10).WithMessage("Informe no máximo 10 status.");
+        RuleFor(query => query.PaymentStatusIds).Must(ids => ids is null || ids.Count <= 10).WithMessage("Informe no máximo 10 status de pagamento.");
+        RuleFor(query => query.CustomerId).GreaterThan(0).When(query => query.CustomerId.HasValue);
+        RuleFor(query => query.CouponId).GreaterThan(0).When(query => query.CouponId.HasValue);
+        RuleFor(query => query.CreatedTo).GreaterThanOrEqualTo(query => query.CreatedFrom)
+            .When(query => query.CreatedFrom.HasValue && query.CreatedTo.HasValue).WithMessage("createdTo deve ser posterior a createdFrom.");
+        RuleFor(query => query.MinTotal).GreaterThanOrEqualTo(0).When(query => query.MinTotal.HasValue);
+        RuleFor(query => query.MaxTotal).GreaterThanOrEqualTo(query => query.MinTotal ?? 0).When(query => query.MaxTotal.HasValue)
+            .WithMessage("maxTotal deve ser maior ou igual a minTotal.");
+        RuleFor(query => query.Sort).Must(sort => sort is null || Sorts.Contains(sort))
+            .WithMessage("sort deve ser newest, oldest, total_desc ou total_asc.");
+        RuleFor(query => query.Page).InclusiveBetween(1, 100000);
+        RuleFor(query => query.PageSize).InclusiveBetween(1, 100);
+    }
+}
+
 public sealed class CancelOrderCommandValidator : AbstractValidator<CancelOrderCommand>
 {
     public CancelOrderCommandValidator()

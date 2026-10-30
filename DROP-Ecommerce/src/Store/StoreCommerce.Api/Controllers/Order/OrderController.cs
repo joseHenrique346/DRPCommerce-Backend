@@ -18,7 +18,16 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
     }
 
     /// <summary>
-    /// Consulta o pedido com itens, cobrança e histórico de status.
+    /// Busca pedidos por número, status, status de pagamento, cliente, cupom, período de criação e faixa de valor, com paginação.
+    /// </summary>
+    [HttpGet("search")]
+    public async Task<IActionResult> GetSearchAsync([FromQuery] SearchOrdersQuery query, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(query, ct));
+    }
+
+    /// <summary>
+    /// Consulta o pedido com itens, cobrança, envios e histórico de status.
     /// </summary>
     [HttpGet("{id:long}/detail")]
     public async Task<IActionResult> GetDetailAsync(long id, CancellationToken ct)
@@ -46,12 +55,13 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
     }
 
     /// <summary>
-    /// Em processamento → Enviado.
+    /// Em processamento → Enviado, registrando o envio (tipo, transportadora, rastreio e previsão de entrega).
+    /// Os dados do envio são obrigatórios em pedidos com produtos físicos.
     /// </summary>
     [HttpPost("{id:long}/ship")]
     public async Task<IActionResult> ShipAsync(long id, [FromBody] ShipOrderRequest? request, CancellationToken ct)
     {
-        return this.ToActionResult(await _mediator.Send(new AdvanceOrderCommand(id, OrderStep.Ship, request?.Note), ct));
+        return this.ToActionResult(await _mediator.Send(new ShipOrderCommand(id, request ?? new ShipOrderRequest(null, null, null, null, null)), ct));
     }
 
     /// <summary>

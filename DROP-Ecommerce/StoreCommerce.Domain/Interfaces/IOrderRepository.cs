@@ -21,6 +21,14 @@ public interface IOrderRepository : IRepository<Order>
     /// </summary>
     Task<Order?> GetForWorkflowAsync(long enterpriseId, long orderId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Próximo número de pedido da loja (inclui pedidos excluídos, números nunca são reaproveitados).
+    /// Deve ser chamado dentro de uma transação com a loja bloqueada (LockCatalogAsync).
+    /// </summary>
+    Task<long> GetNextOrderNumberAsync(long enterpriseId, CancellationToken cancellationToken);
+
+    Task<(List<Order> Items, int TotalCount)> SearchAsync(Models.OrderSearchCriteria criteria, CancellationToken cancellationToken);
+
     Task<Order?> FindByIdempotencyKeyAsync(long enterpriseId, long customerId, string idempotencyKey, CancellationToken cancellationToken);
 
     Task<List<long>> GetTenantsWithExpiredPaymentsAsync(DateTime now, CancellationToken cancellationToken);

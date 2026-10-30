@@ -40,6 +40,11 @@ public class UpdateListOrderCommandHandler(
         {
             var order = orders[command.id];
 
+            if (!order.CanChangeShippingAddress &&
+                order.IsShippingAddressDifferent(command.shippingAddressLine, command.shippingCity, command.shippingStateId, command.shippingZipCode))
+                return Result<List<Order>>.Validation("Order.AddressLocked",
+                    $"O endereço de entrega do pedido {order.OrderNumber} não pode ser alterado depois que ele foi enviado.");
+
             order.UpdateShippingAddress(command.shippingAddressLine, command.shippingCity, command.shippingStateId, command.shippingZipCode, command.notes);
 
             if (command.couponId != order.CouponId)

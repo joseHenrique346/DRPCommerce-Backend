@@ -6,12 +6,19 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Orders;
 
+/// <summary>
+/// Etapas sem dados extras. O envio tem fluxo próprio (ShipAsync), porque registra transportadora e rastreio.
+/// </summary>
 public enum OrderStep
 {
     StartProcessing = 1,
-    Ship = 2,
     Deliver = 3
 }
+
+/// <summary>
+/// Dados do envio. Sem transportadora na retirada no local (ShipmentType.Pickup).
+/// </summary>
+public sealed record ShipmentDetails(long ShipmentTypeId, string? CarrierName, string? TrackingCode, DateTime EstimatedDelivery);
 
 /// <summary>
 /// Máquina de estados do pedido com seus efeitos: baixa e devolução de estoque, uso do cupom e pagamento.
@@ -79,13 +86,32 @@ public sealed class OrderLifecycleService(
                 case OrderStep.StartProcessing:
                     order.StartProcessing(source, actorId, now);
                     break;
-                case OrderStep.Ship:
-                    order.MarkShipped(source, actorId, note, now);
-                    break;
                 default:
                     order.MarkDelivered(source, actorId, now);
                     break;
             }
+
+            return Task.CompletedTask;
+        }, ct);
+
+    /// <summary>
+    /// Em processamento → Enviado. Pedidos com produtos físicos exigem os dados do envio; pedidos só com itens digitais ou
+    /// serviços podem ser marcados como enviados sem eles.
+    /// </summary>
+    public Task<Order> ShipAsync(long enterpriseId, long orderId, ShipmentDetails? details, OrderChangeSource source, long? actorId, string? note,
+        CancellationToken ct) =>
+        RunAsync(enterpriseId, orderId, null, order =>
+        {
+            var now = Now;
+            var physical = order.ListOrderItem.Any(item => item.ProductId.HasValue && item.ProductVariant?.Product.IsDigital != true);
+
+            if (physical && details is null)
+                throw new SecurityFailure(400, "Order.ShipmentRequired", "Informe o tipo de envio, a transportadora e a previsão de entrega.");
+
+            var shipment = details is null ? null : Shipment.CreateForOrder(order, details.ShipmentTypeId, details.CarrierName, details.TrackingCode,
+                details.EstimatedDelivery, now);
+
+            order.MarkShipped(shipment, source, actorId, note, now);
 
             return Task.CompletedTask;
         }, ct);

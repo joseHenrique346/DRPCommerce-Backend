@@ -40,6 +40,7 @@ public partial class StoreCommerceDbContext
                     !(entry.State == EntityState.Modified && entry.Property(nameof(Order.CustomerId)).IsModified),
                 OrderItem item => entry.State == EntityState.Added && OwnsOrder(item.Order, item.OrderId) ||
                     entry.State == EntityState.Modified && OwnsOrder(item.Order, item.OrderId),
+                Shipment shipment => (entry.State == EntityState.Added || entry.State == EntityState.Modified) && OwnsOrder(shipment.Order, shipment.OrderId),
                 OrderStatusHistory history => entry.State == EntityState.Added && OwnsOrder(history.Order, history.OrderId),
                 Transaction transaction => OwnsOrder(transaction.Order, transaction.OrderId),
                 CouponRedemption redemption => OwnsOrder(redemption.Order, redemption.OrderId),

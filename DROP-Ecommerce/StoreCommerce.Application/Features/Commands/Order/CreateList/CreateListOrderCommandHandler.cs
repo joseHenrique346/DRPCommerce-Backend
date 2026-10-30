@@ -7,7 +7,8 @@ using StoreCommerce.Domain.Interfaces;
 namespace StoreCommerce.Application.Features.Commands;
 
 public class CreateListOrderCommandHandler(
-    IRepository<Order> repository,
+    IOrderRepository repository,
+    IProductRepository products,
     IRepository<Coupon> couponRepository,
     IUnitOfWork unitOfWork,
     ITenantProvider tenantProvider,
@@ -28,9 +29,15 @@ public class CreateListOrderCommandHandler(
         var coupons = await OrderCouponLoader.LoadAsync(couponRepository, request.commands.Select(command => command.couponId), cancellationToken);
         var orders = new List<Order>(request.commands.Count);
 
+        // A numeração usa o mesmo bloqueio da loja que o checkout, para dois pedidos nunca receberem o mesmo número.
+        await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
+        await products.LockCatalogAsync(enterpriseId, cancellationToken);
+        var nextNumber = await repository.GetNextOrderNumberAsync(enterpriseId, cancellationToken);
+
         foreach (var command in request.commands)
         {
             var order = Order.Create(enterpriseId, command.customerId, command.shippingAddressLine, command.shippingCity, command.shippingStateId, command.shippingZipCode, command.notes);
+            order.AssignNumber(nextNumber++);
             order.RecordCreation(OrderChangeSource.Backoffice, actor.UserId, now);
 
             if (command.couponId is long couponId)
@@ -48,6 +55,7 @@ public class CreateListOrderCommandHandler(
 
         await repository.AddRangeAsync(orders, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result<List<Order>>.Success(orders);
     }

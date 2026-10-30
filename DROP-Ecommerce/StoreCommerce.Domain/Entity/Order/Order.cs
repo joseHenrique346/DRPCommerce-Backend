@@ -17,6 +17,10 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     #region Properties
     public long EnterpriseId { get; private set; }
     public long CustomerId { get; private set; }
+    /// <summary>
+    /// Número sequencial do pedido na loja (1, 2, 3...), exibido ao cliente no lugar do Id.
+    /// </summary>
+    public long OrderNumber { get; private set; }
     public long? CouponId { get; private set; }
     public long OrderStatusId { get; private set; }
     public long OrderPaymentStatusId { get; private set; }
@@ -117,6 +121,19 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
         return order;
     }
 
+    /// <summary>
+    /// Define o número do pedido na loja. Chamado uma única vez, com a loja bloqueada para numeração.
+    /// </summary>
+    public void AssignNumber(long orderNumber)
+    {
+        BaseValidate.ValidatePositive(orderNumber, nameof(OrderNumber));
+
+        if (OrderNumber != 0)
+            throw new InvalidOperationException("O pedido já possui número.");
+
+        OrderNumber = orderNumber;
+    }
+
     public void RecordCreation(OrderChangeSource source, long? actorId, DateTime now)
     {
         if (_listStatusHistory.Count == 0)
@@ -183,11 +200,30 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public void StartProcessing(OrderChangeSource source, long? actorId, DateTime now) =>
         Advance(OrderStatus.Confirmed.Id, OrderStatus.Processing.Id, source, actorId, "Pedido em separação", now);
 
-    public void MarkShipped(OrderChangeSource source, long? actorId, string? reason, DateTime now) =>
-        Advance(OrderStatus.Processing.Id, OrderStatus.Shipped.Id, source, actorId, reason ?? "Pedido enviado", now);
+    /// <summary>
+    /// Em processamento → Enviado. Com shipment, registra o envio (transportadora, rastreio e previsão) no pedido.
+    /// </summary>
+    public void MarkShipped(Shipment? shipment, OrderChangeSource source, long? actorId, string? reason, DateTime now)
+    {
+        if (shipment is not null)
+        {
+            if (shipment.OrderId != Id)
+                throw new ArgumentException("O envio não pertence ao pedido.");
 
-    public void MarkDelivered(OrderChangeSource source, long? actorId, DateTime now) =>
+            _listShipment.Add(shipment);
+        }
+
+        var tracking = shipment is null || string.IsNullOrWhiteSpace(shipment.TrackingCode) ? string.Empty : $" (rastreio {shipment.TrackingCode})";
+        Advance(OrderStatus.Processing.Id, OrderStatus.Shipped.Id, source, actorId, (reason ?? "Pedido enviado") + tracking, now);
+    }
+
+    public void MarkDelivered(OrderChangeSource source, long? actorId, DateTime now)
+    {
         Advance(OrderStatus.Shipped.Id, OrderStatus.Delivered.Id, source, actorId, "Pedido entregue", now);
+
+        foreach (var shipment in _listShipment)
+            shipment.MarkDelivered(now);
+    }
 
     /// <summary>
     /// Cancela pedidos pendentes, confirmados ou em separação. A devolução de estoque, cupom e pagamento é feita pelo fluxo do pedido.
@@ -240,9 +276,21 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     /// </summary>
     public int TotalQuantity => _listOrderItem.Sum(item => item.Quantity);
 
+    /// <summary>
+    /// O endereço de entrega só pode mudar até o pedido ser enviado (pendente, confirmado ou em processamento).
+    /// </summary>
+    public bool CanChangeShippingAddress =>
+        OrderStatusId == OrderStatus.Pending.Id || OrderStatusId == OrderStatus.Confirmed.Id || OrderStatusId == OrderStatus.Processing.Id;
+
+    public bool IsShippingAddressDifferent(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode) =>
+        ShippingAddressLine != shippingAddressLine || ShippingCity != shippingCity || ShippingStateId != shippingStateId || ShippingZipCode != shippingZipCode;
+
     public void UpdateShippingAddress(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes)
     {
         ValidateShippingAddress(shippingAddressLine, shippingCity, shippingStateId, shippingZipCode, notes);
+
+        if (!CanChangeShippingAddress && IsShippingAddressDifferent(shippingAddressLine, shippingCity, shippingStateId, shippingZipCode))
+            throw new ArgumentException("O endereço de entrega não pode ser alterado depois que o pedido foi enviado.");
 
         ShippingAddressLine = shippingAddressLine;
         ShippingCity = shippingCity;
