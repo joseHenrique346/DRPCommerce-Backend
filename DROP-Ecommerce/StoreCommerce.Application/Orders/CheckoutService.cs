@@ -21,6 +21,7 @@ public sealed class CheckoutService(
     ICustomerAddressRepository addresses,
     IRepository<Customer> customers,
     ICouponRepository coupons,
+    IRepository<CouponRedemption> redemptions,
     IInventoryRepository inventory,
     IProductRepository products,
     CouponEligibilityService eligibility,
@@ -99,6 +100,7 @@ public sealed class CheckoutService(
             if (!settings.MeetsMinOrderValue(order.SubTotal))
                 throw new SecurityFailure(400, "Checkout.MinOrderValue", $"O valor mínimo para comprar nesta loja é {settings.MinOrderValue:0.00}.");
 
+            ReserveCouponUse(order, now);
             ReserveStock(order, selected, settings, key, expiresAt, now);
             transactions.Add(Transaction.CreatePendingPayment(order, request.PaymentMethodId, gateway.Provider));
             order.LockForPayment();
@@ -179,6 +181,17 @@ public sealed class CheckoutService(
 
         inventory.AddReservation(reservation);
         order.AttachStockReservation(reservation);
+    }
+
+    private void ReserveCouponUse(Order order, DateTime now)
+    {
+        if (order.Coupon is not { } coupon || order.DiscountAmount <= 0)
+            return;
+
+        // O bloqueio da loja serializa a verificação e o consumo da última utilização disponível.
+        // A transação do checkout desfaz o compromisso se estoque, pedido ou pagamento local não puderem ser gravados.
+        coupon.RegisterUse(now);
+        redemptions.Add(CouponRedemption.Create(coupon, order, now));
     }
 
     /// <summary>

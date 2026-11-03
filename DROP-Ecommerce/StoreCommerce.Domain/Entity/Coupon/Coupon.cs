@@ -22,6 +22,9 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     public decimal DiscountValue { get; private set; }
     public decimal MaxDiscountCap { get; private set; }
     public int? MaxUses { get; private set; }
+    /// <summary>
+    /// Usos comprometidos por pedidos pendentes de pagamento e pagos, ainda não cancelados.
+    /// </summary>
     public int UsedCount { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsSingleUse { get; private set; }
@@ -215,21 +218,27 @@ public class Coupon : BaseEntity, ITenantEntity, ISoftDeletable
     }
 
     /// <summary>
-    /// Registra um uso. A coluna UsedCount é token de concorrência: dois resgates simultâneos não ultrapassam MaxUses.
+    /// Compromete um uso no checkout, antes do pagamento. UsedCount é token de concorrência e inclui esses compromissos.
     /// </summary>
     public void RegisterUse(DateTime now)
     {
         if (GetAvailability(now) != CouponAvailability.Active)
             throw new ArgumentException("Cupom inativo, fora da vigência ou sem usos disponíveis.");
 
-        UsedCount++;
+        UsedCount = checked(UsedCount + 1);
     }
 
     /// <summary>
-    /// Conta o uso de um pedido com pagamento aprovado. As regras já foram exigidas no checkout; depois que o cliente pagou,
-    /// o desconto é honrado mesmo que o cupom tenha expirado ou esgotado enquanto o pagamento era processado.
+    /// Conta o uso na confirmação de pedidos que não têm compromisso prévio (rascunhos do backoffice).
+    /// Honra a validade aceita no pedido, mas não pode consumir utilizações comprometidas por outros pedidos.
     /// </summary>
-    public void RegisterConfirmedUse() => UsedCount++;
+    public void RegisterConfirmedUse()
+    {
+        if (MaxUses.HasValue && UsedCount >= MaxUses.Value)
+            throw new ArgumentException("O cupom não possui utilizações disponíveis.");
+
+        UsedCount = checked(UsedCount + 1);
+    }
 
     public void ReleaseUse()
     {

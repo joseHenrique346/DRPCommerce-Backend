@@ -75,7 +75,7 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
 
     /// <summary>
     /// Cancela pedidos pendentes, confirmados ou em processamento. Devolve estoque e cupom e estorna o pagamento, se houver.
-    /// Exige a permissão orders.cancel.
+    /// Exige orders.cancel e, quando o pedido está pago, também orders.refund.
     /// </summary>
     [HttpPost("{id:long}/cancel")]
     public async Task<IActionResult> CancelAsync(long id, [FromBody] CancelOrderRequest request, CancellationToken ct)

@@ -130,9 +130,11 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public Task<List<long>> GetTenantsWithExpiredPaymentsAsync(DateTime now, CancellationToken cancellationToken)
     {
         var pending = OrderStatus.Pending.Id;
+        var pendingPayment = OrderPaymentStatus.Pending.Id;
 
         return _context.Orders.IgnoreQueryFilters().AsNoTracking()
-            .Where(e => e.OrderStatusId == pending && e.PaymentExpiresAt != null && e.PaymentExpiresAt <= now && !e.IsDeleted)
+            .Where(Order => Order.OrderStatusId == pending && Order.OrderPaymentStatusId == pendingPayment &&
+                Order.PaymentExpiresAt != null && Order.PaymentExpiresAt <= now && !Order.IsDeleted)
             .Select(e => e.EnterpriseId).Distinct().OrderBy(id => id).Take(200)
             .ToListAsync(cancellationToken);
     }
@@ -140,10 +142,12 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public Task<List<long>> GetExpiredPaymentOrderIdsAsync(long enterpriseId, DateTime now, int take, CancellationToken cancellationToken)
     {
         var pending = OrderStatus.Pending.Id;
+        var pendingPayment = OrderPaymentStatus.Pending.Id;
 
         return _context.Orders.IgnoreQueryFilters().AsNoTracking()
-            .Where(e => e.EnterpriseId == enterpriseId && e.OrderStatusId == pending && e.PaymentExpiresAt != null &&
-                e.PaymentExpiresAt <= now && !e.IsDeleted)
+            .Where(Order => Order.EnterpriseId == enterpriseId && Order.OrderStatusId == pending &&
+                Order.OrderPaymentStatusId == pendingPayment && Order.PaymentExpiresAt != null &&
+                Order.PaymentExpiresAt <= now && !Order.IsDeleted)
             .OrderBy(e => e.PaymentExpiresAt).Select(e => e.Id).Take(take)
             .ToListAsync(cancellationToken);
     }

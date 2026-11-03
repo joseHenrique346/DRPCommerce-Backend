@@ -6,8 +6,8 @@ using StoreCommerce.Domain.StaticEntity;
 namespace StoreCommerce.Application.Features.Commands;
 
 /// <summary>
-/// Monta o histórico do cliente usado nas condições do cupom. O uso efetivo (resgate) é registrado pelo ciclo de vida do pedido
-/// quando o pagamento é confirmado.
+/// Monta o histórico do cliente usado nas condições do cupom. O checkout já registra um resgate ativo enquanto aguarda
+/// pagamento; pedidos administrativos sem compromisso registram o resgate na confirmação.
 /// </summary>
 public sealed class CouponEligibilityService(
     IOrderRepository orderRepository,

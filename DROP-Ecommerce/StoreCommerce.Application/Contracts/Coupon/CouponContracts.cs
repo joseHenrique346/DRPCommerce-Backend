@@ -21,6 +21,9 @@ public sealed record CouponConditionResponse(long TypeId, string Type, long Oper
         condition.Describe());
 }
 
+/// <summary>
+/// UsedCount inclui os usos comprometidos em pedidos pendentes de pagamento e pagos, descontados os liberados.
+/// </summary>
 public sealed record CouponResponse(long Id, string Code, long TypeId, string Type, decimal DiscountValue, decimal MaxDiscountCap, int? MaxUses, int UsedCount, bool IsActive, bool IsSingleUse, DateTime StartsAt, DateTime ExpiresAt, CouponAvailability Availability, IReadOnlyList<CouponConditionResponse> Conditions, DateTime CreatedAt, DateTime? UpdatedAt)
 {
     public static CouponResponse FromEntity(Domain.Entity.Coupon coupon, DateTime now) => new(

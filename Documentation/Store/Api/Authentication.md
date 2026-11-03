@@ -183,6 +183,7 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 | Estoque / reservas / movimentações | inventory.manage | inventory.manage |
 | Pedidos / itens | orders.view | orders.manage |
 | Cancelamento de pedidos pelo CRUD | — | orders.manage + orders.cancel |
+| POST `/api/orders/{id}/cancel` | — | orders.cancel; pedido pago também exige orders.refund |
 | Reembolso de pedidos ou do pagamento pelo CRUD | — | orders.manage + orders.refund |
 | Clientes administrativos | customers.view | customers.manage |
 | Funcionários / cargos / departamentos | employees.manage | employees.manage |
@@ -193,7 +194,9 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 
 Audit logs do Drop não aceitam mutação manual, inclusive pelo dono. Permissões não são novos códigos arbitrários cadastrados pela loja: a loja configura perfis usando o catálogo reconhecido pelo backend.
 
-`inventory.manage` protege os endpoints de estoque, reservas e movimentações. As rotas e regras estão em [Produtos, variantes e estoque](../Application/ProductsAndInventory.md). Cancelamento e reembolso continuam usando o CRUD existente, com verificação das permissões específicas, inclusive reembolso parcial/total do pagamento; atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
+`inventory.manage` protege os endpoints de estoque, reservas e movimentações. Reservas vinculadas a pedidos não aceitam liberação ou baixa pelos endpoints genéricos de estoque; essas operações seguem o fluxo do pedido. As rotas e regras estão em [Produtos, variantes e estoque](../Application/ProductsAndInventory.md).
+
+A rota `POST /api/orders/{id}/cancel` exige `orders.cancel`. Se o pedido está pago, também exige `orders.refund`. O fluxo confere as permissões após bloquear a loja e carregar o estado atual do pedido, antes de devolver estoque, liberar cupom ou chamar o estorno. A falta de permissão retorna 403 e preserva esses registros. O dono principal continua autorizado; o cancelamento de pedidos pendentes pelo próprio cliente segue suas regras da vitrine. Atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
 
 A desativação de funcionário segue o fluxo de identidade reservado ao dono principal: bloqueia o dono principal como alvo, valida funcionário e Membership na loja atual e grava as duas desativações em uma transação. A Membership incrementa `AccessVersion`, fazendo os JWTs anteriores serem rejeitados na próxima validação. A conta global do usuário e os vínculos em outras lojas continuam disponíveis. O endpoint retorna 204 no sucesso, 404 para funcionário fora da loja atual ou inexistente e 409 para tentativa de desativar o dono principal.
 

@@ -33,16 +33,32 @@ public sealed class InventoryRepository(StoreCommerceDbContext db) : IInventoryR
         return Reservations(tenant, tracking).SingleOrDefaultAsync(Reservation => Reservation.Id == id, ct);
     }
 
+    public Task<bool> IsAttachedToOrderAsync(long tenant, long reservationId, CancellationToken ct)
+    {
+        // O vínculo continua protegido mesmo se o pedido tiver sido excluído logicamente.
+        return db.Orders.IgnoreQueryFilters().AnyAsync(Order =>
+            Order.EnterpriseId == tenant && Order.StockReservationId == reservationId, ct);
+    }
+
+    private IQueryable<StockReservation> ExpiredStandaloneReservations(DateTime now)
+    {
+        return db.StockReservations.IgnoreQueryFilters().Where(Reservation =>
+            Reservation.Status == StockReservationStatus.Reserved && Reservation.ExpiresAt <= now &&
+            !db.Orders.IgnoreQueryFilters().Any(Order =>
+                Order.EnterpriseId == Reservation.EnterpriseId && Order.StockReservationId == Reservation.Id));
+    }
+
     public Task<List<StockReservation>> GetExpiredAsync(long tenant, DateTime now, CancellationToken ct)
     {
-        return Reservations(tenant)
-            .Where(Reservation => Reservation.Status == StockReservationStatus.Reserved && Reservation.ExpiresAt <= now).ToListAsync(ct);
+        return ExpiredStandaloneReservations(now)
+            .Where(Reservation => Reservation.EnterpriseId == tenant)
+            .Include(Reservation => Reservation.Lines).ThenInclude(Line => Line.ProductVariant)
+            .ToListAsync(ct);
     }
 
     public Task<List<long>> GetExpiredTenantsAsync(DateTime now, CancellationToken ct)
     {
-        return db.StockReservations.IgnoreQueryFilters().AsNoTracking()
-            .Where(Reservation => Reservation.Status == StockReservationStatus.Reserved && Reservation.ExpiresAt <= now)
+        return ExpiredStandaloneReservations(now).AsNoTracking()
             .Select(Reservation => Reservation.EnterpriseId).Distinct().OrderBy(Tenant => Tenant).Take(200).ToListAsync(ct);
     }
 

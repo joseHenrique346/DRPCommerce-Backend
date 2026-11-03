@@ -1,8 +1,10 @@
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Features.Commands;
+using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Orders;
 
@@ -34,6 +36,7 @@ public sealed class OrderLifecycleService(
     StoreSettingsReader storeSettings,
     IPaymentGateway gateway,
     OrderWorkflowScope scope,
+    ICurrentIdentity actor,
     TimeProvider time)
 {
     public const string ExpiredReason = "Pagamento não confirmado no prazo.";
@@ -41,7 +44,8 @@ public sealed class OrderLifecycleService(
     private DateTime Now => time.GetUtcNow().UtcDateTime;
 
     /// <summary>
-    /// Pagamento aprovado: confirma o pedido, baixa o estoque (da reserva ou, se ela expirou, do saldo atual) e conta o uso do cupom.
+    /// Pagamento aprovado: confirma o pedido, baixa o estoque (da reserva ou, se ela expirou, do saldo atual) e garante o uso do cupom.
+    /// O checkout já comprometeu esse uso; a confirmação não o conta novamente.
     /// Repetir a confirmação de um pedido já pago não faz nada.
     /// </summary>
     public Task<Order> ConfirmPaymentAsync(long enterpriseId, long orderId, OrderChangeSource source, long? actorId,
@@ -119,7 +123,7 @@ public sealed class OrderLifecycleService(
     /// <summary>
     /// Cancela o pedido: devolve o estoque (libera a reserva ou repõe o que já foi baixado), devolve o uso do cupom e,
     /// se o pedido estava pago, estorna o pagamento pelo gateway. Com customerId, só o próprio cliente cancela e apenas
-    /// pedidos que ainda aguardam pagamento.
+    /// pedidos que ainda aguardam pagamento. O backoffice exige orders.cancel e, para pedidos pagos, orders.refund.
     /// </summary>
     public async Task<Order> CancelAsync(long enterpriseId, long orderId, string reason, OrderChangeSource source, long? actorId,
         long? customerId, CancellationToken ct)
@@ -140,6 +144,15 @@ public sealed class OrderLifecycleService(
 
             var now = Now;
             var wasPaid = order.IsPaid;
+
+            if (source == OrderChangeSource.Backoffice)
+            {
+                actor.RequirePermission(PermissionCodes.OrdersCancel);
+
+                if (wasPaid)
+                    actor.RequirePermission(PermissionCodes.OrdersRefund);
+            }
+
             ReturnStock(order, now);
             await ReleaseCouponUseAsync(order, now, ct);
             order.Cancel(reason, source, actorId, now);
@@ -165,19 +178,18 @@ public sealed class OrderLifecycleService(
     /// Pagamento recusado pelo gateway: cancela o pedido pendente e libera a reserva.
     /// </summary>
     public Task<Order> FailPaymentAsync(long enterpriseId, long orderId, string reason, OrderChangeSource source, CancellationToken ct) =>
-        RunAsync(enterpriseId, orderId, null, order =>
+        RunAsync(enterpriseId, orderId, null, async order =>
         {
             if (!order.IsAwaitingPayment)
-                return Task.CompletedTask;
+                return;
 
             var now = Now;
             ReturnStock(order, now);
+            await ReleaseCouponUseAsync(order, now, ct);
             order.MarkPaymentFailed(reason, source, null, now);
 
             foreach (var payment in order.ListTransaction.Where(transaction => transaction.IsPendingPayment))
                 payment.MarkFailed();
-
-            return Task.CompletedTask;
         }, ct);
 
     /// <summary>
@@ -213,16 +225,50 @@ public sealed class OrderLifecycleService(
     }
 
     /// <summary>
-    /// Cancela os pedidos pendentes da loja cujo prazo de pagamento venceu. Chamado pelo worker de expiração.
+    /// Seleciona candidatos e revalida cada pedido após bloquear a loja. Só cancela os que continuam aguardando pagamento
+    /// e com prazo vencido. Retorna a quantidade de pedidos efetivamente expirados.
     /// </summary>
     public async Task<int> ExpirePendingAsync(long enterpriseId, CancellationToken ct)
     {
         var expired = await orders.GetExpiredPaymentOrderIdsAsync(enterpriseId, Now, 50, ct);
+        var count = 0;
 
         foreach (var orderId in expired)
-            await CancelAsync(enterpriseId, orderId, ExpiredReason, OrderChangeSource.System, null, null, ct);
+        {
+            if (await ExpireOrderAsync(enterpriseId, orderId, ct))
+                count++;
+        }
 
-        return expired.Count;
+        return count;
+    }
+
+    private async Task<bool> ExpireOrderAsync(long enterpriseId, long orderId, CancellationToken ct)
+    {
+        string? gatewayReferenceToCancel = null;
+        var expired = false;
+
+        await RunAsync(enterpriseId, orderId, null, async order =>
+        {
+            // A consulta de candidatos não decide o cancelamento: o pagamento pode ter sido confirmado enquanto aguardávamos.
+            var now = Now;
+
+            if (!order.IsAwaitingPayment || order.PaymentExpiresAt is not DateTime expiresAt || expiresAt > now)
+                return;
+
+            ReturnStock(order, now);
+            await ReleaseCouponUseAsync(order, now, ct);
+            order.Cancel(ExpiredReason, OrderChangeSource.System, null, now);
+
+            var payment = order.ListTransaction.FirstOrDefault(Transaction => Transaction.IsPendingPayment);
+            gatewayReferenceToCancel = payment?.GatewayReference;
+            payment?.MarkCancelled();
+            expired = true;
+        }, ct);
+
+        if (expired)
+            await CancelGatewayPaymentAsync(gatewayReferenceToCancel, ct);
+
+        return expired;
     }
 
     private async Task<Order> RunAsync(long enterpriseId, long orderId, long? customerId, Func<Order, Task> change, CancellationToken ct)
@@ -251,6 +297,10 @@ public sealed class OrderLifecycleService(
     private void CommitStock(Order order, StoreSettings settings, DateTime now)
     {
         var reservation = order.StockReservation;
+
+        // Uma baixa já concluída, inclusive por versões anteriores, não pode ser repetida na confirmação do pagamento.
+        if (reservation?.Status == StockReservationStatus.Committed)
+            return;
 
         if (reservation is null || reservation.Status != StockReservationStatus.Reserved)
         {
@@ -327,6 +377,8 @@ public sealed class OrderLifecycleService(
                 redemption.ReleasedAt == null, ct, ignoreQueryFilters: true))
             return;
 
+        // Pedidos criados diretamente no backoffice não comprometem cupom enquanto são rascunhos.
+        // O checkout já possui resgate ativo e não chega a este incremento.
         coupon.RegisterConfirmedUse();
         redemptions.Add(CouponRedemption.Create(coupon, order, now));
     }

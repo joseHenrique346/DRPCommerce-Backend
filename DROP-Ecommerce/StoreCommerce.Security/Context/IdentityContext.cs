@@ -30,4 +30,18 @@ public sealed class IdentityContext(IHttpContextAccessor accessor, ITenantProvid
         if (Principal.FindFirst(SecurityNames.Kind)?.Value != "primary_owner" || Principal.FindFirst(SecurityNames.Actor)?.Value != "user")
             throw new SecurityFailure(403, "Identity.PrimaryOwnerRequired", "Apenas o dono principal pode executar esta operação.");
     }
+
+    /// <summary>
+    /// Exige a permissão da identidade administrativa, respeitando o acesso do dono principal.
+    /// </summary>
+    public void RequirePermission(string permission)
+    {
+        var principal = Principal;
+
+        if (principal.Identity?.IsAuthenticated != true)
+            throw new SecurityFailure(401, "Identity.Unauthenticated", "Autenticação necessária.");
+
+        if (principal.FindFirst(SecurityNames.Membership) is null || !SecurityNames.HasPermission(principal, permission))
+            throw new SecurityFailure(403, "Security.PermissionRequired", $"Permissão {permission} necessária para esta operação.");
+    }
 }

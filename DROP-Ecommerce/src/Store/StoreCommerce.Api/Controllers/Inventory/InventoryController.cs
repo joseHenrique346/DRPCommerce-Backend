@@ -40,12 +40,18 @@ public sealed class InventoryController(IMediator mediator) : ControllerBase
         return this.ToActionResult(await mediator.Send(new GetStockReservationQuery(id), ct));
     }
 
+    /// <summary>
+    /// Libera uma reserva avulsa. Reservas vinculadas a pedidos devem ser liberadas pelo cancelamento do pedido.
+    /// </summary>
     [HttpPut("reservations/{id:long}/release")]
     public async Task<IActionResult> ReleaseAsync(long id, CancellationToken ct)
     {
         return this.ToActionResult(await mediator.Send(new ReleaseStockCommand(id), ct));
     }
 
+    /// <summary>
+    /// Efetiva uma reserva avulsa. Reservas vinculadas a pedidos são efetivadas pela confirmação do pagamento.
+    /// </summary>
     [HttpPut("reservations/{id:long}/commit")]
     public async Task<IActionResult> CommitAsync(long id, CancellationToken ct)
     {

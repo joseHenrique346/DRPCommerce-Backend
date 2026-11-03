@@ -4,8 +4,8 @@ using StoreCommerce.Domain.Interfaces;
 namespace StoreCommerce.Domain.Entity;
 
 /// <summary>
-/// Uso efetivo do cupom por um pedido. É registrado quando o pedido sai de Pendente e liberado
-/// (ReleasedAt) quando o pedido é cancelado, reembolsado ou excluído.
+/// Uso comprometido do cupom por um pedido. O checkout o registra antes do pagamento; rascunhos administrativos,
+/// na confirmação. Cancelamento, expiração e recusa de pagamento liberam o compromisso por ReleasedAt.
 /// </summary>
 public class CouponRedemption : BaseEntity, ITenantEntity
 {

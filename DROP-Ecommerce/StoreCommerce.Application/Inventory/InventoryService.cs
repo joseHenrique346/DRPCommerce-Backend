@@ -161,9 +161,14 @@ public sealed class InventoryService(
         await using var transaction = await BeginAsync(enterpriseId, ct);
         using var operation = writes.Begin(enterpriseId);
         var now = Now;
-        await ExpireCoreAsync(enterpriseId, now, ct);
         var reservation = await repository.GetReservationAsync(enterpriseId, id, ct)
             ?? throw new SecurityFailure(404, "Inventory.ReservationNotFound", "Reserva não encontrada na loja atual.");
+
+        if (await repository.IsAttachedToOrderAsync(enterpriseId, id, ct))
+            throw new SecurityFailure(409, "Inventory.OrderReservationProtected",
+                "A reserva pertence a um pedido. Use a confirmação de pagamento ou o cancelamento do pedido.");
+
+        await ExpireCoreAsync(enterpriseId, now, ct);
         var expected = commit ? StockReservationStatus.Committed : StockReservationStatus.Released;
 
         var repeated = reservation.Status == expected || (!commit && reservation.Status == StockReservationStatus.Expired);

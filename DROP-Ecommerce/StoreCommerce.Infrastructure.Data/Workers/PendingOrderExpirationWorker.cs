@@ -8,7 +8,8 @@ namespace StoreCommerce.Infrastructure.Data.Workers;
 
 /// <summary>
 /// Cancela, a cada minuto, os pedidos pendentes cujo prazo de pagamento (StoreSettings.PendingOrderExpirationMinutes) venceu,
-/// liberando o estoque reservado e a cobrança.
+/// liberando estoque, cupom e cobrança. O fluxo revalida o estado e o prazo depois do bloqueio para preservar pagamentos
+/// confirmados entre a consulta dos candidatos e o processamento.
 /// </summary>
 public sealed class PendingOrderExpirationWorker(IServiceScopeFactory scopes, TimeProvider time,
     ILogger<PendingOrderExpirationWorker> logger) : BackgroundService
