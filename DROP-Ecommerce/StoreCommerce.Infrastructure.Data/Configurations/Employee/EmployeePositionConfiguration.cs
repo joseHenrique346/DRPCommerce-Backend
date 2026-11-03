@@ -12,9 +12,9 @@ public class EmployeePositionConfiguration : IEntityTypeConfiguration<EmployeePo
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-        builder.Property(e => e.Name).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.NormalizedName).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.Description).HasMaxLength(1000);
+        builder.Property(e => e.Name).IsRequired().HasMaxLength(EmployeePosition.NameMaxLength);
+        builder.Property(e => e.NormalizedName).IsRequired().HasMaxLength(EmployeePosition.NormalizedNameMaxLength);
+        builder.Property(e => e.Description).HasMaxLength(EmployeePosition.DescriptionMaxLength);
         builder.HasAlternateKey(e => new { e.EnterpriseId, e.Id });
         builder.HasIndex(e => new { e.EnterpriseId, e.NormalizedName }).IsUnique();
         builder.HasOne(e => e.Enterprise).WithMany(e => e.ListEmployeePosition)

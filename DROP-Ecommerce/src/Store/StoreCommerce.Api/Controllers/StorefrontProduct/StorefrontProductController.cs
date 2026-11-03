@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using StoreCommerce.Infrastructure.Data.Context;
+using MediatR;
+using StoreCommerce.Api.Extensions;
+using StoreCommerce.Application.Features.Commands;
+using StoreCommerce.Application.Contracts.Product;
 
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/storefront")]
 [EnableRateLimiting("api")]
-public sealed class StorefrontProductController(StoreCommerceDbContext db) : ControllerBase
+public sealed class StorefrontProductController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Lista os produtos disponíveis na loja.
@@ -18,27 +20,27 @@ public sealed class StorefrontProductController(StoreCommerceDbContext db) : Con
     [HttpGet("products")]
     public async Task<IActionResult> Products([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
-        page = Math.Clamp(page, 1, 100000);
-        pageSize = Math.Clamp(pageSize, 1, 100);
+        return this.ToIdentityActionResult(await mediator.Send(new GetStorefrontProductsQuery(page, pageSize), ct));
+    }
 
-        return Ok(await db.Products
-            .AsNoTracking()
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Slug,
-                x.Description,
-                x.Price,
-                x.Brand,
-                x.ImageUrls,
-                x.CategoryId
-            })
-            .ToListAsync(ct));
+    /// <summary>
+    /// Pesquisa o catálogo público com filtros e resposta paginada.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("products/search")]
+    public async Task<IActionResult> SearchAsync([FromQuery] ProductSearchRequest query, CancellationToken ct)
+    {
+        return this.ToActionResult(await mediator.Send(new SearchStorefrontProductsQuery(query), ct));
+    }
+
+    /// <summary>
+    /// Consulta um produto e seus SKUs disponíveis pelo slug, incluindo opções e preços efetivos.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("products/by-slug/{slug}")]
+    public async Task<IActionResult> GetBySlugAsync(string slug, CancellationToken ct)
+    {
+        return this.ToActionResult(await mediator.Send(new GetProductBySlugQuery(slug), ct));
     }
 }
 

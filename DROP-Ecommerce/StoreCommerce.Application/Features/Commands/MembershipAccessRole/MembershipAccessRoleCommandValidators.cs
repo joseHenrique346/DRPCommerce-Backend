@@ -6,7 +6,6 @@ public class CreateMembershipAccessRoleCommandValidator : AbstractValidator<Crea
 {
     public CreateMembershipAccessRoleCommandValidator()
     {
-        RuleFor(command => command.enterpriseId).GreaterThan(0);
         RuleFor(command => command.enterpriseMembershipId).GreaterThan(0);
         RuleFor(command => command.accessRoleId).GreaterThan(0);
     }

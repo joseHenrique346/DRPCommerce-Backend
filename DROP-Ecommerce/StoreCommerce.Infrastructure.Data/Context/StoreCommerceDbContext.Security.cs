@@ -2,6 +2,7 @@ using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.StaticEntity;
 using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Infrastructure.Data.Context;
@@ -41,6 +42,18 @@ public partial class StoreCommerceDbContext
         if (changes.Count == 0)
             return;
 
+        if (GuardOrderWorkflowWrites(changes))
+            return;
+
+        if (GuardInventoryWrites(changes))
+            return;
+
+        if (GuardCartWrites(changes))
+            return;
+
+        if (GuardCustomerAddressWrites(changes))
+            return;
+
         var tenant = _tenantProvider.GetEnterpriseId();
         var principal = _httpAccessor.HttpContext?.User ?? throw new SecurityFailure(401, "Security.AuthenticationRequired", "Autenticação necessária.");
 
@@ -65,10 +78,31 @@ public partial class StoreCommerceDbContext
 
             switch (entry.Entity)
             {
-                case Category category when category.ParentCategoryId.HasValue:
+                case ProductVariant variant:
+                    if (entry.State == EntityState.Added && ChangeTracker.Entries<Product>()
+                        .Any(Product => ReferenceEquals(Product.Entity, variant.Product) && Product.State == EntityState.Added))
+                    {
+                        if (variant.Product.EnterpriseId != tenant)
+                            throw new SecurityFailure(403, "Security.TenantMismatch", "SKU de outra loja.");
+                    }
+                    else
+                    {
+                        await EnsureTenantAsync<Product>(variant.ProductId, tenant, ct);
+                    }
+
+                    if (entry.State == EntityState.Modified &&
+                        (entry.Property(nameof(ProductVariant.Price)).IsModified || entry.Property(nameof(ProductVariant.CostPrice)).IsModified) &&
+                        !SecurityNames.HasPermission(principal, PermissionCodes.ProductsChangePrice))
+                        throw new SecurityFailure(403, "Security.PricePermissionRequired", "Permissão para alterar preço de SKU necessária.");
+
+                    break;
+                case Category category when !category.IsDeleted && category.ParentCategoryId.HasValue:
                     await EnsureTenantAsync<Category>(category.ParentCategoryId.Value, tenant, ct);
                     break;
                 case Product p:
+                    if (p.IsDeleted)
+                        break;
+
                     await EnsureTenantAsync<Category>(p.CategoryId, tenant, ct);
 
                     if (p.SupplierId.HasValue)
@@ -85,10 +119,42 @@ public partial class StoreCommerceDbContext
 
                     break;
                 case Order o:
-                    await EnsureTenantAsync<Customer>(o.CustomerId, tenant, ct);
+                    // Referências são validadas quando novas ou alteradas; assim um pedido continua editável
+                    // mesmo que o cupom/cliente já vinculado tenha sido excluído logicamente depois.
+                    if (entry.State == EntityState.Added || entry.Property(nameof(Order.CustomerId)).IsModified)
+                        await EnsureTenantAsync<Customer>(o.CustomerId, tenant, ct);
 
-                    if (o.CouponId.HasValue)
+                    if (o.CouponId.HasValue && (entry.State == EntityState.Added || entry.Property(nameof(Order.CouponId)).IsModified))
                         await EnsureTenantAsync<Coupon>(o.CouponId.Value, tenant, ct);
+
+                    if (entry.State == EntityState.Modified &&
+                        (o.OrderStatusId == OrderStatus.Cancelled.Id || o.OrderStatusId == OrderStatus.Refunded.Id ||
+                         o.OrderPaymentStatusId == OrderPaymentStatus.PartialRefund.Id || o.OrderPaymentStatusId == OrderPaymentStatus.FullRefund.Id))
+                    {
+                        var originalStatus = await Orders.AsNoTracking()
+                            .Where(Order => Order.Id == o.Id)
+                            .Select(Order => new { Order.OrderStatusId, Order.OrderPaymentStatusId })
+                            .SingleAsync(ct);
+
+                        if (originalStatus.OrderStatusId != o.OrderStatusId && o.OrderStatusId == OrderStatus.Cancelled.Id &&
+                            !SecurityNames.HasPermission(principal, PermissionCodes.OrdersCancel))
+                            throw new SecurityFailure(403, "Security.CancelPermissionRequired", "Permissão para cancelar pedidos necessária.");
+
+                        if (((originalStatus.OrderStatusId != o.OrderStatusId && o.OrderStatusId == OrderStatus.Refunded.Id) ||
+                             (originalStatus.OrderPaymentStatusId != o.OrderPaymentStatusId &&
+                              (o.OrderPaymentStatusId == OrderPaymentStatus.PartialRefund.Id || o.OrderPaymentStatusId == OrderPaymentStatus.FullRefund.Id))) &&
+                            !SecurityNames.HasPermission(principal, PermissionCodes.OrdersRefund))
+                            throw new SecurityFailure(403, "Security.RefundPermissionRequired", "Permissão para reembolsar pedidos necessária.");
+                    }
+
+                    break;
+                case CouponRedemption redemption when entry.State == EntityState.Added:
+                    await EnsureTenantAsync<Order>(redemption.OrderId, tenant, ct);
+                    await EnsureTenantAsync<Customer>(redemption.CustomerId, tenant, ct);
+
+                    if (!await Orders.AnyAsync(Order => Order.Id == redemption.OrderId && Order.CustomerId == redemption.CustomerId &&
+                            Order.CouponId == redemption.CouponId, ct))
+                        throw new SecurityFailure(400, "Security.InvalidRelationship", "Resgate incompatível com o pedido.");
 
                     break;
                 case Employee e:
@@ -107,10 +173,17 @@ public partial class StoreCommerceDbContext
                 case OrderItem item:
                     await EnsureTenantAsync<Order>(item.OrderId, tenant, ct);
 
-                    if (item.ProductId.HasValue)
+                    if (entry.State == EntityState.Added && item.ProductVariantId.HasValue &&
+                        !await ProductVariants.AnyAsync(Variant => Variant.Id == item.ProductVariantId && Variant.ProductId == item.ProductId &&
+                            Variant.EnterpriseId == tenant, ct))
+                        throw new SecurityFailure(400, "ProductVariant.InvalidRelationship", "A variante não pertence ao produto e à loja do pedido.");
+
+                    // Produto/serviço são copiados para o item na inclusão; depois disso o item é apenas recalculado,
+                    // mesmo que o produto tenha sido excluído logicamente.
+                    if (entry.State == EntityState.Added && item.ProductId.HasValue)
                         await EnsureTenantAsync<Product>(item.ProductId.Value, tenant, ct);
 
-                    if (item.ServiceId.HasValue)
+                    if (entry.State == EntityState.Added && item.ServiceId.HasValue)
                         await EnsureTenantAsync<StoreCommerce.Domain.Entity.Service>(item.ServiceId.Value, tenant, ct);
 
                     break;

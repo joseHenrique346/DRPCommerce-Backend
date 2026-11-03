@@ -6,7 +6,6 @@ public class CreateAccessRolePermissionCommandValidator : AbstractValidator<Crea
 {
     public CreateAccessRolePermissionCommandValidator()
     {
-        RuleFor(command => command.enterpriseId).GreaterThan(0);
         RuleFor(command => command.accessRoleId).GreaterThan(0);
         RuleFor(command => command.permissionId).GreaterThan(0);
     }

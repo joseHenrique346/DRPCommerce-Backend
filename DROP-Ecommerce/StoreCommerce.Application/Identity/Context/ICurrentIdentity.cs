@@ -9,4 +9,5 @@ public interface ICurrentIdentity
     Guid FamilyId { get; }
     string Host { get; }
     void RequirePrimaryOwner();
+    void RequirePermission(string permission);
 }

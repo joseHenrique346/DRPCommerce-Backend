@@ -21,6 +21,7 @@ public interface IIdentityRepositories
     IEntityRepository<EnterpriseInvitation> EnterpriseInvitations { get; }
     IEntityRepository<InvitationAccessRole> InvitationAccessRoles { get; }
     IEntityRepository<OwnershipTransfer> OwnershipTransfers { get; }
+    IEntityRepository<StoreSettings> StoreSettings { get; }
     IAuthenticationSessionRepository Sessions { get; }
     Task<EnterpriseInvitation> GetInvitationWithRolesAsync(long id, CancellationToken cancellationToken);
     Task<IReadOnlyList<MembershipChoice>> GetMembershipChoicesAsync(long userId, CancellationToken cancellationToken);

@@ -1,11 +1,9 @@
-using StoreCommerce.Application.Features.Commands.Base.Handlers;
-using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
-
 namespace StoreCommerce.Application.Features.Commands;
 
-public class DeleteListProductCommandHandler(IRepository<Product> repository, IUnitOfWork unitOfWork)
-    : BaseDeleteListHandler<DeleteListProductCommand, Product>(repository, unitOfWork)
+public sealed class DeleteListProductCommandHandler(ProductCatalogWriter writer) : CatalogRequestHandler<DeleteListProductCommand, bool>
 {
-    protected override IReadOnlyCollection<long> GetIdList(DeleteListProductCommand request) => request.ids;
+    protected override Task<bool> ExecuteAsync(DeleteListProductCommand request, CancellationToken ct)
+    {
+        return writer.DeleteAsync(request.ids, ct);
+    }
 }

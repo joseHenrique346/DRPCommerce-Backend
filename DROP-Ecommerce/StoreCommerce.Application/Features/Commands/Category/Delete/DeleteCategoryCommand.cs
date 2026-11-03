@@ -1,7 +1,6 @@
 using MediatR;
 using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class DeleteCategoryCommand(long id) : IRequest<Result<Category>> { }
+public record class DeleteCategoryCommand(long id, long? moveProductsToCategoryId = null) : IRequest<Result<bool>>;

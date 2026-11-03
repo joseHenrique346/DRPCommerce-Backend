@@ -24,6 +24,7 @@ public sealed class IdentityRepositories(
     IEntityRepository<EnterpriseInvitation> enterpriseInvitations,
     IEntityRepository<InvitationAccessRole> invitationAccessRoles,
     IEntityRepository<OwnershipTransfer> ownershipTransfers,
+    IEntityRepository<StoreSettings> storeSettings,
     IAuthenticationSessionRepository sessions) : IIdentityRepositories
 {
     public IUserRepository Users { get; } = users;
@@ -42,6 +43,7 @@ public sealed class IdentityRepositories(
     public IEntityRepository<EnterpriseInvitation> EnterpriseInvitations { get; } = enterpriseInvitations;
     public IEntityRepository<InvitationAccessRole> InvitationAccessRoles { get; } = invitationAccessRoles;
     public IEntityRepository<OwnershipTransfer> OwnershipTransfers { get; } = ownershipTransfers;
+    public IEntityRepository<StoreSettings> StoreSettings { get; } = storeSettings;
     public IAuthenticationSessionRepository Sessions { get; } = sessions;
 
     public Task<EnterpriseInvitation> GetInvitationWithRolesAsync(long id, CancellationToken cancellationToken)

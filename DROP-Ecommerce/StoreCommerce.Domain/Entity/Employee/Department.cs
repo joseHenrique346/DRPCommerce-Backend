@@ -5,6 +5,12 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Department : BaseEntity, ITenantEntity
 {
+    #region Constants
+    public const int NameMaxLength = 255;
+    public const int NormalizedNameMaxLength = 255;
+    public const int DescriptionMaxLength = 1000;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public string Name { get; private set; } = string.Empty;
@@ -41,8 +47,8 @@ public class Department : BaseEntity, ITenantEntity
     public void UpdateDetails(string name, string description, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateMaxLength(description, 1000, nameof(Description));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
 
         Name = name;
         NormalizedName = name.Trim().ToUpperInvariant();

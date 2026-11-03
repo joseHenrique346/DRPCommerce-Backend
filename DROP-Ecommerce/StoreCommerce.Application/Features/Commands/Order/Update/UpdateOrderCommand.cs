@@ -4,4 +4,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class UpdateOrderCommand(long id, long enterpriseId, long customerId, long? couponId, long statusId, long paymentStatusId, decimal subTotal, decimal discountAmount, decimal shippingCost, decimal taxAmount, decimal totalAmount, string shippingAddressLine, string shippingCity, string shippingState, string shippingZipCode, string notes) : IRequest<Result<Order>> { }
+/// <summary>
+/// Atualiza cupom e endereço de entrega. O status muda apenas pelos fluxos do pedido (confirmar pagamento, enviar, cancelar...).
+/// </summary>
+public record class UpdateOrderCommand(long id, long? couponId, string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode, string notes) : IRequest<Result<Order>> { }

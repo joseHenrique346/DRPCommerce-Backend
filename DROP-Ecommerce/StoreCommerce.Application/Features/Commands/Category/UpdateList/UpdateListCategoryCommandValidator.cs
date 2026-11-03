@@ -7,6 +7,6 @@ public class UpdateListCategoryCommandValidator : AbstractValidator<UpdateListCa
     public UpdateListCategoryCommandValidator()
     {
         RuleFor(category => category.commands).NotEmpty();
-        RuleForEach(category => category.commands).SetValidator(new UpdateCategoryCommandValidator());
+        RuleForEach(category => category.commands).NotNull().SetValidator(new UpdateCategoryCommandValidator());
     }
 }

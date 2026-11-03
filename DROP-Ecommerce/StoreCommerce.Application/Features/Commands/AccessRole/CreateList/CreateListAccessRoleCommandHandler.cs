@@ -4,11 +4,11 @@ using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateListAccessRoleCommandHandler(IAccessRoleRepository repository, IUnitOfWork unitOfWork)
+public class CreateListAccessRoleCommandHandler(IAccessRoleRepository repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
     : BaseCreateListHandler<CreateAccessRoleCommand, CreateListAccessRoleCommand, AccessRole>(repository, unitOfWork)
 {
     protected override IReadOnlyCollection<CreateAccessRoleCommand> GetCommandList(CreateListAccessRoleCommand request) => request.commands;
 
     protected override AccessRole CreateEntity(CreateAccessRoleCommand command) =>
-        AccessRole.Create(command.enterpriseId, command.name, command.description, command.isActive);
+        AccessRole.Create(tenantProvider.GetEnterpriseId(), command.name, command.description, command.isActive);
 }

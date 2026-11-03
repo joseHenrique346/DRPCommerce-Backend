@@ -4,4 +4,4 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class UpdateShipmentCommand(long id, long orderId, long? supplierId, long typeId, string carrierName, string trackingCode, long statusId, decimal shippingCost, string addressLine, string city, string state, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt) : IRequest<Result<Shipment>> { }
+public record class UpdateShipmentCommand(long id, long orderId, long? supplierId, long typeId, string carrierName, string trackingCode, long statusId, decimal shippingCost, string addressLine, string city, long stateId, string zipCode, string country, DateTime estimatedDelivery, DateTime? shippedAt, DateTime? deliveredAt) : IRequest<Result<Shipment>> { }

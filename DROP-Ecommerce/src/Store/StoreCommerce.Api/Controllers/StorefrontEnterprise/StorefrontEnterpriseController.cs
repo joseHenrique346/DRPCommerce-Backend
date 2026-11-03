@@ -1,33 +1,24 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using StoreCommerce.Infrastructure.Data.Context;
-using StoreCommerce.Security.Context;
+using StoreCommerce.Api.Extensions;
+using StoreCommerce.Application.Features.Commands;
 
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/storefront")]
 [EnableRateLimiting("api")]
-public sealed class StorefrontEnterpriseController(StoreCommerceDbContext db, IdentityContext actor) : ControllerBase
+public sealed class StorefrontEnterpriseController(IMediator mediator) : ControllerBase
 {
     /// <summary>
-    /// Consulta os dados públicos da loja acessada.
+    /// Consulta os dados públicos e as regras de venda da loja acessada.
     /// </summary>
     [AllowAnonymous]
     [HttpGet("store")]
     public async Task<IActionResult> Store(CancellationToken ct)
     {
-        return Ok(await db.Enterprises
-            .Where(x => x.Id == actor.EnterpriseId)
-            .Select(x => new
-            {
-                x.TradeName,
-                x.Email,
-                x.Phone
-            })
-            .SingleAsync(ct));
+        return this.ToActionResult(await mediator.Send(new GetPublicStoreInfoQuery(), ct));
     }
 }
-

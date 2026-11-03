@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Result;
 using StoreCommerce.Infrastructure.Data.Context;
+using MediatR;
+using StoreCommerce.Api.Extensions;
+using StoreCommerce.Application.Features.Commands;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -11,8 +14,17 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalProductController(StoreCommerceDbContext db) : ControllerBase
+public sealed class InternalProductController(StoreCommerceDbContext db, IMediator mediator) : ControllerBase
 {
+    /// <summary>
+    /// Consulta os SKUs e opções do produto para integrações autenticadas da loja.
+    /// </summary>
+    [HttpGet("products/{id:long}/variants")]
+    public async Task<IActionResult> GetVariantsAsync(long id, CancellationToken ct)
+    {
+        return this.ToActionResult(await mediator.Send(new GetProductVariantsQuery(id), ct));
+    }
+
     /// <summary>
     /// Consulta um produto para integração interna.
     /// </summary>

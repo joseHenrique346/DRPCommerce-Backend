@@ -7,6 +7,6 @@ public class CreateListCategoryCommandValidator : AbstractValidator<CreateListCa
     public CreateListCategoryCommandValidator()
     {
         RuleFor(category => category.commands).NotEmpty();
-        RuleForEach(category => category.commands).SetValidator(new CreateCategoryCommandValidator());
+        RuleForEach(category => category.commands).NotNull().SetValidator(new CreateCategoryCommandValidator());
     }
 }

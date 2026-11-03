@@ -1,4 +1,5 @@
 using FluentValidation;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -18,11 +19,10 @@ public class CreateShipmentCommandValidator : AbstractValidator<CreateShipmentCo
 
         RuleFor(shipment => shipment.carrierName)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
+            .MaximumLength(Shipment.CarrierNameMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(shipment => shipment.trackingCode)
-            .MaximumLength(100).When(shipment => !string.IsNullOrWhiteSpace(shipment.trackingCode))
-            .WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Shipment.TrackingCodeMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(shipment => shipment.statusId)
             .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
@@ -32,23 +32,22 @@ public class CreateShipmentCommandValidator : AbstractValidator<CreateShipmentCo
 
         RuleFor(shipment => shipment.addressLine)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(300).WithMessage("{PropertyName} não pode ter mais de 300 caracteres.");
+            .MaximumLength(Shipment.AddressLineMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(shipment => shipment.city)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(150).WithMessage("{PropertyName} não pode ter mais de 150 caracteres.");
+            .MaximumLength(Shipment.CityMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
-        RuleFor(shipment => shipment.state)
-            .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(100).WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+        RuleFor(shipment => shipment.stateId)
+            .GreaterThan(0).WithMessage("{PropertyName} deve ser maior que zero.");
 
         RuleFor(shipment => shipment.zipCode)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(20).WithMessage("{PropertyName} não pode ter mais de 20 caracteres.");
+            .MaximumLength(Shipment.ZipCodeMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(shipment => shipment.country)
             .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")
-            .MaximumLength(100).WithMessage("{PropertyName} não pode ter mais de 100 caracteres.");
+            .MaximumLength(Shipment.CountryMaxLength).WithMessage("{PropertyName} não pode ter mais de {MaxLength} caracteres.");
 
         RuleFor(shipment => shipment.estimatedDelivery)
             .NotEqual(default(DateTime)).WithMessage("{PropertyName} deve ser uma data válida.");

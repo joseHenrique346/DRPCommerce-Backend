@@ -10,6 +10,9 @@ using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 using StoreCommerce.Infrastructure.Data.Providers;
 using StoreCommerce.Infrastructure.Data.Repositories;
+using StoreCommerce.Application.Carts;
+using StoreCommerce.Application.Inventory;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Infrastructure.Data;
 
@@ -37,6 +40,18 @@ public static class DependencyInjection
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IRepository<Product>>(Provider => Provider.GetRequiredService<IProductRepository>());
+        services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<InventoryWriteScope>();
+        services.AddScoped<CartWriteScope>();
+        services.AddScoped<StoreCommerce.Application.Orders.OrderWorkflowScope>();
+        services.AddScoped<StoreCommerce.Application.Carts.CustomerAddressWriteScope>();
+        services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
+        // Troque pelo adaptador do gateway real quando a integração for implementada.
+        services.AddScoped<StoreCommerce.Application.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();
+        services.AddHostedService<Workers.PendingOrderExpirationWorker>();
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddHostedService<Workers.StockReservationExpirationWorker>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICouponRepository, CouponRepository>();

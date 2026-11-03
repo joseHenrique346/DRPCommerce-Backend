@@ -13,8 +13,13 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.ItemName).HasMaxLength(200);
-        builder.Property(e => e.SKU).HasMaxLength(100);
+        builder.Property(e => e.ItemName).HasMaxLength(OrderItem.ItemNameMaxLength);
+        builder.Property(e => e.SKU).HasMaxLength(OrderItem.SkuMaxLength);
+        builder.Property(Item => Item.VariantName).HasMaxLength(ProductVariant.NameMaxLength);
+        builder.Property(Item => Item.VariantAttributesJson).HasColumnType("jsonb");
+        builder.HasOne(Item => Item.ProductVariant).WithMany()
+            .HasForeignKey(Item => new { Item.ProductId, Item.ProductVariantId })
+            .HasPrincipalKey(Variant => new { Variant.ProductId, Variant.Id }).OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(e => e.UnitPrice).HasPrecision(18, 2);
         builder.Property(e => e.DiscountAmount).HasPrecision(18, 2);

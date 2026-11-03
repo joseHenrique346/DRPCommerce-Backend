@@ -13,7 +13,7 @@ public class UpdateListShipmentCommandHandler(IRepository<Shipment> repository, 
 
     protected override void ApplyChanges(Shipment entity, UpdateShipmentCommand command)
     {
-        entity.UpdateDetails(command.supplierId, command.typeId, command.carrierName, command.trackingCode, command.shippingCost, command.addressLine, command.city, 0, command.zipCode, command.country, command.estimatedDelivery);
+        entity.UpdateDetails(command.supplierId, command.typeId, command.carrierName, command.trackingCode, command.shippingCost, command.addressLine, command.city, command.stateId, command.zipCode, command.country, command.estimatedDelivery);
         entity.UpdateStatus(command.statusId);
     }
 }

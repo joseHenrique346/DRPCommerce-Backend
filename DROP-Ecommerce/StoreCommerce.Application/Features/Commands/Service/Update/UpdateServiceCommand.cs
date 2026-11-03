@@ -4,4 +4,4 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public record class UpdateServiceCommand(long id, long enterpriseId, long categoryId, string name, string description, decimal price, int durationMinutes, bool isActive) : IRequest<Result<Service>> { }
+public record class UpdateServiceCommand(long id, long categoryId, string name, string description, decimal price, int durationMinutes, bool isActive) : IRequest<Result<Service>> { }

@@ -6,6 +6,12 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Document : BaseEntity, ITenantEntity
 {
+    #region Constants
+    public const int ReferenceTypeMaxLength = 500;
+    public const int NumberMaxLength = 100;
+    public const int FileUrlMaxLength = 500;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public long ReferenceId { get; private set; }
@@ -48,10 +54,11 @@ public class Document : BaseEntity, ITenantEntity
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidatePositive(referenceId, nameof(ReferenceId));
         BaseValidate.ValidateNotNullOrEmpty(referenceType, nameof(ReferenceType));
-        BaseValidate.ValidateMaxLength(referenceType, 100, nameof(ReferenceType));
+        BaseValidate.ValidateMaxLength(referenceType, ReferenceTypeMaxLength, nameof(ReferenceType));
         BaseValidate.ValidatePositive(documentTypeId, nameof(DocumentTypeId));
-        BaseValidate.ValidateMaxLength(number, 100, nameof(Number));
-        BaseValidate.ValidateMaxLength(fileUrl, 1000, nameof(FileUrl));
+        BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
         BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
         BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
         BaseValidate.ValidateNotFuture(issuedAt, nameof(IssuedAt));
@@ -64,10 +71,11 @@ public class Document : BaseEntity, ITenantEntity
     {
         BaseValidate.ValidatePositive(referenceId, nameof(ReferenceId));
         BaseValidate.ValidateNotNullOrEmpty(referenceType, nameof(ReferenceType));
-        BaseValidate.ValidateMaxLength(referenceType, 100, nameof(ReferenceType));
+        BaseValidate.ValidateMaxLength(referenceType, ReferenceTypeMaxLength, nameof(ReferenceType));
         BaseValidate.ValidatePositive(documentTypeId, nameof(DocumentTypeId));
-        BaseValidate.ValidateMaxLength(number, 100, nameof(Number));
-        BaseValidate.ValidateMaxLength(fileUrl, 1000, nameof(FileUrl));
+        BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
         BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
         BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
         BaseValidate.ValidateNotFuture(issuedAt, nameof(IssuedAt));

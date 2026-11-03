@@ -13,10 +13,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Name).HasMaxLength(200);
-        builder.Property(e => e.Slug).HasMaxLength(100);
-        builder.Property(e => e.Description).HasMaxLength(500);
-        builder.Property(e => e.ImageUrl).HasMaxLength(500);
+        builder.Property(e => e.Name).HasMaxLength(Category.NameMaxLength);
+        builder.Property(e => e.Slug).HasMaxLength(Category.SlugMaxLength);
+        builder.Property(e => e.Description).HasMaxLength(Category.DescriptionMaxLength);
+        builder.Property(e => e.ImageUrl).HasMaxLength(Category.ImageUrlMaxLength);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
@@ -42,5 +42,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.HasIndex(e => e.EnterpriseId);
         builder.HasIndex(e => e.ParentCategoryId);
+        builder.HasIndex(Category => new { Category.EnterpriseId, Category.Slug })
+            .IsUnique()
+            .HasFilter("is_deleted = FALSE");
     }
 }

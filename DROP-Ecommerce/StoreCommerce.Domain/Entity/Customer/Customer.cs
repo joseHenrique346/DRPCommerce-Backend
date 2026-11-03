@@ -5,6 +5,17 @@ namespace StoreCommerce.Domain.Entity;
 
 public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 {
+    #region Constants
+    public const int FullNameMaxLength = 200;
+    public const int PasswordHashMaxLength = 500;
+    public const int NormalizedEmailMaxLength = 255;
+    public const int AddressLineMaxLength = 200;
+    public const int CityMaxLength = 100;
+    public const int ZipCodeMaxLength = 20;
+    public const int CountryMaxLength = 100;
+    public const int GenderMaxLength = 100;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public string FullName { get; private set; }
@@ -69,15 +80,15 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
-        BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
+        BaseValidate.ValidateMaxLength(fullName, FullNameMaxLength, nameof(FullName));
         BaseValidate.ValidateNotNull(email, nameof(Email));
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
-        BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
+        BaseValidate.ValidateMaxLength(gender, GenderMaxLength, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
         return new Customer(enterpriseId, fullName, email, phone, null, addressLine, city, stateId, zipCode, country, gender, dateOfBirth, isVerified, isActive);
@@ -86,10 +97,10 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     public void UpdatePersonalInfo(string fullName, CustomerEmail email, CustomerPhone phone, string gender, DateTime dateOfBirth)
     {
         BaseValidate.ValidateNotNullOrEmpty(fullName, nameof(FullName));
-        BaseValidate.ValidateMaxLength(fullName, 255, nameof(FullName));
+        BaseValidate.ValidateMaxLength(fullName, FullNameMaxLength, nameof(FullName));
         BaseValidate.ValidateNotNull(email, nameof(Email));
         BaseValidate.ValidateNotNull(phone, nameof(Phone));
-        BaseValidate.ValidateMaxLength(gender, 50, nameof(Gender));
+        BaseValidate.ValidateMaxLength(gender, GenderMaxLength, nameof(Gender));
         BaseValidate.ValidateNotFuture(dateOfBirth, nameof(DateOfBirth));
 
         FullName = fullName;
@@ -107,11 +118,11 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 
     public void UpdateAddress(string addressLine, string city, long stateId, string zipCode, string country)
     {
-        BaseValidate.ValidateMaxLength(addressLine, 500, nameof(AddressLine));
-        BaseValidate.ValidateMaxLength(city, 255, nameof(City));
+        BaseValidate.ValidateMaxLength(addressLine, AddressLineMaxLength, nameof(AddressLine));
+        BaseValidate.ValidateMaxLength(city, CityMaxLength, nameof(City));
         BaseValidate.ValidatePositive(stateId, nameof(StateId));
-        BaseValidate.ValidateMaxLength(zipCode, 20, nameof(ZipCode));
-        BaseValidate.ValidateMaxLength(country, 100, nameof(Country));
+        BaseValidate.ValidateMaxLength(zipCode, ZipCodeMaxLength, nameof(ZipCode));
+        BaseValidate.ValidateMaxLength(country, CountryMaxLength, nameof(Country));
 
         AddressLine = addressLine;
         City = city;
@@ -123,7 +134,7 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     public void UpdatePasswordHash(string passwordHash)
     {
         BaseValidate.ValidateNotNullOrEmpty(passwordHash, nameof(PasswordHash));
-        BaseValidate.ValidateMaxLength(passwordHash, 500, nameof(PasswordHash));
+        BaseValidate.ValidateMaxLength(passwordHash, PasswordHashMaxLength, nameof(PasswordHash));
 
         PasswordHash = passwordHash;
     }

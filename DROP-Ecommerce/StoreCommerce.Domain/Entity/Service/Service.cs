@@ -6,6 +6,11 @@ namespace StoreCommerce.Domain.Entity;
 
 public class Service : BaseEntity, ITenantEntity, ISoftDeletable
 {
+    #region Constants
+    public const int NameMaxLength = 200;
+    public const int DescriptionMaxLength = 500;
+    #endregion
+
     #region Properties
     public long EnterpriseId { get; private set; }
     public long CategoryId { get; private set; }
@@ -47,8 +52,8 @@ public class Service : BaseEntity, ITenantEntity, ISoftDeletable
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         BaseValidate.ValidatePositive(categoryId, nameof(CategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateMaxLength(description, 5000, nameof(Description));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
         BaseValidate.ValidatePositive(price, nameof(Price));
         BaseValidate.ValidatePositive(durationMinutes, nameof(DurationMinutes));
 
@@ -59,8 +64,8 @@ public class Service : BaseEntity, ITenantEntity, ISoftDeletable
     {
         BaseValidate.ValidatePositive(categoryId, nameof(CategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
-        BaseValidate.ValidateMaxLength(name, 255, nameof(Name));
-        BaseValidate.ValidateMaxLength(description, 5000, nameof(Description));
+        BaseValidate.ValidateMaxLength(name, NameMaxLength, nameof(Name));
+        BaseValidate.ValidateMaxLength(description, DescriptionMaxLength, nameof(Description));
         BaseValidate.ValidatePositive(price, nameof(Price));
         BaseValidate.ValidatePositive(durationMinutes, nameof(DurationMinutes));
 

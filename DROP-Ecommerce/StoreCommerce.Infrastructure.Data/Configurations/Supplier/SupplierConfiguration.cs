@@ -13,12 +13,12 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.CompanyName).HasMaxLength(200);
-        builder.Property(e => e.ContactName).HasMaxLength(200);
-        builder.Property(e => e.AddressLine).HasMaxLength(200);
-        builder.Property(e => e.City).HasMaxLength(100);
-        builder.Property(e => e.ZipCode).HasMaxLength(20);
-        builder.Property(e => e.Country).HasMaxLength(100);
+        builder.Property(e => e.CompanyName).HasMaxLength(Supplier.CompanyNameMaxLength);
+        builder.Property(e => e.ContactName).HasMaxLength(Supplier.ContactNameMaxLength);
+        builder.Property(e => e.AddressLine).HasMaxLength(Supplier.AddressLineMaxLength);
+        builder.Property(e => e.City).HasMaxLength(Supplier.CityMaxLength);
+        builder.Property(e => e.ZipCode).HasMaxLength(Supplier.ZipCodeMaxLength);
+        builder.Property(e => e.Country).HasMaxLength(Supplier.CountryMaxLength);
 
         builder.OwnsOne(e => e.Email, nav =>
         {

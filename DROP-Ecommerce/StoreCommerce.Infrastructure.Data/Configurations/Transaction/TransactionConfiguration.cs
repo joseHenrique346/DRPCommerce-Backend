@@ -13,9 +13,9 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.GatewayReference).HasMaxLength(200);
-        builder.Property(e => e.GatewayProvider).HasMaxLength(200);
-        builder.Property(e => e.GatewayPayload).HasMaxLength(4000);
+        builder.Property(e => e.GatewayReference).HasMaxLength(Transaction.GatewayReferenceMaxLength);
+        builder.Property(e => e.GatewayProvider).HasMaxLength(Transaction.GatewayProviderMaxLength);
+        builder.Property(e => e.GatewayPayload).HasMaxLength(Transaction.GatewayPayloadMaxLength);
 
         builder.Property(e => e.Amount).HasPrecision(18, 2);
         builder.Property(e => e.Fee).HasPrecision(18, 2);

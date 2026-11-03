@@ -138,6 +138,7 @@ PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha u
 | GET /api/enterprise-memberships/get-all | Membros da loja, dono principal |
 | PUT /api/enterprise-memberships/{id} | kindId 2/3 e isActive; não rebaixa/remove dono principal |
 | PUT /api/enterprise-memberships/{id}/access-roles | accessRoleIds da mesma loja |
+| PUT /api/employees/{id}/deactivate | Dono principal; desativa funcionário e Membership da loja atual e invalida o acesso |
 | GET /api/permissions/get-all | Catálogo estático de permissões |
 | GET /api/access-roles/get-all | Perfis da loja |
 | POST /api/access-roles/add | name, description, isActive, permissionIds |
@@ -169,13 +170,21 @@ Não há envio automático de links nesta etapa. Entregue os tokens por canal pr
 
 A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e certificado HTTPS continuam sendo configuração de infraestrutura.
 
-## Matriz inicial de operações comerciais
+## Matriz de operações comerciais
 
 | Módulo | Leitura | Escrita |
 |---|---|---|
-| Produtos / categorias | products.view | products.create, products.edit ou products.delete |
-| Preço/custo existente | — | products.edit + products.change_price |
+| Produtos / variantes | products.view | products.create, products.edit ou products.delete |
+| Categorias | categories.view | categories.manage |
+| Cupons | coupons.view | coupons.manage |
+| Fornecedores | suppliers.manage | suppliers.manage |
+| Configurações da loja | settings.manage | settings.manage |
+| Preço/custo existente | — | products.change_price nas rotas próprias; no CRUD completo também exige products.edit |
+| Estoque / reservas / movimentações | inventory.manage | inventory.manage |
 | Pedidos / itens | orders.view | orders.manage |
+| Cancelamento de pedidos pelo CRUD | — | orders.manage + orders.cancel |
+| POST `/api/orders/{id}/cancel` | — | orders.cancel; pedido pago também exige orders.refund |
+| Reembolso de pedidos ou do pagamento pelo CRUD | — | orders.manage + orders.refund |
 | Clientes administrativos | customers.view | customers.manage |
 | Funcionários / cargos / departamentos | employees.manage | employees.manage |
 | Eventos/produtos/cupons Drop | drop.events.view | drop.events.manage |
@@ -184,6 +193,16 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 | Outros módulos | Dono principal | Dono principal |
 
 Audit logs do Drop não aceitam mutação manual, inclusive pelo dono. Permissões não são novos códigos arbitrários cadastrados pela loja: a loja configura perfis usando o catálogo reconhecido pelo backend.
+
+`inventory.manage` protege os endpoints de estoque, reservas e movimentações. Reservas vinculadas a pedidos não aceitam liberação ou baixa pelos endpoints genéricos de estoque; essas operações seguem o fluxo do pedido. As rotas e regras estão em [Produtos, variantes e estoque](../Application/ProductsAndInventory.md).
+
+A rota `POST /api/orders/{id}/cancel` exige `orders.cancel`. Se o pedido está pago, também exige `orders.refund`. O fluxo confere as permissões após bloquear a loja e carregar o estado atual do pedido, antes de devolver estoque, liberar cupom ou chamar o estorno. A falta de permissão retorna 403 e preserva esses registros. O dono principal continua autorizado; o cancelamento de pedidos pendentes pelo próprio cliente segue suas regras da vitrine. Atualizar outros campos de um pedido já cancelado ou reembolsado não exige novamente essas permissões.
+
+A desativação de funcionário segue o fluxo de identidade reservado ao dono principal: bloqueia o dono principal como alvo, valida funcionário e Membership na loja atual e grava as duas desativações em uma transação. A Membership incrementa `AccessVersion`, fazendo os JWTs anteriores serem rejeitados na próxima validação. A conta global do usuário e os vínculos em outras lojas continuam disponíveis. O endpoint retorna 204 no sucesso, 404 para funcionário fora da loja atual ou inexistente e 409 para tentativa de desativar o dono principal.
+
+As nove novas permissões são incluídas por migration no catálogo. Perfis existentes precisam receber as permissões desejadas pelo fluxo de gestão de acessos; permissões de produto deixam de autorizar operações de categoria.
+
+Validação desta etapa: solução compilada e 145 verificações com dependências simuladas e consultas interceptadas, sem banco ou servidor HTTP. Foram conferidos isolamento entre lojas, proteção do dono principal, ordem da transação e encerramento sem commit em falhas, incremento de `AccessVersion`, matriz de permissões, proteção de status de pedidos e consistência entre modelo EF, snapshot e seed da migration. A migration foi gerada e não foi aplicada ao banco. O verificador temporário foi removido após a execução.
 
 ## Prazos e limites padrão
 
@@ -223,7 +242,7 @@ O registro de 89 verificações pertence à implementação anterior. Na reorgan
 - RequireConfirmedEmail permanece false para permitir o desenvolvimento sem entrega. Não representa comprovação de titularidade do e-mail; habilite um fluxo seguro antes de usar isso em produção.
 - Não há recuperação administrativa de proprietário por operador da plataforma, SSO ou SuperUser global.
 - Integração de navegador, DNS real, HTTPS/proxy de produção e funcionamento em várias réplicas precisam de validação no ambiente de deploy.
-- Esta entrega trata identidade/autorização. Não cria motor de pagamento, estoque, processamento automático da fila ou um novo checkout comercial. Os CRUDs administrativos não são endpoints de checkout do cliente; novos casos de compra deverão usar o contexto autenticado e os preços canônicos.
+- A etapa de identidade/autorização não criou motor de pagamento, processamento automático da fila ou um novo checkout comercial. O módulo de estoque foi acrescentado no [Processo D](../Application/ProductsAndInventory.md). Os CRUDs administrativos não são endpoints de checkout do cliente; novos casos de compra deverão usar o contexto autenticado e os preços canônicos.
 - Migração de dados legados e expansão da matriz comercial dependem de decisões sobre os dados/operações reais, sem concessão ampla de acesso por padrão.
 
 Referências técnicas: [JWT no ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-9.0), [CSRF](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-9.0), [rate limiting](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-9.0), [rotação de refresh tokens](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14).

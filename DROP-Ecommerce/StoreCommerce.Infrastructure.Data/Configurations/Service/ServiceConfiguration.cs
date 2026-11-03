@@ -13,8 +13,8 @@ public class ServiceConfiguration : IEntityTypeConfiguration<Service>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Name).HasMaxLength(200);
-        builder.Property(e => e.Description).HasMaxLength(500);
+        builder.Property(e => e.Name).HasMaxLength(Service.NameMaxLength);
+        builder.Property(e => e.Description).HasMaxLength(Service.DescriptionMaxLength);
 
         builder.Property(e => e.Price).HasPrecision(18, 2);
 

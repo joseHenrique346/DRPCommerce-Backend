@@ -7,6 +7,6 @@ public class UpdateListProductCommandValidator : AbstractValidator<UpdateListPro
     public UpdateListProductCommandValidator()
     {
         RuleFor(product => product.commands).NotEmpty();
-        RuleForEach(product => product.commands).SetValidator(new UpdateProductCommandValidator());
+        RuleForEach(product => product.commands).NotNull().SetValidator(new UpdateProductCommandValidator());
     }
 }
