@@ -2,6 +2,8 @@
 
 Os casos de uso ficam em `StoreCommerce.Application/Features/Commands/Category`. Controllers enviam Commands/Queries pelo MediatR; handlers usam repositórios e UnitOfWork, sem depender do DbContext.
 
+Referência revisada em 03/11/2026. Corpos, acesso e respostas das rotas estão no [catálogo HTTP](../Api/Endpoints.md).
+
 ## Regras
 
 - A loja vem do tenant autenticado/resolvido pelo domínio da vitrine.
@@ -53,4 +55,4 @@ As rotas de consulta administrativa anteriores continuam disponíveis. Os comand
 
 ## Migration
 
-`EnforceUniqueCategorySlug` cria somente o índice único `(enterprise_id, slug)` em `categoria`, filtrado por `is_deleted = FALSE`. Antes de aplicá-la em uma base existente, corrija eventuais slugs duplicados por loja; a migration não renomeia categorias automaticamente. Ela não foi aplicada aos bancos de desenvolvimento nesta implementação.
+`EnforceUniqueCategorySlug` cria somente o índice único `(enterprise_id, slug)` em `categoria`, filtrado por `is_deleted = FALSE`. Antes de aplicá-la em uma base existente, corrija eventuais slugs duplicados por loja; a migration não renomeia categorias automaticamente. Esta revisão documental não aplica migrations; conferir o histórico do ambiente conforme o [guia de inicialização](../../Shared/StartupProject.md).

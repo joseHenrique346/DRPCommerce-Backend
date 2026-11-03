@@ -58,10 +58,10 @@ A configuração ASP.NET de autenticação, autorização, cookies e rate limiti
 
 ## Compatibilidade e escopo
 
-Controllers continuam específicas por entidade/função, com construtor primário e herança na mesma linha. Os handlers retornam Result<T> internamente; a API mantém o DTO direto nos sucessos de identidade, sem acrescentar envelope ao login.
+Controllers são específicas por entidade/função. Os handlers retornam Result<T> internamente; a API mantém DTO direto nos sucessos de identidade. Novas rotas comerciais normalmente devolvem o envelope Result com dado em content; não aplicar esse formato ao login nem ignorar respostas 204. Veja [endpoints](../Store/Api/Endpoints.md).
 
 Cookies, CSRF e respostas 204/202 continuam na API e só são produzidos após sucesso. Falhas esperadas viram Result preservando código/status; falhas de infraestrutura continuam no exception handler global.
 
-Filtros de tenant, guards de gravação e matriz de permissões não foram removidos. Esta etapa reorganiza identidade/acesso; não reescreve os CRUDs comerciais do Drop nem as consultas internas/storefront que não pertencem a esses fluxos.
+Filtros de tenant, guards de gravação e matriz de permissões protegem os dois módulos. No Store, os fluxos de inventário, carrinho, endereço e pedido têm escopos próprios. `ICurrentIdentity.RequirePermission` permite validar a permissão no estado atual da transação, como orders.refund ao cancelar um pedido pago. Os CRUDs do Drop não equivalem ao fluxo completo de admissão/venda.
 
-Não há novas migrations, bancos permanentes, serviços de rede ou portas adicionais. Veja [Casos de uso de identidade](../Store/Application/IdentityFlows.md).
+As bibliotecas Security não criam serviço executável ou porta adicional. Migrations de identidade e das regras comerciais continuam nos projetos de infraestrutura dos módulos. Veja [casos de uso de identidade](../Store/Application/IdentityFlows.md), [permissões HTTP](../Store/Api/Authentication.md) e [infraestrutura](Infrastructure.md).

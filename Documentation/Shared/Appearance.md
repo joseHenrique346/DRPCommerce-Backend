@@ -224,4 +224,4 @@ dotnet build DROP-Ecommerce/DROP-Ecommerce.sln -p:InstallGitHooks=false
 
 Upload, processamento e escolha de armazenamento de mídia continuam em avaliação. IMediaAssetReader existe como contrato e sua implementação atual é desabilitada: logoAssetId pode ser null; tentar publicar um ativo sem integração válida retorna Appearance.ResourceUnavailable. Não existe endpoint de upload nem fallback para uma URL arbitrária.
 
-Esta entrega também não implementa frontend, editor Vue, SSR, pagamentos ou o mecanismo transacional de estoque/fila. A aparência apenas apresenta os dados e estados comerciais.
+O módulo de aparência não implementa frontend, editor Vue, SSR ou operação comercial. O Store já possui [estoque por SKU](../Store/Application/ProductsAndInventory.md) e [checkout/pedidos](../Store/Application/OrdersAndCheckout.md); o ciclo completo de fila/venda do Drop e os provedores externos continuam pendentes. A aparência apenas apresenta esses dados e estados.

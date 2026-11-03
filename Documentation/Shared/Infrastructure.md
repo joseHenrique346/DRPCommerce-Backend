@@ -1,343 +1,118 @@
-# Infrastructure.Data — Documentação
+# Persistência e infraestrutura
 
-## Visão Geral
+Revisado em 03/11/2026 conforme o código integrado do Store. Store e Drop usam **PostgreSQL**, EF Core 9 e `Npgsql.EntityFrameworkCore.PostgreSQL` 9.0.0. Não há provider MySQL/Pomelo na configuração atual.
 
-A camada de infraestrutura de dados implementa o acesso ao banco MySQL HeatWave para os dois bounded contexts da aplicação: **DropCommerce** e **StoreCommerce**. Cada módulo possui seu próprio projeto `Infrastructure.Data` com DbContext, repositórios, configurações e extensões de DI independentes.
+Cada módulo tem banco, DbContext, migrations e repositórios próprios. Shared fornece componentes usados nos dois bancos; não cria um terceiro banco. A comunicação Store/Drop é HTTP autenticada, sem chave estrangeira entre bancos.
 
-A integração HTTP do Drop com o Store está documentada em [Drop/Infrastructure/StoreIntegration.md](../Drop/Infrastructure/StoreIntegration.md).
+## Composição
 
----
-
-## Arquitetura
-
-```
-DropCommerce.Api
-  └── Configuration/DependencyInjectionConfig.cs
-        ├── AddDropInfrastructure(connectionString)
-        │     ├── DbContext (MySQL via Pomelo)
-        │     ├── TenantProvider (JWT claim)
-        │     ├── UnitOfWork
-        │     ├── Repository<T> (genérico)
-        │     └── Repositórios específicos
-        └── AddDropApplication()
-              ├── MediatR
-              ├── FluentValidation
-              └── ValidationBehaviour pipeline
+```text
+StoreCommerce.Api / DropCommerce.Api
+  → AddApiConfiguration
+    → AddStoreInfrastructure / AddDropInfrastructure
+      → DbContext com UseNpgsql
+      → TenantProvider, repositórios e UnitOfWork
+      → AddSharedInfrastructure (aparência e serviços comuns)
+    → AddStoreApplication / AddDropApplication
+    → AddStoreSecurity / AddDropSecurity
 ```
 
-Mesma estrutura para StoreCommerce.
+Os projetos `StoreCommerce.Security` e `DropCommerce.Security` concentram os adaptadores de identidade. As quatro bibliotecas `SharedCommerce.*` compartilham primitivas e configuração sem referenciar os módulos. Veja [Security](Security.md) e [estrutura do Shared](README.md).
 
----
+## Configuração dos bancos
 
-## Banco de Dados
+As APIs procuram primeiro a variável específica e depois `ConnectionStrings:DefaultConnection` da configuração ASP.NET:
 
-- **Provider:** MySQL HeatWave via `Pomelo.EntityFrameworkCore.MySql 9.0.0`
-- **Bancos separados:** `DropCommerceDb` e `StoreCommerceDb`
-- **Convenção de nomes:**
-  - Tabelas: português snake_case (ex: `evento`, `item_pedido`, `status_reserva`)
-  - Colunas: snake_case automático via convenção global (ex: `EnterpriseId` → `enterprise_id`)
-  - Chaves, FKs e índices: também em snake_case
+| Serviço | Variável prioritária | Banco sugerido no template |
+| --- | --- | --- |
+| Store | `STORECOMMERCE_CONNECTION_STRING` | `drpcommerce_store` |
+| Drop | `DROPCOMMERCE_CONNECTION_STRING` | `drpcommerce_drop` |
 
-### Tabelas — Drop (31)
+Exemplo de formato, com valores fictícios:
 
-| Entidade | Tabela |
-|----------|--------|
-| DropEvent | `evento` |
-| DropProduct | `produto` |
-| DropCoupon | `cupom` |
-| DropOrder | `pedido` |
-| DropOrderItem | `item_pedido` |
-| DropReservation | `reserva` |
-| DropRegistration | `inscricao` |
-| DropNotification | `notificacao` |
-| DropTransaction | `transacao` |
-| DropAuditLog | `log_auditoria` |
-| FraudSignal | `sinal_fraude` |
-| QueueEntry | `entrada_fila` |
-| QueueSession | `sessao_fila` |
-| WaitlistEntry | `entrada_lista_espera` |
-| DropEventStatus | `status_evento` |
-| DropCouponType | `tipo_cupom` |
-| DropOrderStatus | `status_pedido` |
-| DropOrderPaymentStatus | `status_pagamento_pedido` |
-| DropNotificationType | `tipo_notificacao` |
-| DropNotificationStatus | `status_notificacao` |
-| DropNotificationChannel | `canal_notificacao` |
-| DropReservationStatus | `status_reserva` |
-| DropRegistrationStatus | `status_inscricao` |
-| DropTransactionType | `tipo_transacao` |
-| DropTransactionStatus | `status_transacao` |
-| DropTransactionMethod | `metodo_transacao` |
-| FraudSignalType | `tipo_sinal_fraude` |
-| FraudSeverity | `severidade_fraude` |
-| QueueEntryStatus | `status_entrada_fila` |
-| QueueSessionStatus | `status_sessao_fila` |
-| WaitlistEntryStatus | `status_lista_espera` |
-
-### Tabelas — Store (16)
-
-| Entidade | Tabela |
-|----------|--------|
-| Enterprise | `empresa` |
-| Product | `produto` |
-| Category | `categoria` |
-| Order | `pedido` |
-| OrderItem | `item_pedido` |
-| Customer | `cliente` |
-| Employee | `funcionario` |
-| Role | `cargo` |
-| Department | `departamento` |
-| Invoice | `nota_fiscal` |
-| Shipment | `envio` |
-| Transaction | `transacao` |
-| Coupon | `cupom` |
-| Service | `servico` |
-| Document | `documento` |
-| Supplier | `fornecedor` |
-
----
-
-## Connection String
-
-### Prioridade de resolução
-
-1. **Variável de ambiente** — `DROPCOMMERCE_CONNECTION_STRING` / `STORECOMMERCE_CONNECTION_STRING`
-2. **appsettings.Development.json** — usado em ambiente local (está no `.gitignore`)
-3. **appsettings.json** — fallback com string vazia (falha explícita se nenhuma anterior estiver configurada)
-
-### Configuração local
-
-Copie o template e preencha suas credenciais:
-
-```bash
-cp appsettings.Development.Template.json appsettings.Development.json
+```text
+Host=localhost;Port=5432;Database=drpcommerce_store;Username=<USER>;Password=<PASSWORD>;
 ```
 
-### Configuração de produção/homologação
+Sem configuração de banco, a inicialização falha explicitamente. Os templates versionados ficam junto das APIs; os arquivos locais com credenciais são ignorados pelo Git. Para comandos de execução e configuração de JWT/chave interna, veja [inicialização](StartupProject.md).
 
-Defina a variável de ambiente no host/container:
+## Modelo atual
 
-```bash
-export DROPCOMMERCE_CONNECTION_STRING="Server=prod-host;Port=3306;Database=DropCommerceDb;User=app;Password=secret;"
-export STORECOMMERCE_CONNECTION_STRING="Server=prod-host;Port=3306;Database=StoreCommerceDb;User=app;Password=secret;"
-```
+Os DbContexts e `Configurations` são a referência completa do schema. Os grupos abaixo substituem o inventário antigo, que não incluía identidade, aparência e o ciclo comercial:
 
----
+| Módulo / grupo | Entidades principais |
+| --- | --- |
+| Store — identidade | User, Customer, Enterprise, EnterpriseMembership, EnterpriseDomain, Employee, EmployeePosition, Department, AccessRole, Permission e relações; sessões, tokens, convites e transferência de propriedade. |
+| Store — catálogo | Category, Product, ProductVariant, Service e Supplier. |
+| Store — operação | StoreSettings, Cart, CartItem, CustomerAddress, Order, OrderItem, OrderStatusHistory, Transaction, Shipment, Invoice e Document. |
+| Store — estoque e desconto | StockReservation, StockReservationLine, StockMovement, Coupon, condições de cupom e CouponRedemption. |
+| Drop — evento | DropEvent, DropProduct, DropCoupon e DropRegistration. |
+| Drop — espera e compra | QueueEntry, QueueSession, WaitlistEntry, DropReservation, DropOrder, DropOrderItem e DropTransaction. |
+| Drop — acompanhamento | DropNotification, DropAuditLog e FraudSignal. |
+| Compartilhado, nos dois bancos | Appearance, AppearanceRevision, AppearanceEditSession, ThemeRelease e classificações estáticas. |
 
-## Multi-Tenancy
+`EmployeePosition` substitui a nomenclatura antiga de cargo `Role`. `AccessRole` representa autorização e não é o cargo funcional. As entidades estáticas de status, tipos, métodos e operadores têm IDs fixos e seed por migrations; não são estados livres enviados pelo cliente.
 
-Implementado via **Global Query Filters** do EF Core + claim JWT `EnterpriseId`.
+Tabelas usam nomes definidos nos mapeamentos e colunas/chaves/índices recebem convenção snake_case. Aparência usa `jsonb` nos documentos de configuração. Preços e dimensões do catálogo usam a precisão definida nos mapeamentos, atualmente `numeric(18,2)`.
 
-### TenantProvider
+Fontes: [StoreCommerceDbContext](../../DROP-Ecommerce/StoreCommerce.Infrastructure.Data/Context/StoreCommerceDbContext.cs), [DropCommerceDbContext](../../DROP-Ecommerce/DropCommerce.Infrastructure.Data/Context/DropCommerceDbContext.cs), [mapeamentos Store](../../DROP-Ecommerce/StoreCommerce.Infrastructure.Data/Configurations), [mapeamentos Drop](../../DROP-Ecommerce/DropCommerce.Infrastructure.Data/Configurations).
 
-Lê a claim `EnterpriseId` do `HttpContext.User` (JWT). Retorna 0 se não encontrar.
+## Tenant e filtros de leitura
 
-### Filtros por módulo
+`TenantProvider` não retorna zero para liberar uma consulta sem contexto. Ele exige loja resolvida/confiável ou token autenticado válido; ausência de contexto produz falha de segurança. No storefront, o host identifica a loja e precisa ser compatível com o token. No backoffice, a membership selecionada determina o tenant. No Store, chamadas internas autenticadas podem usar o tenant confiável de serviço.
 
-**Drop:**
-- `DropEvent`: filtro `enterprise_id == tenant AND is_deleted == false` (única entidade com EnterpriseId)
-- Demais ISoftDeletable: filtro `is_deleted == false`
+No Store, entidades de tenant recebem filtro direto por EnterpriseId; entidades com exclusão lógica acrescentam a visibilidade correspondente. Dependentes como OrderItem, Shipment e Transaction também são filtrados pelos agregados da loja. ProductVariant considera a exclusão do SKU e do produto pai.
 
-**Store:**
-- Entidades com ITenantEntity + ISoftDeletable (Product, Order, Customer, Coupon, Service, Category): filtro `enterprise_id == tenant AND is_deleted == false`
-- Entidades com ITenantEntity only (Employee, Invoice, Document, Supplier): filtro `enterprise_id == tenant`
+No Drop, o isolamento não se limita a DropEvent: os filtros de segurança alcançam produtos, cupons, inscrições, fila, sessões, reservas, pedidos, itens, transações, notificações e auditoria pelas relações apropriadas. Recursos privados também consideram o CustomerId quando o ator é cliente. Os filtros estão no arquivo parcial `DropCommerceDbContext.Security.cs`.
 
----
+`IgnoreQueryFilters` só aparece em operações explícitas, como autenticação, manutenção e processamento com tenant informado. Não torna uma consulta pública autorizada a escolher outra loja.
 
-## Soft Delete
+## Proteção de gravação e exclusão
 
-### Interface `ISoftDeletable`
+Os DbContexts validam tenant, relações e escopos confiáveis antes de salvar. Não basta ter um ID ou ser dono para alterar livremente saldos, permissões, pagamento e histórico pelo CRUD.
 
-```csharp
-public interface ISoftDeletable
-{
-    bool IsDeleted { get; }
-    DateTime? DeletedAt { get; }
-    void SoftDelete();
-}
-```
+- Identidade exige o fluxo próprio de conta, sessão ou gestão de acessos.
+- Estoque exige `InventoryWriteScope`; linhas de reserva e movimentações são protegidas contra edição comum.
+- Carrinho, endereços e workflow de pedido possuem escopos próprios.
+- Aparência exige `AppearanceWriteScope` e as regras de alvo/revisão do módulo.
+- Audit logs do Drop não aceitam mutação manual pública.
 
-### Entidades com soft delete
+Os repositórios aplicam `SoftDelete` às entidades que implementam `ISoftDeletable`; outras exclusões seguem a implementação e as relações. Produto, variante e categoria possuem regras adicionais de saldo/reserva/vínculos. Não generalizar remoção física para todo CRUD nem exclusão lógica para toda tabela.
 
-**Drop:** DropEvent, DropProduct, DropCoupon, DropOrder, DropReservation, DropRegistration, DropNotification
+## Repositórios e transações
 
-**Store:** Product, Order, Customer, Coupon, Service, Category
+`Repository<T>` atende CRUD e pode ser especializado. No Store, `IRepository<T>` também amplia `IEntityRepository<T>`, usado em consultas por predicados/projeções; EF e SQL ficam na infraestrutura. Os fluxos comerciais usam repositórios específicos de produtos, inventário, pedidos, carrinho, clientes, endereços, categorias e cupons.
 
-### Comportamento no Repository
+`CommitAsync` da UnitOfWork chama `SaveChangesAsync`. **Salvar alterações e confirmar uma transação explícita são operações distintas.** No Store, `IUnitOfWork` e `IIdentityUnitOfWork` resolvem a mesma instância scoped; `BeginTransactionAsync` e o commit da transação são explícitos. A UnitOfWork do Drop possui seu contrato próprio; alguns fluxos existentes do Drop coordenam a transação no código de persistência/API.
 
-O `DeleteAsync(id)` e `DeleteRangeAsync(ids)` verificam automaticamente:
-- Se a entidade implementa `ISoftDeletable` → chama `SoftDelete()` (marca como deletado)
-- Senão → faz `Remove()` físico
+Catálogo, categorias, estoque e ciclo do pedido usam bloqueio transacional da linha da empresa com `FOR UPDATE`. Isso serializa as operações participantes da mesma loja; não é uma garantia de capacidade ilimitada. Chaves únicas, versões e FKs compostas complementam a proteção contra repetição e cruzamento de lojas.
 
----
+Não há transação distribuída pronta entre Store e Drop. A integração da venda do Drop com a reserva/pedido do Store continua pendente.
 
-## Repository Pattern
+## Workers e adaptadores registrados
 
-### Interface genérica `IRepository<T>`
+| Componente | Comportamento atual |
+| --- | --- |
+| PendingOrderExpirationWorker | A cada minuto identifica pendentes vencidos; o workflow relê pagamento, estado e prazo após o bloqueio antes de cancelar e liberar estoque/cupom. |
+| StockReservationExpirationWorker | A cada minuto expira reservas avulsas; reservas de pedidos seguem o workflow do pedido. |
+| Limpeza de identidade | Remove dados de sessão/token conforme retenção, preservando detecção de reutilização durante a vida da família. |
+| Manutenção de aparência | Executa migrações/manutenção de temas nos fluxos compartilhados. |
+| ManualPaymentGateway | Não chama Mercado Pago ou outra instituição; confirmação é manual e o estorno registrado precisa ser executado fora do sistema. |
+| Clients Store/Drop | Refit para recursos; validação de sessão e tenant pelo Store; falha de dependência não concede acesso. |
 
-```csharp
-public interface IRepository<T> where T : BaseEntity
-{
-    Task<T?> GetByIdAsync(long id, CancellationToken ct);
-    Task<IEnumerable<T>> GetAllAsync(CancellationToken ct);
-    Task<IEnumerable<T>> GetListByListIdAsync(List<long> ids, CancellationToken ct);
-    Task AddAsync(T entity, CancellationToken ct);
-    void Update(T entity);
-    void UpdateRange(IEnumerable<T> entities);
-    Task DeleteAsync(long id, CancellationToken ct);
-    Task DeleteRangeAsync(IEnumerable<long> ids, CancellationToken ct);
-}
-```
-
-### Repositórios específicos
-
-**Drop:**
-- `IDropEventRepository` — GetBySlugAsync, GetActiveEventsAsync
-- `IDropOrderRepository` — GetByCustomerAsync, GetByEventAsync
-- `IDropProductRepository` — GetByEventAsync
-- `IDropCouponRepository` — GetByCodeAsync
-- `IDropRegistrationRepository` — GetByEventAsync, GetByCustomerAndEventAsync
-- `IQueueEntryRepository` — GetByEventAsync, GetByCustomerAndEventAsync
-
-**Store:**
-- `IProductRepository` — GetBySlugAsync, GetByCategoryAsync
-- `IOrderRepository` — GetByCustomerAsync, GetByStatusAsync
-- `ICustomerRepository` — GetActiveAsync
-- `ICouponRepository` — GetByCodeAsync
-- `ICategoryRepository` — GetBySlugAsync
-- `IServiceRepository` — GetByCategoryAsync
-
----
-
-## Unit of Work
-
-Encapsula o `SaveChangesAsync` do DbContext. A Application chama `IUnitOfWork.CommitAsync()` para persistir todas as mudanças pendentes em uma única transação.
-
----
-
-## EntityTypeConfigurations
-
-Cada entidade possui uma classe `IEntityTypeConfiguration<T>` que define:
-- Nome da tabela (`ToTable`)
-- Chave primária com auto-increment
-- Tipos de coluna (`HasMaxLength`, `HasPrecision(18,2)`)
-- Índices em campos frequentes (Slug, EnterpriseId, FKs)
-- Relacionamentos com `OnDelete(Restrict)`
-- `HasDefaultValue(false)` para `IsDeleted`
-
-### Seed Data (StaticEntities)
-
-As 17 StaticEntities do Drop possuem `HasData()` com os valores pré-definidos no Domain. Exemplo:
-
-```csharp
-builder.HasData(
-    new { Id = 1L, Description = "Rascunho" },
-    new { Id = 2L, Description = "Inscrições abertas" },
-    ...
-);
-```
-
-### Value Objects (Store)
-
-Enterprise e Employee possuem Value Objects configurados como Owned Types:
-
-```csharp
-builder.OwnsOne(e => e.Email, nav => {
-    nav.Property(p => p.Value).HasColumnName("Email").HasMaxLength(200).IsRequired();
-});
-```
-
----
-
-## Convenção Snake Case
-
-Aplicada globalmente no `OnModelCreating` de ambos os DbContexts:
-
-```csharp
-foreach (var entity in modelBuilder.Model.GetEntityTypes())
-{
-    foreach (var property in entity.GetProperties())
-        property.SetColumnName(ToSnakeCase(property.GetColumnName()!));
-
-    foreach (var key in entity.GetKeys())
-        key.SetName(ToSnakeCase(key.GetName()!));
-
-    foreach (var fk in entity.GetForeignKeys())
-        fk.SetConstraintName(ToSnakeCase(fk.GetConstraintName()!));
-
-    foreach (var index in entity.GetIndexes())
-        index.SetDatabaseName(ToSnakeCase(index.GetDatabaseName()!));
-}
-```
-
-Roda **uma única vez** no startup (modelo é cacheado). Zero impacto em runtime.
-
----
-
-## Estrutura de Pastas
-
-```
-Infrastructure.Data/
-├── Context/
-│   └── *DbContext.cs
-├── Configurations/
-│   ├── [Entidade]/
-│   │   ├── EntityConfiguration.cs
-│   │   └── StatusConfiguration.cs (se houver)
-│   └── ...
-├── Repositories/
-│   ├── Base/
-│   │   ├── Repository.cs
-│   │   └── UnitOfWork.cs
-│   ├── [Entidade]/
-│   │   └── EntityRepository.cs
-│   └── ...
-├── Providers/
-│   └── TenantProvider.cs
-├── DependencyInjection.cs
-└── *.csproj
-```
-
----
-
-## Registro de Dependências
-
-### Infrastructure (`AddDropInfrastructure` / `AddStoreInfrastructure`)
-
-- `DbContext` — Scoped, MySQL via Pomelo
-- `ITenantProvider` → `TenantProvider` — Scoped
-- `IUnitOfWork` → `UnitOfWork` — Scoped
-- `IRepository<>` → `Repository<>` — Scoped (open generic)
-- Repositórios específicos — Scoped
-
-### Application (`AddDropApplication` / `AddStoreApplication`)
-
-- MediatR handlers (assembly scan)
-- FluentValidation validators (assembly scan)
-- `ValidationBehaviour<,>` — pipeline behavior
-
-### API (`AddApiConfiguration`)
-
-- `HttpContextAccessor` (necessário para TenantProvider)
-- OpenApi
-- Chama Infrastructure + Application
-
----
+Detalhes: [estoque](../Store/Application/ProductsAndInventory.md), [checkout e pedidos](../Store/Application/OrdersAndCheckout.md), [integração Store/Drop](../Drop/Infrastructure/StoreIntegration.md), [aparência](Appearance.md).
 
 ## Migrations
 
-Para gerar migrations, execute na raiz da solution:
+As APIs não aplicam `Database.Migrate` automaticamente. Gerar arquivos, revisar SQL e aplicar ao banco escolhido são passos separados. Esta revisão documental não aplica migrations nem comprova o estado de uma instalação; conferir o histórico de migrations de cada ambiente.
 
-```bash
-# Drop
-dotnet ef migrations add NomeMigration --project DropCommerce.Infrastructure.Data --startup-project src/Drop/DropCommerce.Api
+As evoluções recentes do Store incluem:
 
-# Store
-dotnet ef migrations add NomeMigration --project StoreCommerce.Infrastructure.Data --startup-project src/Store/StoreCommerce.Api
-```
+- `AlignStoreCommerceFieldLimits`, `AddStoreSettings`, `AddStoreEmployeePermissions` e `EnforceUniqueCategorySlug`;
+- `AddProductVariantsAndInventory`, `AddCouponConditionsAndRedemptions` e `AddStorefrontCart`;
+- `BackfillCreatedAt`, `AddCheckoutAndOrderLifecycle`, `AddOrderNumber` e `AddCustomerAddresses`;
+- `ReserveCouponUsesAtCheckout`, ajuste de dados para comprometer usos pendentes de cupom sem mudar o schema.
 
----
+Ambos os módulos também possuem migrations próprias de aparência. `IdentityAndSessions` protege a importação de dados legados; não inventa o proprietário de uma loja antiga. Duplicidades de slug/SKU e dados incompatíveis podem bloquear migrations e precisam ser corrigidos conforme a mensagem. Não apagar histórico para contornar essas verificações.
 
-## SaveChangesAsync Override
-
-Ambos os DbContexts sobrescrevem `SaveChangesAsync` para setar `UpdatedAt = DateTime.UtcNow` automaticamente em qualquer entidade modificada, sem necessidade de lógica manual nos handlers.
+Os comandos completos para listar e aplicar migrations, a partir da raiz do repositório, estão em [StartupProject](StartupProject.md). Regras de dados: [identidade](../Store/Domain/Identity.md), [categorias](../Store/Application/Categories.md), [estoque](../Store/Application/ProductsAndInventory.md) e [cupons](../Store/Application/Coupons.md).

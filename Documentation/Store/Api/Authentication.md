@@ -1,12 +1,14 @@
 # Autenticação e segurança: uso do backend
 
-Esta etapa implementa identidade e acesso no Store e sua validação no Drop, mantendo a arquitetura .NET existente. O modelo de entidades está em [Identidade](../Domain/Identity.md).
+Referência de identidade e acesso no Store e sua validação no Drop, revisada em 03/11/2026. O modelo está em [Identidade](../Domain/Identity.md); as rotas comerciais estão em [Endpoints](Endpoints.md).
 
-Os casos de uso de identidade/acesso pertencem a Application e são executados por Commands/Queries e handlers. Hash, JWT e integração de segurança pertencem a `StoreCommerce.Security` e `DropCommerce.Security`, com persistência em Infrastructure.Data. As primitivas comuns continuam em Shared e são compiladas pela biblioteca `Commerce.Security.Shared`. Veja [Organização dos projetos Security](../../Shared/Security.md) e [Casos de uso de identidade](../Application/IdentityFlows.md).
+Os casos de uso de identidade/acesso pertencem a Application e são executados por Commands/Queries e handlers. Hash, JWT e integração de segurança pertencem a `StoreCommerce.Security` e `DropCommerce.Security`, com persistência em Infrastructure.Data. As primitivas comuns pertencem às quatro bibliotecas `SharedCommerce.*`; não existe projeto `Commerce.Security.Shared` na estrutura atual. Veja [Organização dos projetos Security](../../Shared/Security.md) e [Casos de uso de identidade](../Application/IdentityFlows.md).
 
 ## O que está disponível
 
 Cadastro/login administrativo e de clientes, seleção de loja, refresh rotativo, logout, sessões, troca de senha, perfil próprio, criação/pausa de loja, convites, perfis/permissões, gestão de memberships, transferência de propriedade, domínio próprio com verificação TXT e isolamento de tenant.
+
+O Store também possui categorias, variantes por SKU, inventário, cupons, carrinho persistido, checkout, endereços e ciclo de pedidos. A autenticação de cliente é usada por essas rotas; os CRUDs administrativos não substituem o checkout. Veja [carrinho e pedidos](../Application/OrdersAndCheckout.md).
 
 No storefront do Drop, inscrição e entrada na fila exigem cliente autenticado. Consultas de inscrições, fila, reservas, pedidos, lista de espera e notificações são limitadas ao cliente da loja.
 
@@ -16,13 +18,13 @@ Cada controller concreta tem seu próprio arquivo e pasta em `Controllers/<Nome>
 
 - Autenticação: `BackofficeAuth` para usuários administrativos e `StorefrontAuth` para clientes da loja.
 - Convites e propriedade: `Invitation`, `InvitationAcceptance`, `OwnershipTransfer` e `OwnershipTransferAcceptance`.
-- Storefront do Store: `StorefrontEnterprise`, `StorefrontProduct`, `StorefrontCustomer` e `StorefrontOrder`.
+- Storefront do Store: `StorefrontEnterprise`, `StorefrontProduct`, `StorefrontCategory`, `StorefrontCoupon`, `StorefrontCustomer`, `StorefrontCart` e `StorefrontOrder`.
 - Integração interna do Store: `InternalIdentity`, `InternalTenant`, `InternalCustomer`, `InternalEmployee`, `InternalProduct` e `InternalEnterprise`.
 - Storefront do Drop: `StorefrontDropEvent`, `StorefrontDropRegistration`, `StorefrontQueueEntry`, `StorefrontDropReservation`, `StorefrontDropOrder`, `StorefrontWaitlistEntry` e `StorefrontDropNotification`.
 
 As bases abstratas ficam em `Controllers/Base` e não representam controllers independentes no Swagger. `AuthControllerBase` compartilha cookies e CSRF; o atributo `CookieCsrfAttribute` fica separado em `Security/CookieCsrfAttribute.cs`.
 
-As rotas, contratos e políticas de acesso foram preservados. O Swagger apenas passa a separar os grupos conforme as responsabilidades dos novos controllers; schemas continuam representando os contratos de entrada e saída.
+O Swagger agrupa operações por controller. Sucessos de identidade normalmente devolvem DTO direto; novas operações comerciais usam `Result<T>` com dado em `content`, salvo sucesso 204. Não aplicar o envelope comercial ao login nem presumir que a listagem antiga de produtos retorna o mesmo formato da nova busca.
 
 ## Configuração obrigatória
 
@@ -44,7 +46,7 @@ Configure segredos por variáveis de ambiente, user-secrets ou outro armazenamen
 
 Para desenvolvimento, `stores.localhost` pode servir como base, por exemplo `loja-a.stores.localhost`. Configure resolução DNS/hosts e HTTPS apropriados. O cadastro de loja não cria DNS ou certificados automaticamente.
 
-Cookies de refresh e CSRF são Secure. Use HTTPS também no desenvolvimento. Não desabilite validação TLS nos clients de integração. O script de verificação aceita o certificado local somente em seu cliente de dados fictícios.
+Cookies de refresh e CSRF são Secure. Use HTTPS também no desenvolvimento e configure confiança no certificado local. Os clients internos mantêm validação TLS.
 
 ## Frontend: sequência de autenticação
 
@@ -118,11 +120,20 @@ Rotas adicionais do Store:
 |---|---|
 | GET /api/storefront/store | Contato/nome da loja do Host, público |
 | GET /api/storefront/products?page=1&pageSize=20 | Produtos ativos, sem preço de custo, público |
+| GET /api/storefront/products/search e /products/by-slug/{slug} | Catálogo filtrado/paginado e detalhe com SKUs, públicos |
+| GET /api/storefront/categories/tree e /categories/by-slug/{slug} | Categorias visíveis na loja, públicas |
+| GET /api/storefront/coupons/validate | Prévia de cupom, pública com cliente opcional; não ocupa uso |
 | GET/PUT/DELETE /api/storefront/me | Perfil do cliente autenticado |
+| Rotas /api/storefront/me/addresses | Endereços próprios; consulta, cadastro, edição, exclusão e definição de padrão nas ações específicas |
+| Rotas /api/storefront/cart | Carrinho próprio, itens e seleção; métodos e corpos definidos por ação na referência |
+| POST /api/storefront/checkout | Compra selecionados do carrinho; cliente, preço e desconto resolvidos no servidor |
 | GET /api/storefront/orders | Pedidos próprios |
 | GET /api/storefront/orders/{id} | Pedido próprio; outro cliente recebe 404 |
+| POST /api/storefront/orders/{id}/cancel | Cliente cancela pedido próprio ainda pendente |
 
 PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha usa seu caso de uso específico.
+
+Os grupos acima resumem funcionalidades, não significam que todos os verbos sejam aceitos na raiz de cada grupo. A [referência HTTP completa](Endpoints.md) lista as combinações exatas, incluindo corpos, resposta e diferenças do legado.
 
 ## Loja e gestão de acesso
 
@@ -132,7 +143,7 @@ PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha u
 | PUT /api/users/me | Atualiza somente fullName |
 | DELETE /api/users/me | Desativa conta; protegido se ainda dona de loja |
 | GET /api/enterprises/mine | Memberships próprias, incluindo lojas pausadas |
-| POST /api/enterprises/register | Cria Enterprise + dono principal + subdomínio, atomicamente |
+| POST /api/enterprises/register | Cria Enterprise, dono principal, subdomínio, configurações e papéis padrão, atomicamente |
 | PUT /api/enterprises/current | Dados da loja; somente dono principal |
 | PUT /api/enterprises/{id}/activation | Body booleano; verifica propriedade no banco, inclusive para reativar loja |
 | GET /api/enterprise-memberships/get-all | Membros da loja, dono principal |
@@ -202,7 +213,7 @@ A desativação de funcionário segue o fluxo de identidade reservado ao dono pr
 
 As nove novas permissões são incluídas por migration no catálogo. Perfis existentes precisam receber as permissões desejadas pelo fluxo de gestão de acessos; permissões de produto deixam de autorizar operações de categoria.
 
-Validação desta etapa: solução compilada e 145 verificações com dependências simuladas e consultas interceptadas, sem banco ou servidor HTTP. Foram conferidos isolamento entre lojas, proteção do dono principal, ordem da transação e encerramento sem commit em falhas, incremento de `AccessVersion`, matriz de permissões, proteção de status de pedidos e consistência entre modelo EF, snapshot e seed da migration. A migration foi gerada e não foi aplicada ao banco. O verificador temporário foi removido após a execução.
+O convite cria o vínculo de acesso, mas o onboarding automático do perfil Employee continua pendente. Cargo e departamento não concedem permissões. A matriz é aplicada pelo filtro HTTP e pelos guards/fluxos transacionais; não depende apenas de ocultar botões no frontend.
 
 ## Prazos e limites padrão
 
@@ -224,17 +235,13 @@ Não exponha `/api/internal` no proxy público. As chamadas exigem X-Service-Key
 
 O Host original precisa chegar à API storefront. O middleware só aceita X-Forwarded-Host/Proto/For dos IPs listados em TrustedProxies, com um salto. Sem configuração explícita, forwarding permanece desabilitado. O Gateway existente não foi transformado em provisionador de domínios/HTTPS; revise seus caminhos, prefixos e forwarding ao publicar estas rotas.
 
-## Migrações e verificação
+## Migrações e situação do ambiente
 
 A Store migration `20261008194931_IdentityAndSessions` protege dados legados: para antes das alterações se houver lojas, funcionários, cargos ou departamentos antigos. Uma instalação populada necessita mapa revisado de dono e importação de vínculos/credenciais.
 
-O schema do Drop não exigiu migration nesta etapa. Nenhuma migration foi executada nos bancos existentes do desenvolvedor.
+Depois de identidade, os dois módulos receberam migrations de aparência; o Store também recebeu configurações, permissões, categorias, variantes/estoque, cupons, carrinho, pedidos e endereços. Não presumir que aplicar apenas `IdentityAndSessions` prepara o banco para o código atual.
 
-A validação integrada foi executada durante a implementação, usando bancos temporários e dados fictícios, sem criar projeto de testes. O script temporário foi removido após a validação e não faz parte do repositório.
-
-Rodada validada nesta entrega: 89 verificações, incluindo isolamento entre lojas/clientes, CSRF, permissões, alteração de preço, convites, transferência, revogação imediata, refresh simultâneo, bloqueio de login, rate limiting e Store indisponível. A compilação e a comparação dos modelos EF com as migrations também passaram.
-
-O registro de 89 verificações pertence à implementação anterior. Na reorganização para handlers/repositórios foram executadas 91 verificações sem banco/servidores, além da compilação dos módulos e da comparação dos modelos EF com os snapshots. Após autorização explícita, também passaram 95 verificações HTTP/de respostas com persistência em bancos temporários isolados, cobrindo autenticação administrativa e de clientes, seleção de loja, permissões, convites, propriedade, refresh, logout e Gateway. Os processos foram encerrados e os bancos temporários removidos; os bancos de desenvolvimento não foram alterados. O domínio localhost foi preparado como fixture temporária para o storefront, sem desabilitar TLS; DNS real, interface do navegador, limites padrão e bloqueio progressivo não foram verificados nessa execução. Detalhes em [Casos de uso de identidade](../Application/IdentityFlows.md).
+As APIs não aplicam migrations automaticamente. O histórico do banco determina o que falta em cada ambiente. Esta revisão documental não aplica migrations nem executa testes; contagens de verificações de implementações anteriores não são evidência de homologação da versão atual. Comandos e sequência estão em [StartupProject](../../Shared/StartupProject.md) e [infraestrutura](../../Shared/Infrastructure.md).
 
 ## Limites explícitos desta etapa
 
@@ -242,7 +249,7 @@ O registro de 89 verificações pertence à implementação anterior. Na reorgan
 - RequireConfirmedEmail permanece false para permitir o desenvolvimento sem entrega. Não representa comprovação de titularidade do e-mail; habilite um fluxo seguro antes de usar isso em produção.
 - Não há recuperação administrativa de proprietário por operador da plataforma, SSO ou SuperUser global.
 - Integração de navegador, DNS real, HTTPS/proxy de produção e funcionamento em várias réplicas precisam de validação no ambiente de deploy.
-- A etapa de identidade/autorização não criou motor de pagamento, processamento automático da fila ou um novo checkout comercial. O módulo de estoque foi acrescentado no [Processo D](../Application/ProductsAndInventory.md). Os CRUDs administrativos não são endpoints de checkout do cliente; novos casos de compra deverão usar o contexto autenticado e os preços canônicos.
+- O Store já possui [checkout e ciclo de pedidos](../Application/OrdersAndCheckout.md), usando contexto do cliente, preços canônicos e [estoque por SKU](../Application/ProductsAndInventory.md). Pagamento/estorno são manuais; Mercado Pago, Melhor Envio, NF-e e o ciclo completo de venda do Drop continuam pendentes.
 - Migração de dados legados e expansão da matriz comercial dependem de decisões sobre os dados/operações reais, sem concessão ampla de acesso por padrão.
 
 Referências técnicas: [JWT no ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-9.0), [CSRF](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-9.0), [rate limiting](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-9.0), [rotação de refresh tokens](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.14).

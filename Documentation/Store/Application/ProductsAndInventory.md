@@ -2,6 +2,8 @@
 
 O Processo D usa produto pai e SKU vendável. O catálogo, os SKUs, as reservas e as movimentações são isolados por loja. Controllers enviam Commands/Queries pelo MediatR; regras e transações ficam na Application e no Domain, com EF na infraestrutura.
 
+Revisado em 03/11/2026. O estoque já participa do checkout e do ciclo de pedidos descritos em [OrdersAndCheckout](OrdersAndCheckout.md). Contratos HTTP: [Endpoints](../Api/Endpoints.md).
+
 ## Produto e SKU
 
 Todo produto recebe um `ProductVariant` padrão, inclusive produtos antigos. O `Product.SKU` identifica esse registro. O estoque pertence ao `ProductVariant`, permitindo que tamanho e cor tenham saldos independentes.
@@ -64,8 +66,8 @@ Exemplo em `POST /api/inventory/reservations`:
 
 ```json
 {
-  "idempotencyKey": "checkout-abc-reserva",
-  "reference": "checkout-abc",
+  "idempotencyKey": "separacao-abc-reserva",
+  "reference": "separacao-administrativa-abc",
   "items": [
     { "productVariantId": 31, "quantity": 2 },
     { "productVariantId": 32, "quantity": 1 }
@@ -154,6 +156,6 @@ O histórico de estoque aceita `productVariantId`, `page` e `pageSize`, com os m
 
 Cada produto existente, incluindo os excluídos, recebe seu SKU padrão com estoque zero. Os códigos do catálogo são normalizados; os snapshots antigos de nome, SKU e preço permanecem intactos. Os itens antigos recebem a referência ao SKU padrão. Nenhuma quantidade é inferida a partir de pedidos antigos.
 
-A migration foi gerada e seu SQL revisado sem aplicação ao banco. A solução compilou e o EF não apontou diferenças entre modelo e snapshot. Não foram criados ou executados testes nesta etapa, conforme solicitado.
+A migration está versionada; consultar o histórico do ambiente antes de aplicá-la. Esta atualização documental não aplica migrations nem executa testes. Comandos: [StartupProject](../../Shared/StartupProject.md).
 
 O checkout cria o pedido e sua reserva na mesma transação; a confirmação do pagamento efetiva a baixa. O cancelamento libera a reserva ou devolve as unidades já baixadas. No backoffice, adicionar ou alterar um item no CRUD do pedido registra a variante e recalcula os valores; a baixa ocorre na confirmação do pagamento. Cancelar pelo backoffice exige `orders.cancel`; quando o pedido está pago, também exige `orders.refund`, conferida dentro da transação e antes de alterar estoque, cupom ou pagamento. A integração de venda do Drop continua pendente; a consulta interna já disponibiliza os identificadores dos SKUs para essa integração.

@@ -23,6 +23,7 @@ O storefront resolve o Host consultando `/api/internal/tenants/resolve`. Domíni
 | POST | /api/internal/identity/validate | accessToken, host → isValid |
 | GET | /api/internal/tenants/resolve?host=... | enterpriseId |
 | GET | /api/internal/products/get-by-id/{id} | Produto canônico |
+| GET | /api/internal/products/{id}/variants | SKUs, opções e dados administrativos do produto |
 | POST | /api/internal/products/get-list-by-list-id | Lista de IDs |
 | GET | /api/internal/customers/get-by-id/{id} | Cliente canônico |
 | POST | /api/internal/customers/get-list-by-list-id | Lista de IDs |
@@ -37,6 +38,8 @@ Essas rotas não substituem autenticação pública com um header de tenant. Nã
 ## Camadas e clients
 
 Application define IStoreProductReader, IStoreEnterpriseReader, IStoreCustomerReader e IStoreEmployeeReader, com contratos próprios, sem depender de Refit.
+
+O Store já expõe consulta de variantes, mas `IStoreProductRefitApi`/leitor atual ainda usa os contratos básicos de produto. Consumir SKUs nessa integração e criar os comandos internos de reserva/conversão em pedido são trabalhos pendentes; a nova rota de consulta não executa essas operações.
 
 Infrastructure contém os clients Refit, DTOs HTTP, adapters e StoreIntegrationResponseReader. DropCommerce.Security contém StoreServiceAuthenticationHandler, que injeta chave e tenant autenticado; lê o contexto da requisição por IHttpContextAccessor, evitando dependência de escopo incorreto no HttpClientFactory. Os clients dependem do contrato abstrato StoreAuthenticationHandler em Application, sem referenciar o projeto Security.
 
@@ -70,6 +73,6 @@ A URL não fica fixa no client. Use HTTPS ou uma rede interna privada protegida;
 - Store indisponível ou resposta de integração inválida não concede acesso; serviços/controladores retornam falha.
 - Audit logs não têm escrita manual pública.
 
-A validação integrada foi executada com bancos temporários e dados fictícios; o script temporário foi removido após a validação. Detalhes de configuração, endpoints do frontend e limites de produção: [Autenticação e segurança](../../Store/Api/Authentication.md).
+Esta referência foi revisada em 03/11/2026 contra os clients/controllers atuais. Não há cache distribuído de fila nem pipeline completo de venda Store/Drop implementado. Detalhes de configuração e limites: [Autenticação e segurança](../../Store/Api/Authentication.md), [endpoints do Store](../../Store/Api/Endpoints.md) e [fluxo comercial](../../Store/Application/OrdersAndCheckout.md).
 
 Referência da biblioteca: [Refit](https://github.com/reactiveui/refit).

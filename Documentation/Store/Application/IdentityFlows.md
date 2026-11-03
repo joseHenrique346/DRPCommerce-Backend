@@ -6,17 +6,18 @@
 
 Controllers de autenticação, perfil, empresas, membros, convites, propriedade, perfis de acesso, relações e domínios enviam Commands/Queries específicos. A organização segue `Features/Commands/<Responsabilidade>/<Operação>`; consultas ficam no subgrupo `Queries`, como nos demais casos de uso.
 
-São 44 Commands/Queries, com um arquivo por request e um por handler. DTOs HTTP ficam separados em `Identity/Contracts/Requests` e `Identity/Contracts/Responses`, mantendo namespaces e campos públicos.
+Commands/Queries têm requests e handlers próprios. DTOs de identidade ficam em `Identity/Contracts/Requests` e `Identity/Contracts/Responses`; contratos comerciais, em `Contracts`. A contagem histórica de 44 requests não descreve todos os casos de uso acrescentados ao Store.
 
 ## Exemplos para leitura
 
 - `Authentication/LoginUser`: verifica conta/senha e cria a sessão.
 - `Authentication/Refresh`: consome o refresh anterior, cria seu substituto e detecta reutilização.
 - `User/UpdateUserProfile`: atualiza os campos permitidos da conta atual.
-- `Enterprise/RegisterEnterprise`: cria empresa, dono principal e domínio na mesma transação.
+- `Enterprise/RegisterEnterprise`: cria empresa, dono principal, domínio, configurações comerciais e papéis padrão na mesma transação.
 - `Invitation/AcceptInvitation`: valida destinatário, emissor, validade e perfis antes de criar o vínculo.
 - `OwnershipTransfer/AcceptOwnershipTransfer`: troca a propriedade respeitando a ordem dos commits e invalida os acessos envolvidos.
 - `AccessRole/SaveRole`: grava perfil/permissões e invalida acessos afetados.
+- `Employee/DeactivateEmployee`: dono principal desativa funcionário e vínculo da loja na mesma operação.
 
 UpdateCustomerProfile, DeactivateCustomerAccount, UpdateUserProfile e UpdateCurrentEnterprise têm nomes específicos para não se confundirem com comandos genéricos de CRUD. Os fluxos não passam a permitir gravação direta de privilégios pelo CRUD.
 
@@ -40,20 +41,10 @@ Result<T> é interno. ToIdentityActionResult mantém o DTO direto nos sucessos e
 
 Bearer e CSRF continuam no Swagger. Envio de e-mail permanece desabilitado.
 
-## Verificação desta reorganização
+## Relação com o fluxo comercial atual
 
-Store e Drop compilaram. Foram executadas 91 verificações sem abrir servidores ou conexões de banco: registro dos 44 handlers, dependências, validações, erros esperados, hash de senha, assinatura/rejeição de JWT adulterado, geração de SQL, Swagger e comparação dos modelos EF com os snapshots. Não foi identificada mudança de schema.
+Desativação de funcionário, cadastro da loja com configurações/papéis padrão e endereços do cliente complementam a implementação original. Convites ainda criam Membership sem onboarding automático de Employee. O domínio do cliente e sua identidade continuam sendo a autoridade para carrinho, endereço e pedido.
 
-Após autorização explícita, foram executadas mais 95 verificações HTTP/de respostas com Store, Drop e Gateway nas portas HTTPS 5001, 5002 e 5000, usando duas lojas fictícias em bancos temporários isolados. Foram conferidos:
+Registros antigos de rodadas de verificação pertenciam às reorganizações anteriores e não comprovam homologação do fluxo atual. Esta atualização de documentação não executa testes, abre servidores ou aplica migrations. A configuração vigente está em [Authentication](../Api/Authentication.md); o schema e a execução, em [Infrastructure](../../Shared/Infrastructure.md) e [StartupProject](../../Shared/StartupProject.md).
 
-- Cadastro, login, perfil, validação de senha, CSRF e cookie de refresh com HttpOnly/Secure.
-- Cadastro e seleção de lojas, perfis, permissões, convites e invalidação de tokens após mudança de acesso.
-- Contas de cliente independentes por loja, inclusive com o mesmo e-mail, rejeição de tokens entre lojas e rejeição de perfil pertencente a outra loja.
-- Acesso pelo Gateway ao Store e ao Drop, Swagger com Bearer e prefixo relativo.
-- Transferência de propriedade, rotação de refresh, revogação da família após reutilização e logout.
-
-A execução identificou e corrigiu uma duplicação de `traceId` na conversão de falhas para ProblemDetails. Os status e códigos de credenciais inválidas e política de senha foram conferidos por HTTP após a correção.
-
-Para o storefront, o domínio `localhost` foi preparado exclusivamente no banco temporário e alternado entre as lojas fictícias, preservando a validação do certificado HTTPS. Isso testa a resolução de tenant e o isolamento das contas, mas não a comprovação DNS real. A verificação usou clientes HTTP; não validou a interface do navegador nem suas regras de cookies. Os limites por minuto foram elevados somente nos processos temporários para não interferirem nos testes funcionais; os limites padrão e o bloqueio progressivo não foram testados nessa execução. O envio de e-mail continua desabilitado.
-
-As migrations existentes foram aplicadas somente aos bancos temporários, removidos ao final junto com os processos e o script auxiliar. Nenhuma migration foi aplicada aos bancos de desenvolvimento nesta reorganização, e nenhum projeto de testes foi criado.
+O adaptador de entrega de e-mail continua desabilitado. Confirmação/recuperação não devem expor tokens ao solicitante. Rotas, permissões e corpos atuais: [Endpoints](../Api/Endpoints.md).

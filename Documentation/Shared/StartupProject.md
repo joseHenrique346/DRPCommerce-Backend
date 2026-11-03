@@ -1,9 +1,12 @@
 # Startup do Projeto DROP-Ecommerce
 
+Revisado em 03/11/2026. Execute os comandos a partir da raiz do repositório. Esta atualização documental não cria bancos nem aplica migrations.
+
 ## Pré-requisitos
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [MySQL](https://dev.mysql.com/downloads/) (porta padrão 3306)
+- PostgreSQL acessível pelas APIs (porta padrão 5432)
+- CLI `dotnet-ef` compatível com EF Core 9 para administrar migrations
 - IDE recomendada: Visual Studio 2022+ ou Rider
 
 ## Estrutura de Serviços
@@ -16,20 +19,20 @@
 
 ## Configuração do Banco de Dados
 
-Cada API possui seu próprio banco MySQL. Copie os templates:
+Cada API possui seu próprio banco PostgreSQL. Crie bancos/usuário no ambiente escolhido e copie os templates somente se ainda não houver configuração local:
 
-```bash
-cp DROP-Ecommerce/src/Drop/DropCommerce.Api/appsettings.Development.Template.json DROP-Ecommerce/src/Drop/DropCommerce.Api/appsettings.Development.json
+```powershell
+Copy-Item DROP-Ecommerce/src/Drop/DropCommerce.Api/appsettings.Development.Template.json DROP-Ecommerce/src/Drop/DropCommerce.Api/appsettings.Development.json
 
-cp DROP-Ecommerce/src/Store/StoreCommerce.Api/appsettings.Development.Template.json DROP-Ecommerce/src/Store/StoreCommerce.Api/appsettings.Development.json
+Copy-Item DROP-Ecommerce/src/Store/StoreCommerce.Api/appsettings.Development.Template.json DROP-Ecommerce/src/Store/StoreCommerce.Api/appsettings.Development.json
 ```
 
-Preencha com suas credenciais MySQL:
+Preencha com as credenciais PostgreSQL de cada banco. Exemplo ilustrativo do Store:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=3306;Database=DropCommerceDb;User=root;Password=sua_senha;"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=drpcommerce_store;Username=<USER>;Password=<PASSWORD>;"
   }
 }
 ```
@@ -39,20 +42,58 @@ Ou configure via variáveis de ambiente:
 - `DROPCOMMERCE_CONNECTION_STRING`
 - `STORECOMMERCE_CONNECTION_STRING`
 
+Essas variáveis têm prioridade sobre `ConnectionStrings:DefaultConnection`. O template do Drop sugere `drpcommerce_drop`; os módulos usam bancos separados. Configuração vazia impede inicialização. Os arquivos locais com credenciais não devem ser versionados.
+
 ### Aplicar Migrations
 
-```bash
-dotnet ef database update --project DropCommerce.Infrastructure.Data --startup-project src/Drop/DropCommerce.Api
+Primeiro confira a configuração e as migrations de cada módulo:
+
+```powershell
+dotnet ef migrations list --project DROP-Ecommerce/StoreCommerce.Infrastructure.Data --startup-project DROP-Ecommerce/src/Store/StoreCommerce.Api
+dotnet ef migrations list --project DROP-Ecommerce/DropCommerce.Infrastructure.Data --startup-project DROP-Ecommerce/src/Drop/DropCommerce.Api
 ```
+
+Para aplicar ao ambiente escolhido:
+
+```powershell
+dotnet ef database update --project DROP-Ecommerce/StoreCommerce.Infrastructure.Data --startup-project DROP-Ecommerce/src/Store/StoreCommerce.Api
+dotnet ef database update --project DROP-Ecommerce/DropCommerce.Infrastructure.Data --startup-project DROP-Ecommerce/src/Drop/DropCommerce.Api
+```
+
+As APIs não aplicam migrations automaticamente. Bases legadas podem exigir importação antes de `IdentityAndSessions`, correção de duplicidades de slug/SKU e ajustes comerciais posteriores. `ReserveCouponUsesAtCheckout` compromete usos de cupons dos pedidos pendentes existentes. Veja [infraestrutura](Infrastructure.md) e as notas de [identidade](../Store/Domain/Identity.md), [estoque](../Store/Application/ProductsAndInventory.md) e [cupons](../Store/Application/Coupons.md).
+
+## Segurança e integração obrigatórias
+
+Configure nos arquivos privados, user-secrets ou ambiente de cada processo:
+
+| Configuração | Uso |
+| --- | --- |
+| `Security__SigningKey` | Chave aleatória com pelo menos 32 bytes; igual em Store e Drop. |
+| `Security__InternalServiceKey` | Segredo interno distinto, com pelo menos 32 caracteres; igual nos dois serviços para integração. |
+| `Security__Issuer` | Mesmo emissor nas APIs; padrão DRPCommerce. |
+| `STORECOMMERCE_API_BASE_URL` | URL do Store vista pelo Drop; perfil HTTPS define https://localhost:5001. |
+| `Security__StorefrontBaseDomain` | Base dos domínios das lojas; template usa stores.localhost. |
+| `Security__AllowedOrigins__0`, etc. | Origins exatas do frontend quando houver CORS. |
+| `Security__TrustedProxies__0`, etc. | IPs de proxies confiáveis para forwarding. |
+
+Variáveis de um terminal são herdadas pelos processos iniciados ali; terminais independentes precisam receber sua configuração. Não inserir segredos reais nos templates. Detalhes de JWT, cookies e CSRF: [Authentication](../Store/Api/Authentication.md).
+
+O cadastro da loja cria o registro de subdomínio, mas não configura DNS/hosts nem certificado HTTPS. A vitrine exige domínio ativo/verificado da loja. Envio de e-mail continua desabilitado; `RequireConfirmedEmail=false` permite o recorte de desenvolvimento sem comprovar titularidade do e-mail.
 
 ## Executando
 
 ### Via CLI (em terminais separados)
 
 ```bash
-dotnet run --project DROP-Ecommerce/src/Gateway/Commerce.Gateway
-dotnet run --project DROP-Ecommerce/src/Store/StoreCommerce.Api
-dotnet run --project DROP-Ecommerce/src/Drop/DropCommerce.Api
+dotnet run --project DROP-Ecommerce/src/Store/StoreCommerce.Api --launch-profile https
+dotnet run --project DROP-Ecommerce/src/Drop/DropCommerce.Api --launch-profile https
+dotnet run --project DROP-Ecommerce/src/Gateway/Commerce.Gateway --launch-profile https
+```
+
+Inicie Store antes de usar operações protegidas do Drop: ele consulta o Store para validar sessão/tenant. Para conferir compilação sem instalar hooks:
+
+```powershell
+dotnet build DROP-Ecommerce/DROP-Ecommerce.sln -p:InstallGitHooks=false
 ```
 
 ### Via Visual Studio
@@ -80,14 +121,14 @@ Não desabilite a validação TLS dos clients internos. Na CLI, acrescente `--la
 
 ## Rotas (via Gateway)
 
-Todas as requisições devem passar pelo Gateway na porta **5000**:
+O ponto de entrada para o frontend é o Gateway na porta **5000**. Chamadas internas de serviço usam o destino privado configurado:
 
 | Rota | Destino |
 |------|---------|
 | `http://localhost:5000/api/store/{endpoint}` | StoreCommerce.Api |
 | `http://localhost:5000/api/drop/{endpoint}` | DropCommerce.Api |
 
-O Gateway remove o prefixo antes de encaminhar. Exemplo: `GET http://localhost:5000/api/drop/products` chega na Drop API como `/products`.
+O Gateway remove o prefixo antes de encaminhar. Exemplo real no perfil HTTPS: `GET https://localhost:5000/api/store/api/storefront/products/search` chega ao Store como `/api/storefront/products/search`.
 
 No perfil HTTPS, troque somente o protocolo por `https`. Como o prefixo é removido, uma rota interna `/api/auth/csrf` do Store é acessada por `https://localhost:5000/api/store/api/auth/csrf`.
 
@@ -113,3 +154,14 @@ O documento Swagger declara a URL base relativa `../..`, resolvida a partir de `
 Por exemplo, o GET `/api/auth/csrf` deve mostrar `https://localhost:5000/api/store/api/auth/csrf` em `Request URL` no Swagger do Store aberto pelo Gateway. Depois de alterar essa configuração, reinicie as APIs e recarregue a página do Swagger para obter o documento atualizado.
 
 O Gateway não possui Swagger próprio; os caminhos acima encaminham para a documentação de cada API.
+
+O catch-all do Gateway não estabelece sozinho uma fronteira privada para `/api/internal`. Ao publicar, bloquear esse prefixo na borda e configurar forwarding/Host confiável. A chave interna permanece no backend.
+
+## Fluxos comerciais disponíveis
+
+O Store já possui catálogo com variantes, estoque, cupons, carrinho persistido, checkout, pedidos numerados, histórico e endereços. Pagamento/estorno são manuais, frete permanece zerado e não há integração fiscal. No Drop, entrada na fila e consultas existem, mas o ciclo completo de admissão/reserva/venda continua pendente.
+
+- [Referência dos endpoints do Store](../Store/Api/Endpoints.md)
+- [Carrinho, checkout e pedidos](../Store/Application/OrdersAndCheckout.md)
+- [Integração Store/Drop](../Drop/Infrastructure/StoreIntegration.md)
+- [Integrações externas pendentes](PlanejamentoIntegracoes.md)

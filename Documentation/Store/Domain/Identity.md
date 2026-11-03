@@ -1,6 +1,6 @@
 # Identidade, lojas e autorização
 
-Implementação na branch `feat/83-CriacaoUsuarioLogin`. O backend agora possui casos de uso de autenticação e gestão de acesso, além das entidades e mapeamentos. Para configuração, contratos HTTP e limitações desta etapa, veja [Autenticação e segurança](../Api/Authentication.md).
+Modelo atual, revisado em 03/11/2026, incluindo as regras comerciais do Store. Para configuração e contratos, veja [Autenticação e segurança](../Api/Authentication.md) e [endpoints comerciais](../Api/Endpoints.md).
 
 ## Modelo escolhido para o TCC
 
@@ -36,6 +36,8 @@ Somente o dono principal gere convites, tipos de membership, perfis, permissões
 O dono principal possui acesso operacional implícito dentro de sua loja. Não existe `SuperUser` global. A transferência exige senha do dono atual, destinatário ativo da mesma loja, aceite autenticado e senha do destinatário. O antigo dono vira sócio; a transação mantém exatamente um dono principal ativo.
 
 Mudar permissões, perfis, tipo ou status de membership invalida os JWTs administrativos afetados por `AccessVersion`. Alterar senha, encerrar todas as sessões ou desativar uma conta invalida as sessões por `SecurityVersion`. Essas versões são verificadas no banco a cada requisição protegida.
+
+Desativar Employee é operação do dono principal e também desativa a Membership, invalidando o acesso anterior naquela loja. A conta User e vínculos em outras lojas permanecem independentes. Convite aceito cria Membership; não cria automaticamente o perfil funcional Employee.
 
 ## Persistência de credenciais e ações
 
@@ -73,20 +75,23 @@ Confirmação de e-mail e recuperação têm entidades e casos de uso preparados
 ## Camadas e fluxos
 
 ```text
-Controllers de identidade
-  → IIdentityService / IAccessManagementService (Application)
-    → serviços transacionais (Infrastructure)
-      → entidades de domínio + StoreCommerceDbContext + configurações EF
+Controller
+  → MediatR → Validator → Handler (Application)
+    → contratos de repositório / UnitOfWork
+      → entidades + persistência EF (Infrastructure.Data)
+    → hash/JWT/escopo/contexto (StoreCommerce.Security)
 ```
 
-Os serviços de identidade usam uma mesma unidade EF/transação para bloquear conta/loja, modificar relações e consumir tokens atomicamente. Os CRUDs comerciais continuam usando MediatR, repositórios e UnitOfWork existentes. CRUD genérico não pode modificar diretamente as entidades de identidade ou autorização.
+Os handlers de identidade usam uma mesma UnitOfWork/transação para bloquear conta/loja, modificar relações e consumir tokens atomicamente. As antigas fachadas IIdentityService/IAccessManagementService não representam a organização atual. CRUD genérico não pode modificar diretamente as entidades de identidade ou autorização.
+
+O cadastro de Enterprise também inicializa StoreSettings e papéis padrão de acesso. Papéis comerciais são diferentes de cargo/departamento; novas permissões reconhecidas pelo código precisam ser atribuídas aos perfis existentes conforme o acesso desejado.
 
 O Drop mantém banco próprio, sem FKs entre serviços. Usa os IDs canônicos do Store e valida sessão, tenant e recursos por integração interna autenticada. Veja [Integração Store/Drop](../../Drop/Infrastructure/StoreIntegration.md).
 
 ## Migration e dados antigos
 
-Foi criada `20261008194931_IdentityAndSessions`, sem alterar as migrations históricas. Ela foi validada em banco temporário vazio.
+A migration `20261008194931_IdentityAndSessions` introduz o modelo de identidade. Migrations posteriores acrescentam aparência e os recursos comerciais; ela não é a única necessária para o schema atual.
 
 A migration interrompe antes de modificar uma instalação que tenha lojas, funcionários, cargos ou departamentos antigos. É necessário definir o dono de cada loja e revisar a importação das credenciais/vínculos antes de migrar dados reais. Nenhum dono é inventado e nenhuma senha antiga é descartada automaticamente.
 
-Não foi aplicada migration aos bancos existentes do desenvolvedor. Não foi criado projeto de testes; a validação foi executada com bancos temporários e dados fictícios. O script temporário foi removido após a validação.
+Esta atualização documental não aplica migrations nem executa testes. Conferir o histórico de cada banco para determinar as pendências. Veja [inicialização](../../Shared/StartupProject.md) e [casos de uso](../Application/IdentityFlows.md).

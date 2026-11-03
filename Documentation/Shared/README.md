@@ -21,6 +21,8 @@ O sentido das dependências é `Api → Application → Domain` e `Infrastructur
 
 `AddCommerceSecurity` e `UseCommerceSecurity` pertencem a `SharedCommerce.Api/Configuration`. `StoreCommerce.Security` e `DropCommerce.Security` fornecem as implementações próprias de identidade, sessão, domínio e comunicação interna. Não há referência de um módulo à implementação do outro.
 
-As entidades e classificações de aparência mantêm IDs, códigos, tabelas, relacionamentos, filtros e regras de gravação. Os snapshots atuais do EF acompanham os namespaces novos; as migrations históricas são preservadas. Esta reorganização não exige migration nem alteração nos bancos existentes.
+As entidades e classificações de aparência mantêm IDs, códigos, tabelas, relacionamentos, filtros e regras de gravação. A separação em bibliotecas não cria banco novo. As evoluções do schema são mantidas nas migrations de cada módulo; não confundir a reorganização histórica do Shared com as migrations comerciais posteriores do Store.
 
 Detalhes funcionais: [Appearance](Appearance.md) e [Security](Security.md).
+
+Persistência PostgreSQL, guards e workers: [Infrastructure](Infrastructure.md). Execução local: [StartupProject](StartupProject.md). Operações de compra pertencem ao [Store](../Store/Application/OrdersAndCheckout.md); aparência apresenta dados comerciais sem comandar estoque/pagamento.
