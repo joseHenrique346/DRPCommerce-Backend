@@ -51,6 +51,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<AccessRolePermission> AccessRolePermissions => Set<AccessRolePermission>();
     public DbSet<MembershipAccessRole> MembershipAccessRoles => Set<MembershipAccessRole>();
     public DbSet<EnterpriseMembershipKind> EnterpriseMembershipKinds => Set<EnterpriseMembershipKind>();
+    public DbSet<EnterprisePlan> EnterprisePlans => Set<EnterprisePlan>();
 
     // Static Entities
     public DbSet<CouponType> CouponTypes => Set<CouponType>();

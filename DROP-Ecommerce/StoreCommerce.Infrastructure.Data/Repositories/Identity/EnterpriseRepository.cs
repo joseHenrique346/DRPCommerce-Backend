@@ -11,4 +11,12 @@ public class EnterpriseRepository(StoreCommerceDbContext context) : Repository<E
     {
         return Context.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM empresa WHERE id = {id} FOR UPDATE", cancellationToken);
     }
+
+    public Task<long> GetPlanIdAsync(long enterpriseId, CancellationToken cancellationToken)
+    {
+        return Context.Enterprises.IgnoreQueryFilters().AsNoTracking()
+            .Where(Enterprise => Enterprise.Id == enterpriseId)
+            .Select(Enterprise => Enterprise.PlanId)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
 }

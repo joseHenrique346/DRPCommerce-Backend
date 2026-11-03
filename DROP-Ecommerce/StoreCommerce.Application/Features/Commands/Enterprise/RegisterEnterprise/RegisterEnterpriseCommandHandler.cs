@@ -42,6 +42,6 @@ public sealed class RegisterEnterpriseCommandHandler(IdentityHandlerContext cont
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);
 
-        return new(enterprise.Id, enterprise.TradeName, enterprise.IsActive);
+        return new(enterprise.Id, enterprise.TradeName, enterprise.IsActive, enterprise.PlanId);
     }
 }

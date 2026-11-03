@@ -22,6 +22,8 @@ public static class SecurityNames
     public const string AccessVersion = "access_version";
     public const string Kind = "membership_kind";
     public const string Permission = "permission";
+    public const string Plan = "enterprise_plan";
+    public const string PlanCapability = "plan_capability";
     public const string ResolvedTenant = "Commerce.ResolvedTenant";
     public const string TrustedServiceTenant = "Commerce.ServiceTenant";
 
@@ -43,5 +45,13 @@ public static class SecurityNames
     {
         return user.FindFirst(Actor)?.Value == "user" &&
             (user.FindFirst(Kind)?.Value == "primary_owner" || user.HasClaim(Permission, permission));
+    }
+
+    /// <summary>
+    /// Confere se o plano contratado pela loja habilita a capacidade informada, sem exceção ao dono principal.
+    /// </summary>
+    public static bool HasPlanCapability(ClaimsPrincipal user, string capability)
+    {
+        return user.FindFirst(Actor)?.Value == "user" && user.HasClaim(PlanCapability, capability);
     }
 }

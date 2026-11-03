@@ -5,4 +5,5 @@ namespace StoreCommerce.Domain.Interfaces;
 public interface IEnterpriseRepository : IRepository<Enterprise>
 {
     Task LockAsync(long id, CancellationToken cancellationToken);
+    Task<long> GetPlanIdAsync(long enterpriseId, CancellationToken cancellationToken);
 }

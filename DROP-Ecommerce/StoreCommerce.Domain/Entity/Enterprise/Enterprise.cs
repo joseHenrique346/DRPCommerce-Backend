@@ -15,8 +15,10 @@ public class Enterprise : BaseEntity
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
+    public long PlanId { get; private set; }
 
     #region Navigation Properties
+    public StaticEntity.EnterprisePlan Plan { get; private set; } = null!;
     private readonly List<EnterpriseMembership> _listEnterpriseMembership = [];
     public IReadOnlyCollection<EnterpriseMembership> ListEnterpriseMembership => _listEnterpriseMembership.AsReadOnly();
     private readonly List<EnterpriseDomain> _listEnterpriseDomain = [];
@@ -67,11 +69,19 @@ public class Enterprise : BaseEntity
         ZipCode = zipCode;
         Country = country;
         IsActive = isActive;
+        PlanId = StaticEntity.EnterprisePlan.Default.Id;
     }
     #endregion
 
     #region Functions
     public void SetActive(bool active) => IsActive = active;
+
+    public void ChangePlan(long planId)
+    {
+        BaseValidate.ValidatePositive(planId, nameof(PlanId));
+
+        PlanId = planId;
+    }
     public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(tradeName, nameof(TradeName));

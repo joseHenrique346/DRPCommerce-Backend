@@ -19,6 +19,7 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
         builder.Property(e => e.City).HasMaxLength(100);
         builder.Property(e => e.ZipCode).HasMaxLength(20);
         builder.Property(e => e.Country).HasMaxLength(100);
+        builder.Property(e => e.PlanId).HasDefaultValue(1L);
 
         builder.OwnsOne(e => e.Email, nav =>
         {
@@ -34,6 +35,11 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
         builder.HasOne(e => e.State)
             .WithMany()
             .HasForeignKey(e => e.StateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.Plan)
+            .WithMany()
+            .HasForeignKey(e => e.PlanId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(e => e.ListCategory)
@@ -87,5 +93,6 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(e => e.StateId);
+        builder.HasIndex(e => e.PlanId);
     }
 }

@@ -6,7 +6,7 @@ Os casos de uso de identidade/acesso pertencem a Application e são executados p
 
 ## O que está disponível
 
-Cadastro/login administrativo e de clientes, seleção de loja, refresh rotativo, logout, sessões, troca de senha, perfil próprio, criação/pausa de loja, convites, perfis/permissões, gestão de memberships, transferência de propriedade, domínio próprio com verificação TXT e isolamento de tenant.
+Cadastro/login administrativo e de clientes, seleção de loja, refresh rotativo, logout, sessões, troca de senha, perfil próprio, criação/pausa de loja, alteração do plano contratado, convites, perfis/permissões, gestão de memberships, transferência de propriedade, domínio próprio com verificação TXT e isolamento de tenant.
 
 No storefront do Drop, inscrição e entrada na fila exigem cliente autenticado. Consultas de inscrições, fila, reservas, pedidos, lista de espera e notificações são limitadas ao cliente da loja.
 
@@ -134,6 +134,7 @@ PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha u
 | GET /api/enterprises/mine | Memberships próprias, incluindo lojas pausadas |
 | POST /api/enterprises/register | Cria Enterprise + dono principal + subdomínio, atomicamente |
 | PUT /api/enterprises/current | Dados da loja; somente dono principal |
+| PUT /api/enterprises/current/plan | Body `planId`; altera o plano contratado; somente dono principal |
 | PUT /api/enterprises/{id}/activation | Body booleano; verifica propriedade no banco, inclusive para reativar loja |
 | GET /api/enterprise-memberships/get-all | Membros da loja, dono principal |
 | PUT /api/enterprise-memberships/{id} | kindId 2/3 e isActive; não rebaixa/remove dono principal |
@@ -147,6 +148,31 @@ PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha u
 | PUT/DELETE /api/membership-access-roles/{membershipId}/{roleId} | Atribui/remove perfil |
 
 Sócio-proprietário não pode administrar esses acessos. Módulos comerciais ainda não mapeados explicitamente ficam restritos ao dono principal, por padrão.
+
+## Plano contratado e proteção do tipo de conta
+
+O que a loja pode usar é definido pelo plano (`EnterprisePlan`), e não pelo tipo do usuário. O contrato é da loja; o dono herda as capacidades do plano pela membership.
+
+O token administrativo carrega o plano (`enterprise_plan`) e uma claim por capacidade liberada (`plan_capability`). `ValidateAsync` compara o plano do token com o plano atual da loja a cada requisição, então a troca invalida na hora os tokens antigos.
+
+Gating aplicado nas operações:
+
+- Store: `Employee`, `EmployeePosition` e `Department` exigem `employees`; `EnterpriseDomain` exige `custom_domain`.
+- Drop: qualquer endpoint administrativo (não-storefront) exige `drop`.
+- A checagem de capacidade não abre exceção ao dono principal; se o plano não inclui o recurso, o dono também recebe 403.
+
+A alteração do tipo de contrato usa um endpoint próprio, dedicado e validado no servidor:
+
+| Rota | Contrato | Regra |
+|---|---|---|
+| PUT /api/enterprises/current/plan | Body `planId` | Dono principal autenticado; `planId` deve existir no catálogo; a loja é resolvida pela membership, não pelo body |
+
+Esse desenho segue o padrão de e-commerce maduros: o cliente nunca altera o próprio tipo de conta por um campo genérico de perfil. Mudanças de tipo/plano ficam em um endpoint específico, com autoridade explícita, validação de valor no servidor e bloqueio de concorrência (transação + lock da loja). Um campo de plano aceito em um `PUT` genérico de loja, um ID escolhido pelo cliente ou uma alteração silenciosa via banco seriam vetores de fraude (upgrade indevido, acesso a módulo não pago, escalada de privilégio). Por isso:
+
+- O `planId` recebido é validado contra o catálogo; valor desconhecido ou zero retorna 400.
+- A loja alvo vem do contexto autenticado (`EnterpriseId` da membership), não do corpo.
+- A política `PrimaryOwnerOnly` e uma nova verificação do vínculo de dono principal no banco são exigidas mesmo com token válido.
+- O Drop não decide sozinho: ele confia no plano/capacidades emitidos pelo Store e rejeita o acesso quando o Store não valida a sessão.
 
 ## Convites e propriedade: entrega manual
 
@@ -185,6 +211,8 @@ A verificação TXT prova controle do nome. DNS de roteamento, reverse proxy e c
 
 Audit logs do Drop não aceitam mutação manual, inclusive pelo dono. Permissões não são novos códigos arbitrários cadastrados pela loja: a loja configura perfis usando o catálogo reconhecido pelo backend.
 
+Além das permissões, o plano contratado limita os módulos: funcionários e domínio próprio exigem as capacidades `employees` e `custom_domain`, e todo o Drop administrativo exige `drop`. Sem a capacidade, o resultado é 403 mesmo para o dono principal.
+
 ## Prazos e limites padrão
 
 - Access token: 10 minutos, com validação de estado no banco em toda requisição protegida.
@@ -199,7 +227,7 @@ Esses valores são configuráveis em Security. Várias réplicas precisam de lim
 
 ## Proxy e integração interna
 
-Store e Drop validam JWT com audiences diferentes para administração e cliente. O Drop também chama o Store para conferir a sessão atual; se o Store estiver indisponível, não libera acesso.
+Store e Drop validam JWT com audiences diferentes para administração e cliente. O Drop também chama o Store para conferir a sessão atual; se o Store estiver indisponível, não libera acesso. O plano e as capacidades são emitidos pelo Store no token e reavaliados pelo Drop; o Drop usa a claim `drop` para liberar seus endpoints administrativos e não possui cópia do catálogo de planos.
 
 Não exponha `/api/internal` no proxy público. As chamadas exigem X-Service-Key; consultas de recurso exigem também X-Enterprise-Id enviado por serviço confiável. Nenhum endpoint público trata esse cabeçalho como autoridade.
 
@@ -208,6 +236,8 @@ O Host original precisa chegar à API storefront. O middleware só aceita X-Forw
 ## Migrações e verificação
 
 A Store migration `20261008194931_IdentityAndSessions` protege dados legados: para antes das alterações se houver lojas, funcionários, cargos ou departamentos antigos. Uma instalação populada necessita mapa revisado de dono e importação de vínculos/credenciais.
+
+A migration `EnterprisePlans` adiciona o plano por contrato: cria `plano_empresa`, insere os planos Comum/Premium/Drop e liga `empresa.plan_id` com padrão Comum.
 
 O schema do Drop não exigiu migration nesta etapa. Nenhuma migration foi executada nos bancos existentes do desenvolvedor.
 

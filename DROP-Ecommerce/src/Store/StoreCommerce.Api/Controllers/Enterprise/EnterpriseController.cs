@@ -43,6 +43,21 @@ public sealed class EnterpriseController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
+    /// Altera o plano contratado pela loja selecionada.
+    /// </summary>
+    [HttpPut("current/plan")]
+    [Authorize(Policy = SecurityNames.PrimaryOwner)]
+    public async Task<IActionResult> ChangePlan(EnterprisePlanChangeRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ChangeEnterprisePlanCommand(request.PlanId), ct);
+
+        if (result.IsFailure)
+            return this.ToIdentityActionResult(result);
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Ativa ou desativa uma loja do dono principal.
     /// </summary>
     [HttpPut("{id:long}/activation")]

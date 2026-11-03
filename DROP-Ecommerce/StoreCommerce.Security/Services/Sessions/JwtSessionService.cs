@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Security.Services;
 
@@ -50,6 +51,10 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
 
             if (employeeId.HasValue)
                 claims.Add(Number("EmployeeId", employeeId.Value));
+
+            var plan = EnterprisePlan.FromId(await data.Enterprises.GetPlanIdAsync(membership.EnterpriseId, ct));
+            claims.Add(Number(SecurityNames.Plan, plan.Id));
+            claims.AddRange(plan.ToCapabilities().Select(capability => new Claim(SecurityNames.PlanCapability, capability)));
         }
 
         return Issue(SecurityNames.Backoffice, claims);
@@ -148,8 +153,10 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
                 var membershipId = SecurityNames.Id(principal, SecurityNames.Membership);
                 var accessVersion = SecurityNames.Id(principal, SecurityNames.AccessVersion);
                 var member = await data.EnterpriseMemberships.FindAsync(x => x.Id == membershipId && x.UserId == id && x.EnterpriseId == tenantId && x.IsActive && x.Enterprise.IsActive, ct, ignoreQueryFilters: true, tracking: false);
+                var planId = await data.Enterprises.GetPlanIdAsync(tenantId, ct);
 
                 return member is not null && member.AccessVersion == accessVersion &&
+                    SecurityNames.Id(principal, SecurityNames.Plan) == planId &&
                     principal.FindFirst(SecurityNames.Kind)?.Value == (member.KindId switch
                     {
                         1 => "primary_owner",

@@ -16,6 +16,7 @@ Implementação na branch `feat/83-CriacaoUsuarioLogin`. O backend agora possui 
 - `MembershipAccessRole` e `AccessRolePermission`: atribuição dos perfis e suas permissões.
 - `EmployeePosition` e `Department`: cargo e departamento; não concedem autorização.
 - `EnterpriseDomain`: hostname normalizado, verificação e publicação da loja.
+- `EnterprisePlan`: plano contratado pela loja (entidade estática), com as capacidades que ele libera.
 
 ```text
 User → EnterpriseMembership ← Enterprise → Customer
@@ -36,6 +37,24 @@ Somente o dono principal gere convites, tipos de membership, perfis, permissões
 O dono principal possui acesso operacional implícito dentro de sua loja. Não existe `SuperUser` global. A transferência exige senha do dono atual, destinatário ativo da mesma loja, aceite autenticado e senha do destinatário. O antigo dono vira sócio; a transação mantém exatamente um dono principal ativo.
 
 Mudar permissões, perfis, tipo ou status de membership invalida os JWTs administrativos afetados por `AccessVersion`. Alterar senha, encerrar todas as sessões ou desativar uma conta invalida as sessões por `SecurityVersion`. Essas versões são verificadas no banco a cada requisição protegida.
+
+## Planos por contrato
+
+O contrato comercial é da loja, não do usuário. `Enterprise` passou a carregar `PlanId`, e o dono herda as capacidades do plano via membership. Isso mantém a regra de que o `User` é uma conta global e o que ele "compra" é representado pela loja selecionada.
+
+`EnterprisePlan` é uma entidade estática (`plano_empresa`) com três planos e um catálogo de capacidades:
+
+| Plano | Vitrine | Contas de funcionário | Domínio próprio | Tema personalizado | Módulo DROP |
+|---|---|---|---|---|---|
+| Comum (1, padrão) | Sim | Não | Não | Não | Não |
+| Premium (2) | Sim | Sim | Sim | Sim | Não |
+| Drop (3) | Sim | Sim | Sim | Sim | Sim |
+
+Os códigos de capacidade (`vitrine`, `employees`, `custom_domain`, `custom_theme`, `drop`) ficam em `SharedCommerce.Application` para que Store e Drop compartilhem os mesmos valores. As flags da entidade são convertidas nesses códigos na emissão do token; o `EnterprisePlan.Default` (Comum) é usado quando o `PlanId` não corresponde a nenhum plano conhecido.
+
+O plano é emitido no JWT como claim `enterprise_plan` (o `PlanId`) e como claims `plan_capability` (uma por capacidade). `ValidateAsync` compara o `PlanId` da claim com o plano atual da loja, então trocar de plano invalida imediatamente os tokens administrativos antigos, sem exigir novo login. O gating por capacidade não abre exceção para o dono principal: o dono só usa um recurso se o plano contratado o incluir.
+
+A troca de plano é feita exclusivamente por `PUT /api/enterprises/current/plan`, restrito ao dono principal e validado no servidor (ver [Autenticação e segurança](../Api/Authentication.md)).
 
 ## Persistência de credenciais e ações
 
@@ -63,6 +82,7 @@ Confirmação de e-mail e recuperação têm entidades e casos de uso preparados
 - Loja nova recebe subdomínio da plataforma, já verificado e primário.
 - Domínio próprio começa não verificado e inativo; publicação depende de prova DNS TXT.
 - Para desativar/excluir um domínio primário, escolha outro primário primeiro.
+- Loja sempre referencia um plano existente; `PlanId` usa `Restrict` no banco e padrão Comum em lojas antigas.
 - Employee: relação 1:1 opcional com membership e referências funcionais da mesma loja.
 - FKs compostas de tenant protegem relações de memberships, perfis, convites, funcionários e transferências.
 - Query filters e proteção de SaveChanges rejeitam dados ou referências de outra loja.
@@ -86,6 +106,8 @@ O Drop mantém banco próprio, sem FKs entre serviços. Usa os IDs canônicos do
 ## Migration e dados antigos
 
 Foi criada `20261008194931_IdentityAndSessions`, sem alterar as migrations históricas. Ela foi validada em banco temporário vazio.
+
+O plano por contrato foi adicionado pela migration `EnterprisePlans`: cria `plano_empresa`, insere os três planos e liga `empresa.plan_id` com padrão Comum nas lojas existentes.
 
 A migration interrompe antes de modificar uma instalação que tenha lojas, funcionários, cargos ou departamentos antigos. É necessário definir o dono de cada loja e revisar a importação das credenciais/vínculos antes de migrar dados reais. Nenhum dono é inventado e nenhuma senha antiga é descartada automaticamente.
 

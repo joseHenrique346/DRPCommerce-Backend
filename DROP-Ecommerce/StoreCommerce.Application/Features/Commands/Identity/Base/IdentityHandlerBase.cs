@@ -184,7 +184,7 @@ public abstract class IdentityHandlerBase<TRequest, TResponse>(IdentityHandlerCo
         var access = await jwt.IssueUserAsync(user, family, membership, ct);
 
         return new(access.Token, access.Expires, membership is null && memberships.Count > 0,
-            memberships.Select(x => new MembershipChoice(x.Id, x.EnterpriseId, x.Enterprise.TradeName, x.KindId)).ToList(), token, expires);
+            memberships.Select(x => new MembershipChoice(x.Id, x.EnterpriseId, x.Enterprise.TradeName, x.KindId, x.Enterprise.PlanId)).ToList(), token, expires);
     }
 
     protected Task RevokeFamilyAsync(long accountId, Guid family, bool customer, CancellationToken ct)

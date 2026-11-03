@@ -39,6 +39,13 @@ public sealed class DropOperationFilter : IAsyncAuthorizationFilter
             return Task.CompletedTask;
         }
 
+        if (!SecurityNames.HasPlanCapability(user, EnterprisePlanCapabilities.Drop))
+        {
+            context.Result = new ObjectResult(new ProblemDetails { Status = 403, Title = "Módulo DROP indisponível no plano contratado." }) { StatusCode = 403 };
+
+            return Task.CompletedTask;
+        }
+
         var read = descriptor.ActionName.StartsWith("Get", StringComparison.OrdinalIgnoreCase);
 
         if (descriptor.ControllerName == "DropAuditLog" && !read)

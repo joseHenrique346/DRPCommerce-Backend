@@ -26,6 +26,20 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             return Task.CompletedTask;
 
         var controller = descriptor.ControllerName;
+        var user = context.HttpContext.User;
+        string? capability = controller switch
+        {
+            "Employee" or "EmployeePosition" or "Department" => EnterprisePlanCapabilities.Employees,
+            "EnterpriseDomain" => EnterprisePlanCapabilities.CustomDomain,
+            _ => null
+        };
+
+        if (capability is not null && !SecurityNames.HasPlanCapability(user, capability))
+        {
+            context.Result = new ObjectResult(new ProblemDetails { Status = 403, Title = "Recurso indisponível no plano contratado." }) { StatusCode = 403 };
+
+            return Task.CompletedTask;
+        }
 
         if (controller is
             "BackofficeAuth" or
@@ -52,10 +66,9 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "InternalProduct" or
             "InternalEnterprise" or
             "Permission" or
-            "EnterpriseMembershipKind")
+            "EnterpriseMembershipKind" or
+            "EnterprisePlan")
             return Task.CompletedTask;
-
-        var user = context.HttpContext.User;
 
         if (user.Identity?.IsAuthenticated != true || user.FindFirst(SecurityNames.Actor)?.Value != "user" ||
             user.FindFirst(SecurityNames.Membership) is null)
