@@ -1,0 +1,3 @@
+# Scripts do cmd.exe precisam de CRLF para goto/call funcionarem corretamente.
+*.bat text eol=crlf
+*.cmd text eol=crlf
