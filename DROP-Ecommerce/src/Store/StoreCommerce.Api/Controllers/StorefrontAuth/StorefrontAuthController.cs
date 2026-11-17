@@ -24,6 +24,7 @@ public sealed class StorefrontAuthController(IMediator mediator, IAntiforgery an
     /// </summary>
     [AllowAnonymous]
     [HttpGet("csrf")]
+    [EnableRateLimiting("api")]
     public IActionResult GetCsrf()
     {
         return Csrf();

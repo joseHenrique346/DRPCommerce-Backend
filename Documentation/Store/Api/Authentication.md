@@ -223,6 +223,8 @@ O convite cria o vínculo de acesso, mas o onboarding automático do perfil Empl
 - Tokens de confirmação/recuperação preparados: 30 minutos.
 - Login: a partir de 5 falhas, bloqueio de 30 segundos; novas falhas após espera aumentam até 15 minutos. Contadores persistidos por conta; clientes são independentes por loja.
 - Janela deslizante por IP/política: auth 15/min, refresh 30/min e rotas storefront api 180/min, seis segmentos. Não é limitador distribuído.
+- `GET /api/auth/csrf` e `GET /api/storefront/auth/csrf` usam a política `api`, separada do orçamento `auth` de cadastro/login. Atingir o limite de login não impede obter outro token CSRF.
+- Rejeições do limitador retornam 429 em `application/problem+json`, com `status`, `title`, `detail`, `code: "Security.RateLimited"` e `traceId`. O header `Retry-After` sempre informa segundos inteiros positivos e é exposto pelo CORS. O limitador deslizante do .NET 9 não fornece o prazo nos metadados; nesse caso a resposta usa uma espera conservadora de 60 segundos, correspondente a uma janela completa. Se o limitador fornecer metadados, o prazo é arredondado para cima.
 - Retenção após expiração: 7 dias; limpeza periódica a cada 6 horas. Tokens consumidos são mantidos durante a vida da família para detectar replay.
 
 Esses valores são configuráveis em Security. Várias réplicas precisam de limitação distribuída e chaves de Data Protection compartilhadas para cookies CSRF; isso não foi configurado como infraestrutura de produção nesta etapa.
@@ -233,7 +235,7 @@ Store e Drop validam JWT com audiences diferentes para administração e cliente
 
 Não exponha `/api/internal` no proxy público. As chamadas exigem X-Service-Key; consultas de recurso exigem também X-Enterprise-Id enviado por serviço confiável. Nenhum endpoint público trata esse cabeçalho como autoridade.
 
-O Host original precisa chegar à API storefront. O middleware só aceita X-Forwarded-Host/Proto/For dos IPs listados em TrustedProxies, com um salto. Sem configuração explícita, forwarding permanece desabilitado. O Gateway existente não foi transformado em provisionador de domínios/HTTPS; revise seus caminhos, prefixos e forwarding ao publicar estas rotas.
+O Gateway encaminha o domínio original em `X-Forwarded-Host`, substituindo cabeçalhos encaminhados recebidos do cliente. O Host da conexão ao backend continua sendo o destino, permitindo validar seu certificado HTTPS de `localhost`. Store e Drop processam X-Forwarded-Host/Proto/For antes de resolver a loja e só aceitam um salto dos IPs listados em TrustedProxies. A configuração padrão confia em `127.0.0.1` e `::1`, usados pelo Gateway local. Em outros ambientes, configure os IPs exatos do proxy; uma lista vazia desabilita forwarding. O Gateway existente não foi transformado em provisionador de domínios/HTTPS; revise seus caminhos, prefixos e forwarding ao publicar estas rotas.
 
 ## Migrações e situação do ambiente
 

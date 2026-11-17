@@ -11,19 +11,21 @@ code_commit: 734d537
 
 # Store — referência dos endpoints comerciais
 
+Contratos de Gateway, categorias, estoque e configurações revisados em 16/11/2026 após os testes de integração do frontend. As contagens e referências abaixo descrevem a implementação original das regras do Store.
+
 Referência dos endpoints acrescentados pelas regras do Store e integrados à `main` em `38d0230` (mesmo conteúdo funcional de `734d537`). A comparação histórica usa a base `2088271`, anterior à implementação; não é uma diferença contra a `main` atual. Foram inventariadas **64 combinações novas de método + rota**, em 17 controllers alterados. Esses controllers expõem outras **63 rotas preexistentes**, documentadas ao final para orientar o uso. Não são 127 endpoints novos. A contagem foi conferida estaticamente nos atributos HTTP e nas ações herdadas; não representa execução HTTP nem cobertura de toda a API.
 
 [PR #91 — implementação do Store](https://github.com/joseHenrique346/DRPCommerce-Backend/pull/91) · [Issue #89 — regras do Store](https://github.com/joseHenrique346/DRPCommerce-Backend/issues/89)
 
 ## Como chamar e interpretar
 
-- As rotas abaixo são as rotas **do serviço Store**. No Gateway atual, `/api/store` é removido antes do encaminhamento: `/api/store/api/storefront/cart` chega ao Store como `/api/storefront/cart`. Conferir o endereço publicado do ambiente.
+- As rotas abaixo são as rotas **do serviço Store**. No Gateway atual, `/api/store` é removido antes do encaminhamento: `/api/store/api/storefront/cart` chega ao Store como `/api/storefront/cart`. O Gateway envia o domínio da vitrine em `X-Forwarded-Host`; Store e Drop o aceitam dos proxies confiáveis antes de resolver a loja. A configuração padrão permite o Gateway local (`127.0.0.1` e `::1`), mantendo o Host do destino para validar o certificado HTTPS do backend. Conferir o endereço publicado do ambiente.
 - JSON usa propriedades em camelCase. `{id:long}` representa um inteiro de 64 bits positivo; não enviar as chaves nem `:long` na URL.
 - Backoffice exige Bearer de usuário com vínculo ativo na loja e a permissão indicada. O dono principal segue as regras de autorização central. Ter um ID de outra loja não concede acesso.
 - Vitrine pública resolve loja pelo host/domínio. Cliente usa Bearer de cliente daquela loja. Não enviar `enterpriseId` para escolher arbitrariamente a loja; cabeçalhos internos não são autoridade para navegador.
 - Sucesso das novas rotas comerciais normalmente é HTTP **200**, com `Result<T>` e dado em `content`: `isSuccess`, `isFailure`, `content`, `errors`, `listMessageErrors`. Não presumir 201 em POST. A exceção nova é desativação de funcionário, HTTP 204.
 - Erros de aplicação usam ProblemDetails, com códigos conforme a falha. Considerar 400 (validação), 401 (identidade), 403 (permissão), 404 (recurso), 409 (conflito/estoque/estado) e 503 (dependência indisponível); limites podem produzir 429. Alguns retornos de middleware/legado podem não usar o mesmo corpo.
-- Não generalizar o envelope para o legado: perfil e informação da loja usam DTO direto; a listagem antiga de produtos retorna array direto; DELETE do próprio perfil retorna 204.
+- Não generalizar o envelope para o legado: perfil usa DTO direto; `GET /api/storefront/store` usa `Result<PublicStoreInfoResponse>`, com os dados da loja em `content`; a listagem antiga de produtos retorna array direto; DELETE do próprio perfil retorna 204.
 - Leituras paginadas usam contratos próprios; conferir `PagedResponse<T>` e os DTOs vinculados abaixo. Não depender de `get-all` para grandes catálogos.
 
 ## Índice das rotas novas
@@ -63,6 +65,8 @@ Referência dos endpoints acrescentados pelas regras do Store e integrados à `m
 | `DELETE /api/categories/delete-with-products` | `categories.manage` | Exclui categorias em lote, com transferência opcional dos produtos. Subcategorias precisam integrar o lote. DeleteListCategoryCommand no corpo. |
 
 Filtros de `search`: `name`, `parentId`, `isActive`, `rootsOnly`, `page`, `pageSize`, conforme `SearchCategoriesQuery`. A árvore administrativa inclui inativas; a pública oculta ramificações inativas. Ativação recebe `{ "isActive": true }`. Reordenação recebe `{ "items": [{ "id": 123, "displayOrder": 1 }] }`. Exclusão em lote recebe `{ "ids": [123], "moveProductsToCategoryId": null }`. Na exclusão, `moveProductsToCategoryId` permite realocar produtos; sem destino, os vínculos impedem a exclusão. Subcategorias precisam integrar o conjunto excluído. Exclusão e movimentação ficam na mesma transação.
+
+Cadastro mínimo em `POST /api/categories/add`: `{ "name": "Camisetas", "slug": "camisetas", "isActive": true }`. `description` e `imageUrl` podem ser omitidos, nulos ou vazios; são armazenados como string vazia quando ausentes/nulos, mantendo o limite de 500 caracteres para cada campo. A regra também vale para atualização e lotes. `parentCategoryId` omitido indica raiz e `displayOrder` omitido assume zero. Sucesso retorna 200 com `Result<T>`.
 
 ### Cupons
 
@@ -126,6 +130,19 @@ Uso exclusivo entre serviços: `X-Service-Key` e loja resolvida pelo contexto in
 | `PUT /api/inventory/reservations/{id:long}/commit` | `inventory.manage` | Efetiva uma reserva avulsa; rejeita reservas de pedidos. Sem corpo; baixa reserva avulsa. |
 
 O saldo é controlado por variante/SKU, inclusive para produto simples, que possui variante padrão. Ajuste recebe `quantityChange`, `reason`, `idempotencyKey` e `expectedVersion` opcional. Reserva recebe `idempotencyKey`, `items` com `productVariantId` e `quantity`, e `reference` opcional. Movimentações registram alterações de estoque/reserva, saldo resultante, operação e ator.
+
+O painel deve usar `PUT /api/store/api/inventory/variants/{productVariantId}/adjust` pelo Gateway. `POST /api/products/adjust-stock` não faz parte do contrato. Obtenha o ID da variante em `GET /api/products/{productId}/variants`, inclusive para a variante padrão do produto simples. Exemplo de corpo:
+
+```json
+{
+  "quantityChange": -2,
+  "reason": "Correção de contagem",
+  "idempotencyKey": "ajuste-contagem-20261116-001",
+  "expectedVersion": 3
+}
+```
+
+`quantityChange` é um inteiro diferente de zero (positivo para entrada, negativo para saída); `reason` é obrigatório e tem até 500 caracteres; `idempotencyKey` é obrigatória e tem até 100 caracteres. Gere uma chave por ajuste e reutilize-a apenas nas tentativas do mesmo ajuste. `expectedVersion` pode ser omitido/nulo ou conter a versão positiva retornada por `GET /api/inventory/variants/{id}`. Versão desatualizada retorna 409 `Inventory.StaleVersion`; chave reutilizada com outro conteúdo retorna 409 `Inventory.IdempotencyConflict`. Sucesso retorna 200 com `Result<StockMovementResponse>`: `content` contém a movimentação, `stockAfter` e `reservedAfter`.
 
 Reservar compromete disponibilidade; efetivar realiza a baixa; liberar devolve disponibilidade. Repetições são tratadas pelas chaves/estado da operação. Reservas vinculadas a pedidos são protegidas: `release` e `commit` genéricos retornam **409 / Inventory.OrderReservationProtected**. Somente o ciclo do pedido pode movimentá-las. A expiração genérica atende reservas avulsas; as de pedidos seguem o worker de pedidos. Limites da reserva avulsa: até 100 SKUs distintos, até 10.000 unidades no total e respeito ao `maxItemsPerOrder` da loja quando configurado. A busca de movimentos é paginada, com `productVariantId` opcional.
 
@@ -196,6 +213,8 @@ Criação recebe `CreateVariantRequest`: `details` obrigatório; `pricing` e `di
 | `PUT /api/store-settings` | `settings.manage` | Atualiza limites, moeda e política comercial da loja. UpdateStoreSettingsCommand no corpo. |
 
 GET consulta e PUT atualiza `currencyCode`, `minOrderValue`, `maxItemsPerOrder` opcional, `allowBackorder`, `pendingOrderExpirationMinutes`. São regras da loja, não parâmetros de cobrança enviados pelo comprador. O checkout considera essas regras; o carrinho não reserva estoque. Ainda não há configuração de cotação de frete integrada.
+
+Ambas as operações retornam 200 com `Result<StoreSettings>` e dados em `content`. `/api/store-settings` não emite ETag nem exige If-Match; o frontend não deve esperar 412/428 nesse contrato. ETag e If-Match pertencem às [sessões de edição de aparência](../../Shared/Appearance.md).
 
 ### Carrinho do cliente
 
@@ -384,7 +403,7 @@ O comportamento desses endpoints foi endurecido na branch: preços e snapshots d
 | GET `/api/storefront/me` | Cliente; perfil próprio, DTO direto. |
 | PUT `/api/storefront/me` | Cliente; atualiza perfil próprio, DTO direto. |
 | DELETE `/api/storefront/me` | Cliente; desativa conta própria, sucesso 204. |
-| GET `/api/storefront/store` | Público; dados públicos e configurações expostas da loja, DTO direto. |
+| GET `/api/storefront/store` | Público; `Result<PublicStoreInfoResponse>` com dados públicos e configurações expostas da loja em `content`. |
 | GET `/api/storefront/orders` | Cliente; lista seus pedidos, `page` e `pageSize`. |
 | GET `/api/storefront/orders/{id:long}` | Cliente; detalhe de pedido próprio, com cobrança e histórico. |
 | GET `/api/storefront/products` | Público; listagem antiga paginada por query, array direto por compatibilidade. |

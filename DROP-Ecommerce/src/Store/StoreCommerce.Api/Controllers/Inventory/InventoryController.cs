@@ -22,6 +22,15 @@ public sealed class InventoryController(IMediator mediator) : ControllerBase
         return this.ToActionResult(await mediator.Send(query, ct));
     }
 
+    /// <summary>
+    /// Ajusta o estoque de uma variante/SKU, inclusive a variante padrão de um produto simples.
+    /// </summary>
+    /// <remarks>
+    /// Envie quantityChange (inteiro diferente de zero), reason (até 500 caracteres),
+    /// idempotencyKey (até 100 caracteres) e expectedVersion opcional (inteiro positivo).
+    /// O id da rota é o productVariantId, não o productId. Reutilize a chave somente ao repetir o mesmo ajuste.
+    /// A resposta é Result&lt;StockMovementResponse&gt;, com a movimentação e os saldos em content.
+    /// </remarks>
     [HttpPut("variants/{id:long}/adjust")]
     public async Task<IActionResult> AdjustAsync(long id, [FromBody] AdjustStockRequest request, CancellationToken ct)
     {

@@ -172,14 +172,23 @@ public static class CommerceSecurityRegistration
             // Informa o excesso de requisições e o prazo de espera sem revelar detalhes internos.
             options.OnRejected = async (context, ct) =>
             {
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry))
-                    context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(retry.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                // O limitador de janela deslizante do .NET 9 não fornece RetryAfter.
+                // Uma janela completa é uma espera conservadora quando não houver metadados.
+                var retry = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+                    ? retryAfter
+                    : TimeSpan.FromMinutes(1);
+                context.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retry.TotalSeconds))
+                    .ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-                await context.HttpContext.Response.WriteAsJsonAsync(new
-                {
-                    code = "Security.RateLimited",
-                    message = "Muitas requisições. Tente novamente depois."
-                }, ct);
+                await Results.Problem(
+                    statusCode: StatusCodes.Status429TooManyRequests,
+                    title: "Muitas requisições.",
+                    detail: "Muitas requisições. Tente novamente depois.",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["code"] = "Security.RateLimited",
+                        ["traceId"] = context.HttpContext.TraceIdentifier
+                    }).ExecuteAsync(context.HttpContext);
             };
             // Distribui os limites por IP e operação usando as requisições da janela deslizante.
             foreach (var (name, permits) in new[] { ("auth", settings.AuthRequestsPerMinute), ("refresh", settings.RefreshRequestsPerMinute), ("api", settings.ApiRequestsPerMinute) })

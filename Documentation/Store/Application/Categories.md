@@ -11,6 +11,7 @@ Referência revisada em 03/11/2026. Corpos, acesso e respostas das rotas estão 
 - O pai precisa existir, não estar excluído, estar ativo e pertencer à mesma loja ao criar ou trocar o pai. Editar os outros campos de uma categoria cujo pai foi desativado continua permitido.
 - A alteração de pai considera a árvore final do lote e impede ciclos, inclusive entre duas alterações do mesmo lote. As entidades só são alteradas depois da validação completa.
 - `slug` pode ser omitido, nulo ou vazio. Nesse caso ele é gerado a partir do nome, removendo acentos e substituindo separadores por hífens, com limite de 100 caracteres. O slug informado deve usar letras minúsculas, números e hífens simples.
+- `description` e `imageUrl` são opcionais no cadastro e na atualização, individuais ou em lote. Valores omitidos/nulos são normalizados para string vazia; o limite de 500 caracteres por campo permanece. Cadastro mínimo: `{ "name": "Camisetas", "slug": "camisetas", "isActive": true }`.
 - Slugs de categorias não excluídas são únicos na loja, com validação na Application e índice único filtrado no banco. Uma colisão, inclusive entre slugs gerados no mesmo lote, retorna conflito. A troca simultânea de slugs já ocupados é recusada; use um slug temporário para liberar o valor.
 - Alterações da árvore e dos slugs abrem uma transação e bloqueiam a linha da empresa com `FOR UPDATE`. Isso serializa as operações de categoria da mesma loja.
 

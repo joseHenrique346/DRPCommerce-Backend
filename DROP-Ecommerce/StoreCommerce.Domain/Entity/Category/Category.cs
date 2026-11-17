@@ -61,7 +61,7 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
     #endregion
 
     #region Functions
-    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string? slug, string description, string imageUrl, int displayOrder, bool isActive)
+    public static Category Create(long enterpriseId, long? parentCategoryId, string name, string? slug, string? description, string? imageUrl, int displayOrder, bool isActive)
     {
         BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
         var category = new Category(enterpriseId, null, string.Empty, string.Empty, string.Empty, string.Empty, 0, isActive);
@@ -70,7 +70,7 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         return category;
     }
 
-    public void UpdateDetails(long? parentCategoryId, string name, string? slug, string description, string imageUrl, int displayOrder, bool isActive)
+    public void UpdateDetails(long? parentCategoryId, string name, string? slug, string? description, string? imageUrl, int displayOrder, bool isActive)
     {
         BaseValidate.ValidateNullablePositive(parentCategoryId, nameof(ParentCategoryId));
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
@@ -91,8 +91,8 @@ public class Category : BaseEntity, ITenantEntity, ISoftDeletable
         ParentCategoryId = parentCategoryId;
         Name = name;
         Slug = slug;
-        Description = description;
-        ImageUrl = imageUrl;
+        Description = description ?? string.Empty;
+        ImageUrl = imageUrl ?? string.Empty;
         DisplayOrder = displayOrder;
         IsActive = isActive;
     }
