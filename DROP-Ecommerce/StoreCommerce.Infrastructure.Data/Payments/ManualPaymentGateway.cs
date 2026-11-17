@@ -1,4 +1,5 @@
 using StoreCommerce.Application.Payments;
+using StoreCommerce.Domain.Integrations;
 
 namespace StoreCommerce.Infrastructure.Data.Payments;
 
@@ -13,12 +14,34 @@ public sealed class ManualPaymentGateway : IPaymentGateway
 
     public string Provider => ProviderName;
 
-    public Task<PaymentSession> CreatePaymentAsync(PaymentRequest request, CancellationToken cancellationToken) =>
-        Task.FromResult(new PaymentSession($"manual-{request.EnterpriseId}-{request.OrderId}", null,
-            "Pagamento aguardando confirmação manual da loja.", request.ExpiresAt));
+    public Task<PaymentProviderContext> GetContextAsync(long enterpriseId, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new PaymentProviderContext(Provider, IntegrationEnvironment.Sandbox, $"manual-{enterpriseId}", null));
+    }
 
-    public Task CancelPaymentAsync(string gatewayReference, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task<PaymentSession> CreatePaymentAsync(PaymentRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(CreateSession(request));
+    }
 
-    public Task<RefundResult> RefundAsync(RefundRequest request, CancellationToken cancellationToken) =>
-        Task.FromResult(new RefundResult(true, $"manual-refund-{request.EnterpriseId}-{request.OrderId}", null));
+    public Task<PaymentSession?> RecoverPaymentAsync(PaymentRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult<PaymentSession?>(CreateSession(request));
+    }
+
+    public Task CancelPaymentAsync(string gatewayReference, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task<RefundResult> RefundAsync(RefundRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new RefundResult(true, $"manual-refund-{request.EnterpriseId}-{request.OrderId}", null));
+    }
+
+    private static PaymentSession CreateSession(PaymentRequest request)
+    {
+        return new PaymentSession($"manual-{request.EnterpriseId}-{request.OrderId}", null,
+            "Pagamento aguardando confirmação manual da loja.", request.ExpiresAt);
+    }
 }

@@ -30,6 +30,7 @@ Documentos compartilhados:
 - [Organização dos projetos Security](Shared/Security.md)
 - [Aparência versionada, presets e contratos do frontend](Shared/Appearance.md)
 - [Integrações externas — situação e próximos passos](Shared/PlanejamentoIntegracoes.md)
+- [Conexões de provedores e tentativas de pagamento](Shared/PreparacaoPagamentos.md)
 
 Identidade e autorização:
 

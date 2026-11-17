@@ -58,7 +58,11 @@ public sealed record OrderItemDetailResponse(
 /// </summary>
 public sealed record PaymentInfoResponse(
     string Provider, long MethodId, string Method, long StatusId, string Status, decimal Amount, string Reference,
-    string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt, DateTime? PaidAt, DateTime? RefundedAt);
+    string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt, DateTime? PaidAt, DateTime? RefundedAt,
+    PaymentAttemptInfoResponse? Attempt = null);
+
+public sealed record PaymentAttemptInfoResponse(long Id, PaymentCreationStatus CreationStatus, string CurrencyCode,
+    string? PreferenceId, IReadOnlyList<string> PaymentIds);
 
 public sealed record OrderHistoryResponse(
     long? FromStatusId, string? FromStatus, long ToStatusId, string ToStatus, long? FromPaymentStatusId, long ToPaymentStatusId,
@@ -114,13 +118,13 @@ public sealed record OrderDetailResponse(
             order.ListOrderItem.OrderBy(item => item.Id).Select(item => new OrderItemDetailResponse(
                 item.Id, item.ProductId, item.ProductVariantId, item.ServiceId, item.ItemName, item.VariantName, item.SKU,
                 item.Quantity, item.UnitPrice, item.DiscountAmount, item.TotalPrice)).ToList(),
-            payment is null ? null : PaymentFromEntity(payment),
+            payment is null ? null : PaymentFromEntity(payment, order.ListPaymentAttempt.FirstOrDefault(Attempt => Attempt.TransactionId == payment.Id)),
             order.ListShipment.OrderBy(shipment => shipment.Id).Select(ShipmentInfoResponse.FromEntity).ToList(),
             order.ListStatusHistory.OrderBy(history => history.ChangedAt).ThenBy(history => history.Id)
                 .Select(history => OrderHistoryResponse.FromEntity(history, backoffice)).ToList());
     }
 
-    private static PaymentInfoResponse PaymentFromEntity(Transaction payment)
+    private static PaymentInfoResponse PaymentFromEntity(Transaction payment, PaymentAttempt? attempt)
     {
         var session = PaymentSessionPayload.Parse(payment.GatewayPayload);
 
@@ -129,7 +133,9 @@ public sealed record OrderDetailResponse(
             payment.TransactionStatusId,
             BaseStaticEntity.GetAll<TransactionStatus>().First(status => status.Id == payment.TransactionStatusId).Description,
             payment.Amount, payment.GatewayReference, session?.CheckoutUrl, session?.Instructions, session?.ExpiresAt,
-            payment.PaidAt, payment.RefundedAt);
+            payment.PaidAt, payment.RefundedAt,
+            attempt is null ? null : new PaymentAttemptInfoResponse(attempt.Id, attempt.Status, attempt.CurrencyCode,
+                attempt.PreferenceId, attempt.Payments.OrderBy(Payment => Payment.Id).Select(Payment => Payment.PaymentId).ToList()));
     }
 }
 

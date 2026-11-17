@@ -1,5 +1,7 @@
 # Integrações externas — situação e próximos passos
 
+Atualização de 16/11/2026 na #93: implementada a [fundação de conexões e tentativas de pagamento](PreparacaoPagamentos.md), com tokens protegidos, snapshot financeiro, IDs separados e recuperação de criação interrompida. O adapter ativo continua manual; OAuth, webhooks e adapters reais permanecem pendentes. As tabelas abaixo descrevem a base anterior e devem ser lidas junto dessa atualização.
+
 Atualizado em 03/11/2026. O Store já possui catálogo por SKU, estoque, carrinho, checkout, cupons e ciclo do pedido. **Mercado Pago e Melhor Envio foram escolhidos**, e as contas já existem; os adapters ainda não foram implementados. Emissão fiscal depende de definição/contratação de API e habilitação do emitente.
 
 O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisito para escolher essas duas integrações. Este documento registra a preparação restante; não significa que houve homologação, transação real ou contratação fiscal.

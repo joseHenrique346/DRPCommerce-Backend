@@ -42,6 +42,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasForeignKey(e => e.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Navigation(e => e.ListStatusHistory).HasField("_listStatusHistory");
+        builder.Navigation(Order => Order.ListPaymentAttempt).HasField("_listPaymentAttempt");
 
         // Mesma chave de checkout do mesmo cliente devolve o mesmo pedido.
         builder.HasIndex(e => new { e.EnterpriseId, e.CustomerId, e.IdempotencyKey }).IsUnique().HasFilter("idempotency_key IS NOT NULL");

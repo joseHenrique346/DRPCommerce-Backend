@@ -13,12 +13,17 @@ using StoreCommerce.Infrastructure.Data.Repositories;
 using StoreCommerce.Application.Carts;
 using StoreCommerce.Application.Inventory;
 using StoreCommerce.Domain.Entity;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
+using StoreCommerce.Application.Integrations;
+using StoreCommerce.Application.Payments;
+using StoreCommerce.Infrastructure.Data.Integrations;
 
 namespace StoreCommerce.Infrastructure.Data;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddStoreInfrastructure(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddStoreInfrastructure(this IServiceCollection services, string connectionString, IConfiguration? configuration = null)
     {
         services.AddDbContext<StoreCommerceDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -46,6 +51,31 @@ public static class DependencyInjection
         services.AddScoped<CartWriteScope>();
         services.AddScoped<StoreCommerce.Application.Orders.OrderWorkflowScope>();
         services.AddScoped<StoreCommerce.Application.Carts.CustomerAddressWriteScope>();
+        services.AddScoped<IntegrationWriteScope>();
+        services.AddScoped<IProviderConnectionStore, ProviderConnectionStore>();
+        services.AddScoped<IProviderTokenProtector, ProviderTokenProtector>();
+        services.AddScoped<IPaymentAttemptStore, Payments.PaymentAttemptStore>();
+        services.AddHostedService<Workers.PaymentAttemptReconciliationWorker>();
+
+        var integrationOptions = configuration?.GetSection("ProviderIntegrations");
+
+        if (integrationOptions is not null)
+            services.Configure<ProviderIntegrationOptions>(integrationOptions);
+        else
+            services.AddOptions<ProviderIntegrationOptions>();
+
+        var protection = services.AddDataProtection().SetApplicationName("DRPCommerce.StoreIntegrations");
+        var keyRingPath = integrationOptions?["KeyRingPath"];
+        var certificate = integrationOptions?["KeyEncryptionCertificateThumbprint"];
+
+        if (!string.IsNullOrWhiteSpace(keyRingPath))
+            protection.PersistKeysToFileSystem(new DirectoryInfo(keyRingPath));
+
+        if (!string.IsNullOrWhiteSpace(certificate))
+            protection.ProtectKeysWithCertificate(certificate);
+        else if (OperatingSystem.IsWindows())
+            protection.ProtectKeysWithDpapi();
+
         services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
         // Troque pelo adaptador do gateway real quando a integração for implementada.
         services.AddScoped<StoreCommerce.Application.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();

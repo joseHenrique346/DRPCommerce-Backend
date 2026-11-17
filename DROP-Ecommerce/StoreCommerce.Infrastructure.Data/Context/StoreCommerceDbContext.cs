@@ -19,12 +19,14 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Carts.CartWriteScope _cartWrites;
     private readonly StoreCommerce.Application.Orders.OrderWorkflowScope _orderWorkflow;
     private readonly StoreCommerce.Application.Carts.CustomerAddressWriteScope _customerAddressWrites;
+    private readonly StoreCommerce.Application.Integrations.IntegrationWriteScope _integrationWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
         InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites,
         StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow,
-        StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites)
+        StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites,
+        StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -35,6 +37,7 @@ public partial class StoreCommerceDbContext : DbContext
         _cartWrites = cartWrites;
         _orderWorkflow = orderWorkflow;
         _customerAddressWrites = customerAddressWrites;
+        _integrationWrites = integrationWrites;
     }
 
     #region DbSets
@@ -155,6 +158,9 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<CustomerAddress>(modelBuilder);
         ApplyTenantFilter<OrderStatusHistory>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
+        modelBuilder.Entity<ProviderConnection>().HasQueryFilter(ProviderConnection => ProviderConnection.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(PaymentAttempt => PaymentAttempt.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentExternalPayment>().HasQueryFilter(PaymentExternalPayment => PaymentExternalPayment.EnterpriseId == _tenantProvider.GetEnterpriseId());
 
         // Dependents of filtered aggregates must use the same visibility rules.
         modelBuilder.Entity<OrderItem>().HasQueryFilter(e =>

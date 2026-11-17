@@ -43,6 +43,9 @@ public partial class StoreCommerceDbContext
                 Shipment shipment => (entry.State == EntityState.Added || entry.State == EntityState.Modified) && OwnsOrder(shipment.Order, shipment.OrderId),
                 OrderStatusHistory history => entry.State == EntityState.Added && OwnsOrder(history.Order, history.OrderId),
                 Transaction transaction => OwnsOrder(transaction.Order, transaction.OrderId),
+                PaymentAttempt attempt => entry.State == EntityState.Added && OwnsOrder(attempt.Order, attempt.OrderId) &&
+                    attempt.Transaction.Order == attempt.Order && attempt.Transaction.Amount == attempt.Amount &&
+                    attempt.Transaction.CustomerId == attempt.CustomerId,
                 CouponRedemption redemption => OwnsOrder(redemption.Order, redemption.OrderId),
                 Coupon => entry.State == EntityState.Modified && OnlyModified(entry, nameof(Coupon.UsedCount)),
                 StockReservation => true,

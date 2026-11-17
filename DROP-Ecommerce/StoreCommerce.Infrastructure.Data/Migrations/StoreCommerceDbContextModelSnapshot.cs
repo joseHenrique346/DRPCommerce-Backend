@@ -2498,6 +2498,236 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("transferencia_propriedade", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentAttempt", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<string>("CustomerEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("customer_email");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("customer_name");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("ExternalAccountId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<string>("ExternalReference")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("external_reference");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("instructions");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime>("NextReconciliationAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_reconciliation_at");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("PreferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("preference_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
+                    b.Property<long?>("ProviderConnectionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("provider_connection_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("transaction_id");
+
+                    b.Property<long>("TransactionMethodId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("transaction_method_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tentativa_pagamento");
+
+                    b.HasAlternateKey("Id", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasName("ak_tentativa_pagamento_id_enterprise_id_provider_environment_e~");
+
+                    b.HasIndex("ExternalReference")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tentativa_pagamento_external_reference");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tentativa_pagamento_idempotency_key");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_tentativa_pagamento_order_id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tentativa_pagamento_transaction_id");
+
+                    b.HasIndex("EnterpriseId", "OrderId")
+                        .HasDatabaseName("ix_tentativa_pagamento_enterprise_id_order_id");
+
+                    b.HasIndex("Status", "NextReconciliationAt")
+                        .HasDatabaseName("ix_tentativa_pagamento_status_next_reconciliation_at");
+
+                    b.HasIndex("Provider", "Environment", "ExternalAccountId", "PreferenceId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tentativa_pagamento_provider_environment_external_account_i~")
+                        .HasFilter("preference_id IS NOT NULL");
+
+                    b.HasIndex("ProviderConnectionId", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasDatabaseName("ix_tentativa_pagamento_provider_connection_id_enterprise_id_pr~");
+
+                    b.ToTable("tentativa_pagamento", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentExternalPayment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<string>("ExternalAccountId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<long>("PaymentAttemptId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_attempt_id");
+
+                    b.Property<string>("PaymentId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("payment_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pagamento_externo");
+
+                    b.HasIndex("Provider", "Environment", "ExternalAccountId", "PaymentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagamento_externo_provider_environment_external_account_id_~");
+
+                    b.HasIndex("PaymentAttemptId", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasDatabaseName("ix_pagamento_externo_payment_attempt_id_enterprise_id_provider~");
+
+                    b.ToTable("pagamento_externo", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>
                 {
                     b.Property<long>("Id")
@@ -3059,6 +3289,112 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                             t.HasCheckConstraint("ck_variante_versao", "version > 0");
                         });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderConnection", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("AccessTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("access_token_expires_at");
+
+                    b.Property<long>("AuthorizedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("authorized_by_user_id");
+
+                    b.Property<DateTime>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("connected_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DisconnectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("disconnected_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<string>("ExternalAccountId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<bool>("IsConnected")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_connected");
+
+                    b.Property<string>("ProtectedTokens")
+                        .IsRequired()
+                        .HasMaxLength(64000)
+                        .HasColumnType("character varying(64000)")
+                        .HasColumnName("protected_tokens");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
+                    b.Property<DateTime?>("RefreshLeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refresh_lease_expires_at");
+
+                    b.Property<Guid?>("RefreshLeaseToken")
+                        .HasColumnType("uuid")
+                        .HasColumnName("refresh_lease_token");
+
+                    b.Property<DateTime?>("RefreshTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refresh_token_expires_at");
+
+                    b.Property<DateTime?>("RefreshedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("refreshed_at");
+
+                    b.Property<string>("Scopes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("scopes");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_conexao_provedor");
+
+                    b.HasAlternateKey("Id", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasName("ak_conexao_provedor_id_enterprise_id_provider_environment_exte~");
+
+                    b.HasIndex("AuthorizedByUserId")
+                        .HasDatabaseName("ix_conexao_provedor_authorized_by_user_id");
+
+                    b.HasIndex("EnterpriseId", "Provider", "Environment")
+                        .IsUnique()
+                        .HasDatabaseName("ix_conexao_provedor_enterprise_id_provider_environment");
+
+                    b.ToTable("conexao_provedor", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>
@@ -5660,6 +5996,49 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("RecipientMembership");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentAttempt", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Order", "Order")
+                        .WithMany("ListPaymentAttempt")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tentativa_pagamento_pedido_order_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tentativa_pagamento_transacao_transaction_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.ProviderConnection", "ProviderConnection")
+                        .WithMany()
+                        .HasForeignKey("ProviderConnectionId", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasPrincipalKey("Id", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tentativa_pagamento_conexao_provedor_provider_connection_id~");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("ProviderConnection");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentExternalPayment", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.PaymentAttempt", "PaymentAttempt")
+                        .WithMany("Payments")
+                        .HasForeignKey("PaymentAttemptId", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .HasPrincipalKey("Id", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_pagamento_externo_tentativa_pagamento_payment_attempt_id_en~");
+
+                    b.Navigation("PaymentAttempt");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Category", "Category")
@@ -5700,6 +6079,23 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasConstraintName("fk_variante_produto_produto_enterprise_id_product_id");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderConnection", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorizedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conexao_provedor_usuario_authorized_by_user_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conexao_provedor_empresa_enterprise_id");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>
@@ -6106,11 +6502,18 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                     b.Navigation("ListOrderItem");
 
+                    b.Navigation("ListPaymentAttempt");
+
                     b.Navigation("ListShipment");
 
                     b.Navigation("ListStatusHistory");
 
                     b.Navigation("ListTransaction");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentAttempt", b =>
+                {
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>

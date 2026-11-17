@@ -60,6 +60,8 @@ public class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public IReadOnlyCollection<Shipment> ListShipment => _listShipment.AsReadOnly();
     private readonly List<Transaction> _listTransaction = [];
     public IReadOnlyCollection<Transaction> ListTransaction => _listTransaction.AsReadOnly();
+    private readonly List<PaymentAttempt> _listPaymentAttempt = [];
+    public IReadOnlyCollection<PaymentAttempt> ListPaymentAttempt => _listPaymentAttempt.AsReadOnly();
     #endregion
 
     #endregion

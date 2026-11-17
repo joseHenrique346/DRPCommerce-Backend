@@ -1,3 +1,5 @@
+using StoreCommerce.Domain.Integrations;
+
 namespace StoreCommerce.Application.Payments;
 
 /// <summary>
@@ -10,6 +12,14 @@ public interface IPaymentGateway
     /// Identificador gravado em Transaction.GatewayProvider.
     /// </summary>
     string Provider { get; }
+
+    Task<PaymentProviderContext> GetContextAsync(long enterpriseId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Consulta uma criação possivelmente concluída usando a correlação persistida. null significa resultado
+    /// ainda desconhecido; nunca deve criar outra cobrança neste método.
+    /// </summary>
+    Task<PaymentSession?> RecoverPaymentAsync(PaymentRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Cria a cobrança do pedido. A confirmação é assíncrona: o resultado chega depois (webhook ou confirmação manual)
@@ -39,12 +49,18 @@ public sealed record PaymentRequest(
     string CurrencyCode,
     long TransactionMethodId,
     DateTime ExpiresAt,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    PaymentProviderContext Context,
+    string ExternalReference);
+
+public sealed record PaymentProviderContext(string Provider, IntegrationEnvironment Environment,
+    string ExternalAccountId, long? ProviderConnectionId);
 
 /// <summary>
 /// Cobrança criada. CheckoutUrl (cartão/redirecionamento) e Instructions (código Pix, linha digitável) são exibidos ao cliente.
 /// </summary>
-public sealed record PaymentSession(string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt);
+public sealed record PaymentSession(string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt,
+    string? PreferenceId = null, string? PaymentId = null);
 
 public sealed record RefundRequest(long EnterpriseId, long OrderId, string GatewayReference, decimal Amount, string Reason, string IdempotencyKey);
 

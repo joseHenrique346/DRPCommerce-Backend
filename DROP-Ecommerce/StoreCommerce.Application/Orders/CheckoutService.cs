@@ -11,8 +11,8 @@ namespace StoreCommerce.Application.Orders;
 /// <summary>
 /// Finaliza a compra dos itens selecionados do carrinho: recalcula tudo com os dados atuais, reserva o estoque até o prazo
 /// de pagamento, cria o pedido pendente com a cobrança e tira do carrinho os itens comprados — tudo em uma transação.
-/// A cobrança no gateway é criada em seguida; repetir o checkout com a mesma chave devolve o mesmo pedido e recria
-/// a cobrança se ela ainda não existir.
+/// A intenção de pagamento é persistida junto do pedido. A chamada externa ocorre depois do commit;
+/// repetição ou interrupção recupera a mesma tentativa sem repetir uma criação de resultado desconhecido.
 /// </summary>
 public sealed class CheckoutService(
     IOrderRepository orders,
@@ -29,6 +29,8 @@ public sealed class CheckoutService(
     StoreSettingsReader storeSettings,
     OrderLifecycleService lifecycle,
     IPaymentGateway gateway,
+    IPaymentAttemptStore paymentAttempts,
+    PaymentAttemptService paymentAttemptService,
     OrderWorkflowScope scope,
     IUnitOfWork unitOfWork,
     ICurrentIdentity actor,
@@ -54,6 +56,7 @@ public sealed class CheckoutService(
         var settings = await storeSettings.GetCurrentAsync(ct);
         var visible = categories.Content!.Select(category => category.Id).ToHashSet();
         var now = time.GetUtcNow().UtcDateTime;
+        var providerContext = await gateway.GetContextAsync(enterpriseId, ct);
         long orderId;
 
         await using (var transaction = await unitOfWork.BeginTransactionAsync(ct))
@@ -64,6 +67,8 @@ public sealed class CheckoutService(
             if (await orders.FindByIdempotencyKeyAsync(enterpriseId, customerId, key, ct) is { } concurrent)
             {
                 await transaction.CommitAsync(ct);
+                // Remove a transação atual do DbContext antes do processamento independente do pagamento.
+                await transaction.DisposeAsync();
 
                 return await CompleteAsync(enterpriseId, customerId, concurrent.Id, ct);
             }
@@ -102,7 +107,14 @@ public sealed class CheckoutService(
 
             ReserveCouponUse(order, now);
             ReserveStock(order, selected, settings, key, expiresAt, now);
-            transactions.Add(Transaction.CreatePendingPayment(order, request.PaymentMethodId, gateway.Provider));
+            var payment = Transaction.CreatePendingPayment(order, request.PaymentMethodId, gateway.Provider);
+            transactions.Add(payment);
+
+            if (order.TotalAmount > 0)
+                paymentAttempts.Add(PaymentAttempt.Create(payment, providerContext.Provider, providerContext.Environment,
+                    providerContext.ExternalAccountId, providerContext.ProviderConnectionId, settings.CurrencyCode,
+                    customer.FullName, customer.Email.Value, expiresAt, now));
+
             order.LockForPayment();
 
             foreach (var item in selected)
@@ -196,7 +208,7 @@ public sealed class CheckoutService(
 
     /// <summary>
     /// Garante a cobrança do pedido: pedidos sem valor a pagar (ex.: cupom de 100%) são confirmados na hora;
-    /// os demais recebem a cobrança do gateway, criada uma única vez.
+    /// os demais processam a intenção persistida com exclusão mútua entre requisições e workers.
     /// </summary>
     private async Task<OrderDetailResponse> CompleteAsync(long enterpriseId, long customerId, long orderId, CancellationToken ct)
     {
@@ -208,19 +220,19 @@ public sealed class CheckoutService(
             await lifecycle.ConfirmPaymentAsync(enterpriseId, orderId, OrderChangeSource.System, null, null, "sem-cobranca", 0,
                 "Pedido sem valor a pagar", ct);
         }
-        else if (order.IsAwaitingPayment && order.ListTransaction.FirstOrDefault(item => item.IsPendingPayment) is { } payment &&
-            string.IsNullOrEmpty(payment.GatewayReference))
+        else if (order.IsAwaitingPayment)
         {
-            var customer = await customers.FindAsync(item => item.Id == customerId, ct, tracking: false);
-            var settings = await storeSettings.GetForEnterpriseAsync(enterpriseId, ct);
-            var session = await gateway.CreatePaymentAsync(new PaymentRequest(enterpriseId, order.Id, customerId, customer?.FullName ?? string.Empty,
-                customer?.Email.Value ?? string.Empty, payment.Amount, settings.CurrencyCode, payment.TransactionMethodId,
-                order.PaymentExpiresAt ?? time.GetUtcNow().UtcDateTime, $"order-{order.Id}"), ct);
+            var attemptId = await paymentAttempts.FindForOrderAsync(enterpriseId, orderId, ct);
 
-            payment.AttachGatewayPayment(session.Reference, new PaymentSessionPayload(session.CheckoutUrl, session.Instructions, session.ExpiresAt).Serialize());
+            if (attemptId is null)
+            {
+                var settings = await storeSettings.GetForEnterpriseAsync(enterpriseId, ct);
+                await paymentAttempts.EnsureLegacyAttemptAsync(enterpriseId, orderId, settings.CurrencyCode, ct);
+                attemptId = await paymentAttempts.FindForOrderAsync(enterpriseId, orderId, ct);
+            }
 
-            using (scope.Begin(enterpriseId, customerId))
-                await unitOfWork.CommitAsync(ct);
+            if (attemptId is long id)
+                await paymentAttemptService.ProcessAsync(enterpriseId, id, ct);
         }
 
         var detail = await orders.GetDetailAsync(orderId, customerId, ct)

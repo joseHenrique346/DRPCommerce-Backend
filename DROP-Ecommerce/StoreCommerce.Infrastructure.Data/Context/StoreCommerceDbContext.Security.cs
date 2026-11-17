@@ -42,6 +42,9 @@ public partial class StoreCommerceDbContext
         if (changes.Count == 0)
             return;
 
+        if (GuardIntegrationWrites(changes))
+            return;
+
         if (GuardOrderWorkflowWrites(changes))
             return;
 
@@ -62,6 +65,9 @@ public partial class StoreCommerceDbContext
 
         foreach (var entry in changes)
         {
+            if (entry.Entity is ProviderConnection or PaymentAttempt or PaymentExternalPayment)
+                throw new SecurityFailure(403, "Integration.UseWorkflow", "Use os fluxos específicos de integração.");
+
             if (entry.Entity is User or Enterprise or EnterpriseMembership or EnterpriseDomain or AccessRole or Permission or
                 AccessRolePermission or MembershipAccessRole or UserRefreshToken or CustomerRefreshToken or UserActionToken or CustomerActionToken or EnterpriseInvitation or InvitationAccessRole or OwnershipTransfer)
                 throw new SecurityFailure(403, "Security.UseIdentityWorkflow", "Use os fluxos específicos de identidade e gestão de acesso.");
