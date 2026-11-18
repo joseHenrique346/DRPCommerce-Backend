@@ -28,14 +28,16 @@ public interface IPaymentGateway
     Task<PaymentSession> CreatePaymentAsync(PaymentRequest request, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Cancela uma cobrança ainda não paga (ex.: Pix ou boleto de um pedido expirado).
+    /// Executa uma intenção persistida de cancelamento ou estorno, usando sua chave e seu contexto congelados.
+    /// Falha sem efeito só pode ser afirmada após comprovação do provedor.
     /// </summary>
-    Task CancelPaymentAsync(string gatewayReference, CancellationToken cancellationToken);
+    Task<PaymentOperationResult> ExecuteOperationAsync(PaymentOperationRequest request, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Estorna um pagamento capturado.
+    /// Consulta a operação pela correlação persistida, sem executar outro cancelamento/estorno.
+    /// Ausência de confirmação deve retornar OutcomeUnknown; aceitação ainda não concluída retorna Pending.
     /// </summary>
-    Task<RefundResult> RefundAsync(RefundRequest request, CancellationToken cancellationToken);
+    Task<PaymentOperationResult> RecoverOperationAsync(PaymentOperationRequest request, CancellationToken cancellationToken);
 }
 
 /// <param name="IdempotencyKey">Chave estável por pedido, para o gateway não cobrar duas vezes.</param>
@@ -61,10 +63,6 @@ public sealed record PaymentProviderContext(string Provider, IntegrationEnvironm
 /// </summary>
 public sealed record PaymentSession(string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt,
     string? PreferenceId = null, string? PaymentId = null);
-
-public sealed record RefundRequest(long EnterpriseId, long OrderId, string GatewayReference, decimal Amount, string Reason, string IdempotencyKey);
-
-public sealed record RefundResult(bool Succeeded, string Reference, string? FailureReason);
 
 /// <summary>
 /// Resultado de pagamento informado pelo gateway (webhook) ou pelo backoffice (confirmação manual).

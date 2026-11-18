@@ -12,7 +12,7 @@ O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisit
 | --- | --- | --- |
 | Venda Store | Checkout idempotente, totais do servidor, compromisso de estoque/cupom, numeração e histórico. | Ligar pagamento e frete reais preservando essas invariantes. |
 | Pagamento | IPaymentGateway, sessão/instruções e aplicação interna de resultado; ManualPaymentGateway registrado. | Adapter Mercado Pago, conexão por loja, notificações validadas, consulta e reconciliação. |
-| Reembolso | Permissão orders.refund no cancelamento pago, devolução de estoque/cupom e registro manual. | Dinheiro devolvido pelo provedor, estado pendente e recuperação; chamada externa fora da transação com lock. |
+| Reembolso | Intenção persistida, I/O fora do lock, estados financeiros e recuperação por consulta; confirmação manual auditada. | Adapter real de execução/consulta e homologação de devolução no provedor. |
 | Frete | Dimensões/peso por produto e sobrescritas por SKU; Shipment com dados de envio. | Cotar, selecionar, congelar custo, comprar/gerar/imprimir etiqueta e rastrear pelo Melhor Envio. ShippingCost permanece zero no cálculo atual. |
 | Fiscal | Entidade Invoice e referências comerciais. | Emitente/perfil fiscal, transmissão, autorização, XML/DANFE, consulta e cancelamento. |
 | Drop | Evento, inscrição, entrada na fila e consultas privadas. | Admissão, reserva no estoque canônico, correlação com venda Store e recuperação entre bancos. |
@@ -35,7 +35,7 @@ Fontes internas: [checkout/pedidos](../Store/Application/OrdersAndCheckout.md), 
 4. Validar notificação e consultar o pagamento na API; retorno do navegador não confirma venda. Conferir conta, ambiente, valor, moeda e correlação antes de aplicar resultado.
 5. Deduplicar callbacks e manter worker de reconciliação. Timeout pode ter resultado desconhecido; não repetir efeitos financeiros cegamente.
 6. Tratar pagamento depois de expiração do pedido sem vender novamente o estoque já liberado.
-7. Refatorar estorno para intenção persistida, chamada externa fora do lock e confirmação/reconciliação. O comportamento do adapter manual não basta para um provedor real.
+7. A base de [cancelamento/estorno persistido e recuperável](CancelamentoEstorno.md) está implementada. Falta ligar e homologar execução/consulta no adapter real.
 
 Detalhes de endpoint, autenticação, requisitos de conta e disponibilidade devem ser confirmados na documentação oficial do produto escolhido durante a implementação. Não há webhook público Mercado Pago pronto apenas por existir ApplyPaymentResultCommand.
 

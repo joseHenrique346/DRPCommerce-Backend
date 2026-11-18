@@ -2758,6 +2758,179 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("pagamento_externo", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentOperation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("ActorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<long?>("ConfirmedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("confirmed_by_user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CurrencyCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int?>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<string>("ExternalAccountId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<string>("ExternalReference")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("external_reference");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lease_token");
+
+                    b.Property<string>("ManualConfirmationNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("manual_confirmation_note");
+
+                    b.Property<DateTime>("NextReconciliationAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_reconciliation_at");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("order_id");
+
+                    b.Property<long?>("PaymentAttemptId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_attempt_id");
+
+                    b.Property<string>("PaymentId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("payment_id");
+
+                    b.Property<long?>("PaymentTransactionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_transaction_id");
+
+                    b.Property<string>("PreferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("preference_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("provider");
+
+                    b.Property<long?>("ProviderConnectionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("provider_connection_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("ResolutionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resolution_code");
+
+                    b.Property<string>("ResultReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("result_reference");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer")
+                        .HasColumnName("source");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_operacao_pagamento");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_operacao_pagamento_idempotency_key");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_operacao_pagamento_order_id");
+
+                    b.HasIndex("PaymentAttemptId")
+                        .HasDatabaseName("ix_operacao_pagamento_payment_attempt_id");
+
+                    b.HasIndex("PaymentTransactionId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ix_operacao_pagamento_payment_transaction_id_kind");
+
+                    b.HasIndex("Status", "NextReconciliationAt")
+                        .HasDatabaseName("ix_operacao_pagamento_status_next_reconciliation_at");
+
+                    b.HasIndex("EnterpriseId", "OrderId", "Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ix_operacao_pagamento_enterprise_id_order_id_kind")
+                        .HasFilter("payment_transaction_id IS NULL");
+
+                    b.ToTable("operacao_pagamento", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>
                 {
                     b.Property<long>("Id")
@@ -6072,6 +6245,30 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("PaymentAttempt");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentOperation", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Order", "Order")
+                        .WithMany("ListPaymentOperation")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_operacao_pagamento_pedido_order_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.PaymentAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentAttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_operacao_pagamento_tentativa_pagamento_payment_attempt_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_operacao_pagamento_transacao_payment_transaction_id");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.Category", "Category")
@@ -6536,6 +6733,8 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ListOrderItem");
 
                     b.Navigation("ListPaymentAttempt");
+
+                    b.Navigation("ListPaymentOperation");
 
                     b.Navigation("ListShipment");
 

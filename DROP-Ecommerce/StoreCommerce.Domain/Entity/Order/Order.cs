@@ -267,6 +267,16 @@ public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
         Transition(OrderStatusId, OrderPaymentStatus.FullRefund.Id, source, actorId, reason, now);
     }
 
+    public void RegisterCancelledPaymentCapture(DateTime now)
+    {
+        if (!IsCancelled)
+            throw new ArgumentException("A captura tardia exige um pedido cancelado.");
+
+        if (OrderPaymentStatusId != OrderPaymentStatus.Paid.Id)
+            Transition(OrderStatusId, OrderPaymentStatus.Paid.Id, OrderChangeSource.PaymentGateway, null,
+                "Pagamento aprovado após cancelamento; estorno solicitado", now);
+    }
+
     /// <summary>
     /// Status em que o pedido conta como compra concluída no histórico do cliente (condições de cupom).
     /// </summary>

@@ -11,6 +11,7 @@ public partial class StoreCommerceDbContext
     public DbSet<ProviderConnection> ProviderConnections => Set<ProviderConnection>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<PaymentExternalPayment> PaymentExternalPayments => Set<PaymentExternalPayment>();
+    public DbSet<PaymentOperation> PaymentOperations => Set<PaymentOperation>();
 
     private bool GuardIntegrationWrites(List<EntityEntry> changes)
     {

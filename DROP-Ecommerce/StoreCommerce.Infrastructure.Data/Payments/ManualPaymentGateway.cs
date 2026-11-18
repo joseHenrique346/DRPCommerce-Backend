@@ -1,11 +1,12 @@
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Integrations;
+using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Infrastructure.Data.Payments;
 
 /// <summary>
 /// Gateway provisório: não chama serviço externo. A cobrança fica pendente até o backoffice confirmar o recebimento,
-/// e o estorno é registrado como concluído para ser feito fora do sistema. Substitua pelo adaptador do gateway real
+/// e o estorno só é concluído após confirmação explícita do operador. Substitua pelo adaptador do gateway real
 /// no registro de dependências.
 /// </summary>
 public sealed class ManualPaymentGateway : IPaymentGateway
@@ -29,14 +30,18 @@ public sealed class ManualPaymentGateway : IPaymentGateway
         return Task.FromResult<PaymentSession?>(CreateSession(request));
     }
 
-    public Task CancelPaymentAsync(string gatewayReference, CancellationToken cancellationToken)
+    public Task<PaymentOperationResult> ExecuteOperationAsync(PaymentOperationRequest request, CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
+        var result = request.Kind == PaymentOperationKind.Cancel
+            ? new PaymentOperationResult(PaymentOperationStatus.Succeeded, $"manual-cancel-{request.IdempotencyKey}")
+            : new PaymentOperationResult(PaymentOperationStatus.AwaitingManualConfirmation);
+
+        return Task.FromResult(result);
     }
 
-    public Task<RefundResult> RefundAsync(RefundRequest request, CancellationToken cancellationToken)
+    public Task<PaymentOperationResult> RecoverOperationAsync(PaymentOperationRequest request, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new RefundResult(true, $"manual-refund-{request.EnterpriseId}-{request.OrderId}", null));
+        return ExecuteOperationAsync(request, cancellationToken);
     }
 
     private static PaymentSession CreateSession(PaymentRequest request)

@@ -65,7 +65,7 @@ public partial class StoreCommerceDbContext
 
         foreach (var entry in changes)
         {
-            if (entry.Entity is ProviderConnection or PaymentAttempt or PaymentExternalPayment)
+            if (entry.Entity is ProviderConnection or PaymentAttempt or PaymentExternalPayment or PaymentOperation)
                 throw new SecurityFailure(403, "Integration.UseWorkflow", "Use os fluxos específicos de integração.");
 
             if (entry.Entity is User or Enterprise or EnterpriseMembership or EnterpriseDomain or AccessRole or Permission or

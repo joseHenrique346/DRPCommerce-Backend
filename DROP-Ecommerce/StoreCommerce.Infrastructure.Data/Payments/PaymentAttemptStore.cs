@@ -61,7 +61,7 @@ public sealed class PaymentAttemptStore(StoreCommerceDbContext context, Integrat
     public Task<List<PaymentAttemptKey>> GetDueAsync(DateTime now, int take, CancellationToken ct)
     {
         return context.PaymentAttempts.IgnoreQueryFilters().AsNoTracking()
-            .Where(Attempt => Attempt.Status != PaymentCreationStatus.Created && Attempt.NextReconciliationAt <= now &&
+            .Where(Attempt => Attempt.Status != PaymentCreationStatus.Created && Attempt.Status != PaymentCreationStatus.Aborted && Attempt.NextReconciliationAt <= now &&
                 (Attempt.LeaseExpiresAt == null || Attempt.LeaseExpiresAt <= now) &&
                 (Attempt.Status != PaymentCreationStatus.Requested ||
                     (Attempt.ExpiresAt > now && Attempt.Order.OrderStatusId == OrderStatus.Pending.Id && !Attempt.Order.IsDeleted)))
@@ -74,7 +74,7 @@ public sealed class PaymentAttemptStore(StoreCommerceDbContext context, Integrat
         var attempt = await context.PaymentAttempts.IgnoreQueryFilters().AsNoTracking()
             .SingleOrDefaultAsync(Attempt => Attempt.Id == attemptId && Attempt.EnterpriseId == enterpriseId, ct);
 
-        if (attempt is null || attempt.Status == PaymentCreationStatus.Created || attempt.NextReconciliationAt > now || attempt.LeaseExpiresAt > now)
+        if (attempt is null || attempt.Status is PaymentCreationStatus.Created or PaymentCreationStatus.Aborted || attempt.NextReconciliationAt > now || attempt.LeaseExpiresAt > now)
             return null;
 
         var lease = Guid.NewGuid();

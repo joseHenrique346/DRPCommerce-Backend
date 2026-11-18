@@ -169,6 +169,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         return _dbSet.AsNoTracking()
             .Include(e => e.ListOrderItem)
             .Include(e => e.ListTransaction)
+            .Include(Order => Order.ListPaymentOperation)
             .Include(Order => Order.ListPaymentAttempt).ThenInclude(Attempt => Attempt.Payments)
             .Include(e => e.ListStatusHistory)
             .Include(e => e.ListShipment)

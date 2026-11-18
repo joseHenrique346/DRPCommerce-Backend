@@ -74,13 +74,33 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
     }
 
     /// <summary>
-    /// Cancela pedidos pendentes, confirmados ou em processamento. Devolve estoque e cupom e estorna o pagamento, se houver.
+    /// Cancela pedidos pendentes, confirmados ou em processamento. Devolve estoque e cupom e solicita o estorno, se houver.
     /// Exige orders.cancel e, quando o pedido está pago, também orders.refund.
     /// </summary>
     [HttpPost("{id:long}/cancel")]
     public async Task<IActionResult> CancelAsync(long id, [FromBody] CancelOrderRequest request, CancellationToken ct)
     {
         return this.ToActionResult(await _mediator.Send(new CancelOrderCommand(id, request.Reason), ct));
+    }
+
+    /// <summary>
+    /// Reagenda uma falha comprovadamente sem efeito. Resultados desconhecidos são consultados pelo worker.
+    /// </summary>
+    [HttpPost("{id:long}/payment-operations/{operationId:long}/retry")]
+    public async Task<IActionResult> RefundRetryAsync(long id, long operationId, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(new ResolvePaymentOperationCommand(id, operationId, null, null, true), ct));
+    }
+
+    /// <summary>
+    /// Confirma que o dinheiro de um estorno manual pendente foi devolvido fora do sistema.
+    /// </summary>
+    [HttpPost("{id:long}/payment-operations/{operationId:long}/confirm-manual-refund")]
+    public async Task<IActionResult> RefundConfirmManualAsync(long id, long operationId,
+        [FromBody] ConfirmManualRefundRequest request, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(new ResolvePaymentOperationCommand(id, operationId,
+            request.Reference, request.Note, false), ct));
     }
 
     protected override CreateListOrderCommand WrapCreateInRange(CreateOrderCommand command)

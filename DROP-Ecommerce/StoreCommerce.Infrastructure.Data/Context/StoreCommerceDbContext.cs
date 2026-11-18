@@ -160,6 +160,7 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<StoreSettings>(modelBuilder);
         modelBuilder.Entity<ProviderConnection>().HasQueryFilter(ProviderConnection => ProviderConnection.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(PaymentAttempt => PaymentAttempt.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentOperation>().HasQueryFilter(PaymentOperation => PaymentOperation.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PaymentExternalPayment>().HasQueryFilter(PaymentExternalPayment => PaymentExternalPayment.EnterpriseId == _tenantProvider.GetEnterpriseId());
 
         // Dependents of filtered aggregates must use the same visibility rules.

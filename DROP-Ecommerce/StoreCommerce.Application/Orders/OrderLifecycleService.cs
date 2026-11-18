@@ -4,6 +4,7 @@ using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.Integrations;
 using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Orders;
@@ -35,6 +36,7 @@ public sealed class OrderLifecycleService(
     IUnitOfWork unitOfWork,
     StoreSettingsReader storeSettings,
     IPaymentGateway gateway,
+    IPaymentOperationStore operations,
     OrderWorkflowScope scope,
     ICurrentIdentity actor,
     TimeProvider time)
@@ -64,6 +66,12 @@ public sealed class OrderLifecycleService(
             var now = Now;
             var settings = await storeSettings.GetForEnterpriseAsync(enterpriseId, ct);
             var payment = order.ListTransaction.Where(transaction => transaction.IsPendingPayment).OrderByDescending(transaction => transaction.Id).FirstOrDefault();
+
+            if (source == OrderChangeSource.Backoffice &&
+                (order.ListTransaction.Any(Transaction => Transaction.GatewayProvider != IntegrationProviders.Manual) ||
+                    order.ListPaymentAttempt.Any(Attempt => Attempt.Provider != IntegrationProviders.Manual)))
+                throw new SecurityFailure(409, "Payment.ProviderConfirmationRequired",
+                    "Pagamentos externos exigem confirmação autenticada do provedor.");
 
             if (payment is null)
             {
@@ -122,15 +130,13 @@ public sealed class OrderLifecycleService(
 
     /// <summary>
     /// Cancela o pedido: devolve o estoque (libera a reserva ou repõe o que já foi baixado), devolve o uso do cupom e,
-    /// se o pedido estava pago, estorna o pagamento pelo gateway. Com customerId, só o próprio cliente cancela e apenas
+    /// se o pedido estava pago, solicita o estorno para processamento independente. Com customerId, só o próprio cliente cancela e apenas
     /// pedidos que ainda aguardam pagamento. O backoffice exige orders.cancel e, para pedidos pagos, orders.refund.
     /// </summary>
     public async Task<Order> CancelAsync(long enterpriseId, long orderId, string reason, OrderChangeSource source, long? actorId,
         long? customerId, CancellationToken ct)
     {
-        string? gatewayReferenceToCancel = null;
-
-        var cancelled = await RunAsync(enterpriseId, orderId, customerId, async order =>
+        return await RunAsync(enterpriseId, orderId, customerId, async order =>
         {
             if (order.IsCancelled)
                 return;
@@ -158,20 +164,10 @@ public sealed class OrderLifecycleService(
             order.Cancel(reason, source, actorId, now);
 
             if (wasPaid)
-            {
-                await RefundAsync(order, reason, source, actorId, now, ct);
-            }
+                await EnqueueRefundsAsync(order, reason, source, actorId, now, ct);
             else
-            {
-                var pending = order.ListTransaction.FirstOrDefault(transaction => transaction.IsPendingPayment);
-                gatewayReferenceToCancel = pending?.GatewayReference;
-                pending?.MarkCancelled();
-            }
+                await EnqueueCancellationsAsync(order, reason, source, actorId, now, ct);
         }, ct);
-
-        await CancelGatewayPaymentAsync(gatewayReferenceToCancel, ct);
-
-        return cancelled;
     }
 
     /// <summary>
@@ -205,22 +201,42 @@ public sealed class OrderLifecycleService(
         if (status == PaymentResultStatus.Failed)
             return await FailPaymentAsync(owner.EnterpriseId, owner.OrderId, "Pagamento recusado pelo gateway.", OrderChangeSource.PaymentGateway, ct);
 
-        var current = await orders.GetForWorkflowAsync(owner.EnterpriseId, owner.OrderId, ct)
-            ?? throw new SecurityFailure(404, "Order.NotFound", "Pedido não encontrado.");
-
-        if (!current.IsCancelled)
-            return await ConfirmPaymentAsync(owner.EnterpriseId, owner.OrderId, OrderChangeSource.PaymentGateway, null, null, reference,
-                paidAmount, "Pagamento aprovado pelo gateway", ct);
-
+        // A decisão é revalidada sob o mesmo bloqueio do cancelamento, sem um snapshot externo obsoleto.
         return await RunAsync(owner.EnterpriseId, owner.OrderId, null, async order =>
         {
-            if (order.ListTransaction.Any(transaction => transaction.TransactionTypeId == Domain.StaticEntity.TransactionType.Refund.Id))
+            if (paidAmount.HasValue && paidAmount.Value != order.TotalAmount)
+                throw new SecurityFailure(409, "Payment.AmountMismatch", "O valor pago é diferente do total do pedido.");
+
+            var payment = order.ListTransaction.Single(Transaction => Transaction.GatewayProvider == provider &&
+                Transaction.GatewayReference == reference && Transaction.TransactionTypeId == TransactionType.Payment.Id);
+            var now = Now;
+
+            if (order.IsCancelled)
+            {
+                if (payment.TransactionStatusId == TransactionStatus.Refunded.Id)
+                    return;
+
+                if (!payment.IsCapturedPayment)
+                    payment.MarkCaptured(reference, now);
+
+                order.RegisterCancelledPaymentCapture(now);
+                await EnqueueRefundsAsync(order, "Pagamento aprovado após o cancelamento do pedido.",
+                    OrderChangeSource.PaymentGateway, null, now, ct);
+
+                return;
+            }
+
+            if (order.IsPaid)
                 return;
 
-            var now = Now;
-            var payment = order.ListTransaction.First(transaction => transaction.GatewayReference == reference);
+            if (!order.IsAwaitingPayment)
+                throw new SecurityFailure(409, "Order.NotAwaitingPayment", "O pedido não está aguardando pagamento.");
+
+            var settings = await storeSettings.GetForEnterpriseAsync(owner.EnterpriseId, ct);
+            CommitStock(order, settings, now);
+            order.ConfirmPayment(settings, OrderChangeSource.PaymentGateway, null, "Pagamento aprovado pelo gateway", now);
             payment.MarkCaptured(reference, now);
-            await RefundAsync(order, "Pagamento aprovado após o cancelamento do pedido.", OrderChangeSource.PaymentGateway, null, now, ct);
+            await RegisterCouponUseAsync(order, now, ct);
         }, ct);
     }
 
@@ -244,7 +260,6 @@ public sealed class OrderLifecycleService(
 
     private async Task<bool> ExpireOrderAsync(long enterpriseId, long orderId, CancellationToken ct)
     {
-        string? gatewayReferenceToCancel = null;
         var expired = false;
 
         await RunAsync(enterpriseId, orderId, null, async order =>
@@ -259,14 +274,9 @@ public sealed class OrderLifecycleService(
             await ReleaseCouponUseAsync(order, now, ct);
             order.Cancel(ExpiredReason, OrderChangeSource.System, null, now);
 
-            var payment = order.ListTransaction.FirstOrDefault(Transaction => Transaction.IsPendingPayment);
-            gatewayReferenceToCancel = payment?.GatewayReference;
-            payment?.MarkCancelled();
+            await EnqueueCancellationsAsync(order, ExpiredReason, OrderChangeSource.System, null, now, ct);
             expired = true;
         }, ct);
-
-        if (expired)
-            await CancelGatewayPaymentAsync(gatewayReferenceToCancel, ct);
 
         return expired;
     }
@@ -395,41 +405,26 @@ public sealed class OrderLifecycleService(
         }
     }
 
-    private async Task RefundAsync(Order order, string reason, OrderChangeSource source, long? actorId, DateTime now, CancellationToken ct)
+    private async Task EnqueueRefundsAsync(Order order, string reason, OrderChangeSource source, long? actorId,
+        DateTime now, CancellationToken ct)
     {
-        var payment = order.ListTransaction.FirstOrDefault(transaction => transaction.IsCapturedPayment);
+        var captured = order.ListTransaction.Where(Transaction => Transaction.IsCapturedPayment && Transaction.Amount > 0).ToList();
 
-        if (payment is null)
-        {
-            // Pedido marcado como pago antes do fluxo de pagamento existir: não há cobrança para estornar no gateway.
-            order.RegisterFullRefund(source, actorId, "Estorno a ser feito fora do sistema (pagamento sem cobrança registrada)", now);
+        foreach (var payment in captured)
+            await operations.EnqueueAsync(order, payment, PaymentOperationKind.FullRefund, reason, source, actorId, now, ct);
 
-            return;
-        }
-
-        var result = await gateway.RefundAsync(new RefundRequest(order.EnterpriseId, order.Id, payment.GatewayReference, payment.Amount, reason,
-            $"order-{order.Id}-refund"), ct);
-
-        if (!result.Succeeded)
-            throw new SecurityFailure(409, "Payment.RefundFailed", result.FailureReason ?? "O gateway recusou o estorno do pagamento.");
-
-        transactions.Add(Transaction.CreateRefund(payment, result.Reference, now));
-        order.RegisterFullRefund(source, actorId, "Pagamento estornado", now);
+        // Legados sem lançamento precisam de revisão; nunca afirmar um estorno que não foi comprovado.
+        if (captured.Count == 0 && order.TotalAmount > 0)
+            await operations.EnqueueAsync(order, null, PaymentOperationKind.FullRefund, reason, source, actorId, now, ct);
     }
 
-    // Cancelar a cobrança no gateway é melhor esforço: se falhar, uma aprovação tardia é estornada por ApplyPaymentResultAsync.
-    private async Task CancelGatewayPaymentAsync(string? reference, CancellationToken ct)
+    private async Task EnqueueCancellationsAsync(Order order, string reason, OrderChangeSource source, long? actorId,
+        DateTime now, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(reference))
-            return;
-
-        try
+        foreach (var payment in order.ListTransaction.Where(Transaction => Transaction.IsCancellablePayment).ToList())
         {
-            await gateway.CancelPaymentAsync(reference, ct);
-        }
-        catch (Exception) when (!ct.IsCancellationRequested)
-        {
-            // O adaptador do gateway é responsável por registrar o erro em log.
+            await operations.EnqueueAsync(order, payment, PaymentOperationKind.Cancel, reason, source, actorId, now, ct);
+            payment.MarkCancelled();
         }
     }
 

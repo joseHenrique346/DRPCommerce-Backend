@@ -56,6 +56,8 @@ public static class DependencyInjection
         services.AddScoped<IProviderConnectionStore, ProviderConnectionStore>();
         services.AddScoped<IProviderTokenProtector, ProviderTokenProtector>();
         services.AddScoped<IPaymentAttemptStore, Payments.PaymentAttemptStore>();
+        services.AddScoped<IPaymentOperationStore, Payments.PaymentOperationStore>();
+        services.AddHostedService<Workers.PaymentOperationReconciliationWorker>();
         services.AddHostedService<Workers.PaymentAttemptReconciliationWorker>();
 
         var integrationOptions = configuration?.GetSection("ProviderIntegrations");

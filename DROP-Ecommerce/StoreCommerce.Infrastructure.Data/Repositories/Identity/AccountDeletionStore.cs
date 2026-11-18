@@ -42,9 +42,13 @@ public sealed class AccountDeletionStore(StoreCommerceDbContext context, IIdenti
                     (Attempt.Status == PaymentCreationStatus.Requested && Attempt.ExpiresAt > now &&
                         Attempt.Order.OrderStatusId == OrderStatus.Pending.Id)), ct);
 
-        if (uncertainPayments > 0)
+        var unresolvedOperations = await context.PaymentOperations.IgnoreQueryFilters()
+            .CountAsync(Operation => Operation.EnterpriseId == enterpriseId && Operation.Order.CustomerId == customerId &&
+                Operation.Status != PaymentOperationStatus.Succeeded && Operation.Status != PaymentOperationStatus.Superseded, ct);
+
+        if (uncertainPayments > 0 || unresolvedOperations > 0)
             blockers.Add(new AccountDeletionBlocker("AccountDeletion.UnresolvedPaymentOperations",
-                "Aguarde a recuperação das operações de pagamento cujo resultado ainda está pendente.", uncertainPayments));
+                "Resolva os cancelamentos e estornos pendentes antes de excluir a conta.", uncertainPayments + unresolvedOperations));
 
         var activeOrders = await context.Orders.IgnoreQueryFilters()
             .CountAsync(Order => Order.EnterpriseId == enterpriseId && Order.CustomerId == customerId &&

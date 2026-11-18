@@ -154,6 +154,9 @@ public class Transaction : BaseEntity
 
     public bool IsPendingPayment => TransactionTypeId == TransactionType.Payment.Id && TransactionStatusId == TransactionStatus.Pending.Id;
 
+    public bool IsCancellablePayment => TransactionTypeId == TransactionType.Payment.Id &&
+        (TransactionStatusId == TransactionStatus.Pending.Id || TransactionStatusId == TransactionStatus.Authorized.Id);
+
     public bool IsCapturedPayment => TransactionTypeId == TransactionType.Payment.Id && TransactionStatusId == TransactionStatus.Captured.Id;
 
     /// <summary>
@@ -199,7 +202,7 @@ public class Transaction : BaseEntity
 
     public void MarkCancelled()
     {
-        if (IsPendingPayment)
+        if (IsCancellablePayment)
             TransactionStatusId = TransactionStatus.Cancelled.Id;
     }
 

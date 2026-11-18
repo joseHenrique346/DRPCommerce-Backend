@@ -39,6 +39,7 @@ Depois do commit, `PaymentAttemptService` obtém uma lease por atualização con
 | Estado | Próxima ação permitida |
 | --- | --- |
 | Requested | Primeira criação, com pedido/pagamento pendentes, prazo válido e conexão ativa quando externa. |
+| Aborted | Cancelamento local venceu o claim de criação; nenhuma cobrança deve ser criada. |
 | Processing com lease ativa | Outra execução aguarda; não cria novamente. |
 | Processing abandonado | Consultar o provedor pela mesma correlação. |
 | OutcomeUnknown | Consultar o provedor; ausência de resultado mantém a pendência. |
@@ -76,4 +77,4 @@ Validação local com 42 verificações em PostgreSQL 17 temporário e isolado: 
 
 ## Próximas etapas da #93
 
-Implementar OAuth e adapters reais; webhook assinado e consulta autoritativa do estado financeiro; estorno fora da transação de catálogo; cotação de frete no checkout e etiquetas. Antes de habilitar pagamentos reais, também adaptar cancelamento/estorno/consulta para usar os identificadores e a conexão congelados, preservar aprovação tardia e impedir confirmação manual indevida. Esta fundação não torna o fluxo manual apropriado para dinheiro real.
+O fluxo de [cancelamento e estorno recuperáveis](CancelamentoEstorno.md) já persiste intenções, processa fora da transação de catálogo, recupera por consulta e preserva a aprovação tardia. Falta implementar OAuth e adapters reais, webhook assinado e consulta autoritativa do estado financeiro; cotação de frete no checkout e etiquetas. Antes de habilitar pagamentos reais, homologar esses contratos no provedor e adaptar o frontend aos estados pendentes. O adapter ativo continua manual.

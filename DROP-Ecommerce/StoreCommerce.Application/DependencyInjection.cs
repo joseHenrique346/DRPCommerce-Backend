@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<Orders.OrderLifecycleService>();
         services.AddScoped<Orders.CheckoutService>();
         services.AddScoped<Payments.PaymentAttemptService>();
+        services.AddScoped<Payments.PaymentOperationService>();
         services.AddScoped<Integrations.ProviderConnectionService>();
         services.AddScoped<CategoryCatalogReader>();
         services.AddScoped<CatalogWriteContext>();
