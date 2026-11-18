@@ -19,7 +19,7 @@ public sealed class CheckoutService(
     IRepository<Transaction> transactions,
     ICartRepository carts,
     ICustomerAddressRepository addresses,
-    IRepository<Customer> customers,
+    ICustomerRepository customers,
     ICouponRepository coupons,
     IRepository<CouponRedemption> redemptions,
     IInventoryRepository inventory,
@@ -62,6 +62,10 @@ public sealed class CheckoutService(
         await using (var transaction = await unitOfWork.BeginTransactionAsync(ct))
         {
             await products.LockCatalogAsync(enterpriseId, ct);
+            await customers.LockAsync(customerId, ct);
+            customer = await customers.FindAsync(Customer => Customer.Id == customerId && Customer.EnterpriseId == enterpriseId &&
+                Customer.IsActive && !Customer.IsDeleted && Customer.PersonalDataErasedAt == null, ct, tracking: false)
+                ?? throw new SecurityFailure(401, "Identity.InvalidCredentials", "A conta não está disponível para novas compras.");
 
             // Duas tentativas simultâneas com a mesma chave: a segunda espera o bloqueio e devolve o pedido da primeira.
             if (await orders.FindByIdempotencyKeyAsync(enterpriseId, customerId, key, ct) is { } concurrent)
@@ -147,10 +151,11 @@ public sealed class CheckoutService(
         if (address is not null)
             return (address.AddressLine, address.City, address.StateId, address.ZipCode);
 
-        if (string.IsNullOrWhiteSpace(customer.AddressLine) || string.IsNullOrWhiteSpace(customer.City) || string.IsNullOrWhiteSpace(customer.ZipCode))
+        if (string.IsNullOrWhiteSpace(customer.AddressLine) || string.IsNullOrWhiteSpace(customer.City) ||
+            string.IsNullOrWhiteSpace(customer.ZipCode) || !customer.StateId.HasValue)
             throw new SecurityFailure(400, "Checkout.AddressRequired", "Cadastre um endereço de entrega para finalizar a compra.");
 
-        return (customer.AddressLine, customer.City, customer.StateId, customer.ZipCode);
+        return (customer.AddressLine, customer.City, customer.StateId.Value, customer.ZipCode);
     }
 
     private async Task ApplyCouponAsync(Order order, string? couponCode, long customerId, StoreSettings settings, DateTime now, CancellationToken ct)

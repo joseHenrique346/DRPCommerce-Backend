@@ -123,7 +123,9 @@ Rotas adicionais do Store:
 | GET /api/storefront/products/search e /products/by-slug/{slug} | Catálogo filtrado/paginado e detalhe com SKUs, públicos |
 | GET /api/storefront/categories/tree e /categories/by-slug/{slug} | Categorias visíveis na loja, públicas |
 | GET /api/storefront/coupons/validate | Prévia de cupom, pública com cliente opcional; não ocupa uso |
-| GET/PUT/DELETE /api/storefront/me | Perfil do cliente autenticado |
+| GET/PUT /api/storefront/me | Perfil do cliente autenticado |
+| GET /api/storefront/me/deletion | Consulta impedimentos para excluir o perfil desta loja |
+| DELETE /api/storefront/me | Exclusão com currentPassword no corpo + CSRF; preserva vendas e bloqueia pendências |
 | Rotas /api/storefront/me/addresses | Endereços próprios; consulta, cadastro, edição, exclusão e definição de padrão nas ações específicas |
 | Rotas /api/storefront/cart | Carrinho próprio, itens e seleção; métodos e corpos definidos por ação na referência |
 | POST /api/storefront/checkout | Compra selecionados do carrinho; cliente, preço e desconto resolvidos no servidor |
@@ -141,7 +143,8 @@ Os grupos acima resumem funcionalidades, não significam que todos os verbos sej
 |---|---|
 | GET /api/users/me | Conta administrativa própria |
 | PUT /api/users/me | Atualiza somente fullName |
-| DELETE /api/users/me | Desativa conta; protegido se ainda dona de loja |
+| GET /api/users/me/deletion | Consulta impedimentos para excluir a conta global |
+| DELETE /api/users/me | Exclui perfil mediante currentPassword no corpo + CSRF; bloqueado enquanto dono principal de loja |
 | GET /api/enterprises/mine | Memberships próprias, incluindo lojas pausadas |
 | POST /api/enterprises/register | Cria Enterprise, dono principal, subdomínio, configurações e papéis padrão, atomicamente |
 | PUT /api/enterprises/current | Dados da loja; somente dono principal |

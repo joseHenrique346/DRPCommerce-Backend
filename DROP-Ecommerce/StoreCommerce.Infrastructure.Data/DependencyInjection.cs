@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
         services.AddScoped<IIdentityRepositories, IdentityRepositories>();
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
+        services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IRepository<Product>>(Provider => Provider.GetRequiredService<IProductRepository>());

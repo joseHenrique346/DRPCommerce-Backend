@@ -4,7 +4,7 @@ using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Domain.Entity;
 
-public class Order : BaseEntity, ISoftDeletable, ITenantEntity
+public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
 {
     #region Constants
     public const int ShippingAddressLineMaxLength = 200;

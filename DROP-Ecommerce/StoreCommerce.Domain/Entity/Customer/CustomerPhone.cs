@@ -18,6 +18,14 @@ public class CustomerPhone
     #endregion
 
     #region Functions
+    /// <summary>
+    /// Telefone ausente em um cadastro encerrado; não relaxa as validações de contas ativas.
+    /// </summary>
+    public static CustomerPhone Erased()
+    {
+        return new CustomerPhone(string.Empty);
+    }
+
     public static CustomerPhone Create(string value)
     {
         BaseValidate.ValidateNotNullOrEmpty(value, nameof(Value));

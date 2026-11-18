@@ -118,10 +118,9 @@ public sealed class ShipOrderCommandHandler(OrderLifecycleService lifecycle, IOr
 }
 
 /// <summary>
-/// Busca de pedidos do backoffice. O nome do cliente é lido sem o filtro de exclusão, para pedidos de clientes excluídos
-/// continuarem identificados.
+/// Busca de pedidos do backoffice usando a identificação histórica do comprador, independente do cadastro atual.
 /// </summary>
-public sealed class SearchOrdersQueryHandler(IOrderRepository orders, IRepository<Customer> customers, ITenantProvider tenant)
+public sealed class SearchOrdersQueryHandler(IOrderRepository orders)
     : WorkflowRequestHandler<SearchOrdersQuery, PagedResponse<OrderSearchItemResponse>>
 {
     protected override async Task<PagedResponse<OrderSearchItemResponse>> ExecuteAsync(SearchOrdersQuery request, CancellationToken ct)
@@ -131,13 +130,7 @@ public sealed class SearchOrdersQueryHandler(IOrderRepository orders, IRepositor
             request.CreatedFrom, request.CreatedTo, request.MinTotal, request.MaxTotal,
             request.Sort ?? "newest", request.Page, request.PageSize), ct);
 
-        var enterpriseId = tenant.GetEnterpriseId();
-        var customerIds = items.Select(order => order.CustomerId).Distinct().ToList();
-        var names = (await customers.ListAsync(customer => customerIds.Contains(customer.Id) && customer.EnterpriseId == enterpriseId,
-                customer => new { customer.Id, customer.FullName }, ct, ignoreQueryFilters: true))
-            .ToDictionary(customer => customer.Id, customer => customer.FullName);
-
-        return new(items.Select(order => OrderSearchItemResponse.FromEntity(order, names.GetValueOrDefault(order.CustomerId, string.Empty))).ToList(),
+        return new(items.Select(Order => OrderSearchItemResponse.FromEntity(Order, Order.BuyerName)).ToList(),
             count, request.Page, request.PageSize);
     }
 }

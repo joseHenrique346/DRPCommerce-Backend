@@ -27,11 +27,11 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
     public long SecurityVersion { get; private set; } = 1;
     public string AddressLine { get; private set; }
     public string City { get; private set; }
-    public long StateId { get; private set; }
+    public long? StateId { get; private set; }
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public string Gender { get; private set; }
-    public DateTime DateOfBirth { get; private set; }
+    public DateTime? DateOfBirth { get; private set; }
     public bool IsVerified { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -39,7 +39,7 @@ public partial class Customer : BaseEntity, ISoftDeletable, ITenantEntity
 
     #region Navigation Properties
     public Enterprise Enterprise { get; private set; }
-    public StaticEntity.State State { get; private set; }
+    public StaticEntity.State? State { get; private set; }
     private readonly List<Order> _listOrder = [];
     public IReadOnlyCollection<Order> ListOrder => _listOrder.AsReadOnly();
     private readonly List<Invoice> _listInvoice = [];

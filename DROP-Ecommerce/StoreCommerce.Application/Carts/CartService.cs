@@ -15,7 +15,7 @@ namespace StoreCommerce.Application.Carts;
 public sealed class CartService(
     ICartRepository carts,
     IProductRepository products,
-    IRepository<Customer> customers,
+    ICustomerRepository customers,
     ICouponRepository coupons,
     CouponEligibilityService eligibility,
     StoreSettingsReader storeSettings,
@@ -145,6 +145,14 @@ public sealed class CartService(
 
     private async Task<CartResponse> WriteAsync(CartContext context, bool createIfMissing, Action<CartEntity> change, CancellationToken ct)
     {
+        await using var transaction = await unitOfWork.BeginTransactionAsync(ct);
+        await products.LockCatalogAsync(context.EnterpriseId, ct);
+        await customers.LockAsync(context.CustomerId, ct);
+
+        if (!await customers.ExistsAsync(Customer => Customer.Id == context.CustomerId && Customer.EnterpriseId == context.EnterpriseId &&
+            Customer.IsActive && !Customer.IsDeleted && Customer.PersonalDataErasedAt == null, ct))
+            throw new SecurityFailure(401, "Identity.InvalidCredentials", "A conta não está disponível para alterar o carrinho.");
+
         var cart = await carts.GetForCustomerAsync(context.EnterpriseId, context.CustomerId, tracking: true, ct);
 
         if (cart is null)
@@ -161,6 +169,8 @@ public sealed class CartService(
             change(cart);
             await unitOfWork.CommitAsync(ct);
         }
+
+        await transaction.CommitAsync(ct);
 
         return await BuildResponseAsync(cart, context, null, ct);
     }

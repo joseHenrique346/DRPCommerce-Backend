@@ -4,20 +4,22 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class DeactivateUserCommandHandler(IdentityHandlerContext context) : IdentityHandlerBase<DeactivateUserCommand, bool>(context)
+public sealed class DeactivateUserCommandHandler(IdentityHandlerContext context, IAccountDeletionStore deletion)
+    : IdentityHandlerBase<DeactivateUserCommand, bool>(context)
 {
     protected override async Task<bool> ExecuteAsync(DeactivateUserCommand command, CancellationToken ct)
     {
         using var operation = scope.Begin();
         await using var transaction = await unitOfWork.BeginTransactionAsync(ct);
         var user = (User)await CurrentAccountAsync(false, true, ct);
+        await VerifyLoginAsync(user, command.Request.CurrentPassword, ct);
+        var eligibility = await deletion.InspectUserAsync(user.Id, ct);
 
-        if (await data.EnterpriseMemberships.ExistsAsync(x => x.UserId == user.Id && x.KindId == 1 && x.IsActive, ct, ignoreQueryFilters: true))
-            throw new SecurityFailure(409, "Identity.PrimaryOwnerInUse", "Transfira a propriedade de suas lojas, inclusive as pausadas, antes de desativar sua conta.");
+        if (!eligibility.CanDelete)
+            throw new SecurityFailure(409, eligibility.Blockers[0].Code, eligibility.Blockers[0].Message);
 
-        user.UpdateDetails(user.FullName, user.Email, false);
-        user.InvalidateSessions();
-        await RevokeAllAsync(user.Id, false, ct);
+        await deletion.EraseUserRelatedDataAsync(user.Id, user.NormalizedEmail, Now, ct);
+        user.ErasePersonalData(Now);
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);
 

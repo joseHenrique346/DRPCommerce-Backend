@@ -75,6 +75,8 @@ public sealed record OrderHistoryResponse(
         history.Source, includeActor ? history.ActorId : null, history.Reason, history.ChangedAt);
 }
 
+public sealed record BuyerSnapshotResponse(string Name, string Email, string Phone, DateTime? CapturedAt, BuyerSnapshotSource? Source);
+
 public sealed record OrderDetailResponse(
     long Id,
     long Number,
@@ -100,7 +102,8 @@ public sealed record OrderDetailResponse(
     IReadOnlyList<OrderItemDetailResponse> Items,
     PaymentInfoResponse? Payment,
     IReadOnlyList<ShipmentInfoResponse> Shipments,
-    IReadOnlyList<OrderHistoryResponse> History)
+    IReadOnlyList<OrderHistoryResponse> History,
+    BuyerSnapshotResponse? Buyer = null)
 {
     public static OrderDetailResponse FromEntity(OrderEntity order, bool backoffice)
     {
@@ -121,7 +124,9 @@ public sealed record OrderDetailResponse(
             payment is null ? null : PaymentFromEntity(payment, order.ListPaymentAttempt.FirstOrDefault(Attempt => Attempt.TransactionId == payment.Id)),
             order.ListShipment.OrderBy(shipment => shipment.Id).Select(ShipmentInfoResponse.FromEntity).ToList(),
             order.ListStatusHistory.OrderBy(history => history.ChangedAt).ThenBy(history => history.Id)
-                .Select(history => OrderHistoryResponse.FromEntity(history, backoffice)).ToList());
+                .Select(history => OrderHistoryResponse.FromEntity(history, backoffice)).ToList(),
+            new BuyerSnapshotResponse(order.BuyerName, order.BuyerEmail, order.BuyerPhone,
+                order.BuyerSnapshotCapturedAt, order.BuyerSnapshotSource));
     }
 
     private static PaymentInfoResponse PaymentFromEntity(Transaction payment, PaymentAttempt? attempt)

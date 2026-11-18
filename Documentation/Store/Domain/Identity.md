@@ -58,7 +58,7 @@ Confirmação de e-mail e recuperação têm entidades e casos de uso preparados
 ## Invariantes e isolamento
 
 - User: e-mail normalizado único globalmente.
-- Customer: e-mail normalizado único por loja, inclusive após exclusão lógica.
+- Customer: e-mail normalizado único por loja, inclusive após desativação/exclusão lógica administrativa. Na exclusão do próprio perfil, o e-mail é substituído por identificador aleatório; um cadastro posterior com o endereço anterior recebe outro ID e não herda as vendas antigas.
 - Membership: única por `(EnterpriseId, UserId)`.
 - Índice parcial: no máximo um dono principal ativo por loja; cadastro e transferência preservam sua existência.
 - Hostname único globalmente; no máximo um domínio primário por loja.

@@ -167,8 +167,8 @@ public partial class StoreCommerceDbContext : DbContext
             e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
         modelBuilder.Entity<Shipment>().HasQueryFilter(e =>
             e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
-        modelBuilder.Entity<Transaction>().HasQueryFilter(e =>
-            e.Customer.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Customer.IsDeleted);
+        modelBuilder.Entity<Transaction>().HasQueryFilter(Transaction =>
+            Transaction.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !Transaction.Order.IsDeleted);
     }
 
     private void ApplyTenantAndSoftDeleteFilter<T>(ModelBuilder modelBuilder)
@@ -189,12 +189,7 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        _appearanceWrites.Guard(this);
-        GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-        UpdateChangedDates();
-
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        return SaveChangesAsync(acceptAllChangesOnSuccess, CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
@@ -202,12 +197,25 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        // A criação administrativa também precisa manter o lock do comprador até a gravação do pedido.
+        var needsTransaction = Database.CurrentTransaction is null && ChangeTracker.Entries<Order>()
+            .Any(Entry => Entry.State == EntityState.Added);
+        await using var localTransaction = needsTransaction
+            ? await Database.BeginTransactionAsync(cancellationToken)
+            : null;
+
         _appearanceWrites.Guard(this);
+        await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
 
         UpdateChangedDates();
 
-        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var affected = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+        if (localTransaction is not null)
+            await localTransaction.CommitAsync(cancellationToken);
+
+        return affected;
     }
 
     private void UpdateChangedDates()

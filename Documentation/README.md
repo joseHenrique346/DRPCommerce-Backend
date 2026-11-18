@@ -31,6 +31,7 @@ Documentos compartilhados:
 - [Aparência versionada, presets e contratos do frontend](Shared/Appearance.md)
 - [Integrações externas — situação e próximos passos](Shared/PlanejamentoIntegracoes.md)
 - [Conexões de provedores e tentativas de pagamento](Shared/PreparacaoPagamentos.md)
+- [Exclusão de conta, impedimentos e snapshots de vendas](Shared/ExclusaoConta.md)
 
 Identidade e autorização:
 

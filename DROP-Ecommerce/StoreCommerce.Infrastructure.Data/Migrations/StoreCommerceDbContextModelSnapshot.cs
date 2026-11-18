@@ -1040,7 +1040,7 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_birth");
 
@@ -1109,6 +1109,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
 
+                    b.Property<DateTime?>("PersonalDataErasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("personal_data_erased_at");
+
                     b.Property<long>("SecurityVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -1116,7 +1120,7 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDefaultValue(1L)
                         .HasColumnName("security_version");
 
-                    b.Property<long>("StateId")
+                    b.Property<long?>("StateId")
                         .HasColumnType("bigint")
                         .HasColumnName("state_id");
 
@@ -2092,6 +2096,32 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BuyerEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("buyer_email");
+
+                    b.Property<string>("BuyerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("buyer_name");
+
+                    b.Property<string>("BuyerPhone")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("buyer_phone");
+
+                    b.Property<DateTime?>("BuyerSnapshotCapturedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("buyer_snapshot_captured_at");
+
+                    b.Property<int?>("BuyerSnapshotSource")
+                        .HasColumnType("integer")
+                        .HasColumnName("buyer_snapshot_source");
 
                     b.Property<long?>("CouponId")
                         .HasColumnType("bigint")
@@ -4079,6 +4109,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
 
+                    b.Property<DateTime?>("PersonalDataErasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("personal_data_erased_at");
+
                     b.Property<long>("SecurityVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -5393,7 +5427,6 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_cliente_estado_state_id");
 
                     b.OwnsOne("StoreCommerce.Domain.Entity.CustomerEmail", "Email", b1 =>

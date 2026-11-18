@@ -23,5 +23,5 @@ public sealed record CustomerAddressResponse(long Id, string Label, string Recip
 /// Linha da busca de clientes. Compras e total gasto consideram pedidos concluídos (confirmados até entregues).
 /// </summary>
 public sealed record CustomerSearchItemResponse(
-    long Id, string FullName, string Email, string Phone, string City, long StateId, bool IsActive, bool IsVerified, bool EmailConfirmed,
+    long Id, string FullName, string Email, string Phone, string City, long? StateId, bool IsActive, bool IsVerified, bool EmailConfirmed,
     int CompletedOrders, decimal TotalSpent, DateTime? LastOrderAt, DateTime CreatedAt);

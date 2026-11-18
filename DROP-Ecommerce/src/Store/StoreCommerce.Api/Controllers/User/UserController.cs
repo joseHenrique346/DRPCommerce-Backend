@@ -5,6 +5,8 @@ using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StoreCommerce.Application.Identity;
+using StoreCommerce.Api.Security;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -32,15 +34,29 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
-    /// Desativa a conta do usuário sem lojas sob sua propriedade.
+    /// Informa impedimentos para excluir a própria conta global. A exclusão revalida as condições sob bloqueio.
+    /// </summary>
+    [HttpGet("me/deletion")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> GetDeletionEligibility(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new GetAccountDeletionEligibilityQuery(false), ct));
+    }
+
+    /// <summary>
+    /// Apaga o perfil e encerra os acessos, mediante senha atual e ausência de lojas sob sua propriedade.
     /// </summary>
     [HttpDelete("me")]
-    public async Task<IActionResult> Deactivate(CancellationToken ct)
+    [CookieCsrf]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> Deactivate([FromBody] DeleteAccountRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new DeactivateUserCommand(), ct);
+        var result = await mediator.Send(new DeactivateUserCommand(request), ct);
 
         if (result.IsFailure)
             return this.ToIdentityActionResult(result);
+
+        Response.ClearDeletedAccountCookie(false);
 
         return NoContent();
     }

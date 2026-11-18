@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Contracts.Customers;
+using StoreCommerce.Api.Security;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -86,16 +87,31 @@ public sealed class StorefrontCustomerController(IMediator mediator) : Controlle
     }
 
     /// <summary>
-    /// Desativa a conta do cliente nesta loja.
+    /// Informa pagamentos, operações incertas ou pedidos em andamento que impedem a exclusão nesta loja.
+    /// </summary>
+    [Authorize(Policy = SecurityNames.Storefront)]
+    [HttpGet("me/deletion")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> GetDeletionEligibility(CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new GetAccountDeletionEligibilityQuery(true), ct));
+    }
+
+    /// <summary>
+    /// Apaga o perfil nesta loja mediante senha atual. Mantém registros e snapshots comerciais, sem apagar vendas.
     /// </summary>
     [Authorize(Policy = SecurityNames.Storefront)]
     [HttpDelete("me")]
-    public async Task<IActionResult> Delete(CancellationToken ct)
+    [CookieCsrf]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> Delete([FromBody] DeleteAccountRequest request, CancellationToken ct)
     {
-        var result = await mediator.Send(new DeactivateCustomerAccountCommand(), ct);
+        var result = await mediator.Send(new DeactivateCustomerAccountCommand(request), ct);
 
         if (result.IsFailure)
             return this.ToIdentityActionResult(result);
+
+        Response.ClearDeletedAccountCookie(true);
 
         return NoContent();
     }

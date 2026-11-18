@@ -23,6 +23,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.ShippingCity).HasMaxLength(Order.ShippingCityMaxLength);
         builder.Property(e => e.ShippingZipCode).HasMaxLength(Order.ShippingZipCodeMaxLength);
         builder.Property(e => e.Notes).HasMaxLength(Order.NotesMaxLength);
+        builder.Property(Order => Order.BuyerName).HasMaxLength(Customer.FullNameMaxLength);
+        builder.Property(Order => Order.BuyerEmail).HasMaxLength(255);
+        builder.Property(Order => Order.BuyerPhone).HasMaxLength(200);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
         builder.Property(e => e.IdempotencyKey).HasMaxLength(Order.IdempotencyKeyMaxLength);
