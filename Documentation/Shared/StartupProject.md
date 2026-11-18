@@ -132,7 +132,23 @@ O Gateway remove o prefixo antes de encaminhar. Exemplo real no perfil HTTPS: `G
 
 No perfil HTTPS, troque somente o protocolo por `https`. Como o prefixo é removido, uma rota interna `/api/auth/csrf` do Store é acessada por `https://localhost:5000/api/store/api/auth/csrf`.
 
+## Health check
+
+Os três serviços expõem `GET /health` sem autenticação, inclusive em `Production`. A resposta é `200 OK`, com corpo `Healthy` e headers que impedem cache. O endpoint confirma que o processo consegue responder HTTP; não verifica PostgreSQL nem a disponibilidade dos outros serviços.
+
+No perfil HTTPS local:
+
+| Serviço | Acesso direto | Acesso pelo Gateway |
+| --- | --- | --- |
+| Gateway | `https://localhost:5000/health` | Mesmo endereço |
+| Store | `https://localhost:5001/health` | `https://localhost:5000/api/store/health` |
+| Drop | `https://localhost:5002/health` | `https://localhost:5000/api/drop/health` |
+
+No deploy separado, usar as portas configuradas em cada VM. O `/health` do Gateway verifica somente o próprio Gateway; os caminhos `/api/store/health` e `/api/drop/health` verificam também o encaminhamento até a API correspondente.
+
 ## Swagger
+
+Swagger UI, JSON do Swagger e OpenAPI das APIs são disponibilizados somente em `Development`. Configurar `ASPNETCORE_ENVIRONMENT=Production` no deploy e não definir `DOTNET_ENVIRONMENT` com um valor conflitante. Os serviços de destino também devem estar em `Production`, pois o Gateway encaminha suas rotas de documentação quando elas existem.
 
 Acesse diretamente em cada serviço (apenas em Development):
 

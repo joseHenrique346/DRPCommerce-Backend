@@ -4,6 +4,7 @@ using DropCommerce.Api.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApiConfiguration(builder.Configuration);
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -17,6 +18,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCommerceSecurity();
+
+app.MapHealthChecks("/health")
+    .AllowAnonymous();
 
 app.MapControllers();
 
