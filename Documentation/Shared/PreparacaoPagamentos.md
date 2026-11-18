@@ -2,6 +2,8 @@
 
 Implementado na tarefa #93 em 16/11/2026. Esta entrega prepara os três primeiros itens da integração: conexão por loja/ambiente, intenção persistida antes da chamada externa e identidades externas separadas. O adapter ativo continua sendo `ManualPaymentGateway`; esta entrega não autoriza contas no Mercado Pago/Melhor Envio nem faz chamadas a essas APIs.
 
+Evolução de 18/11/2026: [adapter Mercado Pago, OAuth e webhook](MercadoPago.md) implementados no backend. A ativação depende da configuração do ambiente e da seleção por loja; o modo manual é preservado.
+
 ## Conexões de provedores
 
 `ProviderConnection` guarda loja, provedor (`mercado-pago` ou `melhor-envio`), ambiente (`Sandbox = 1`, `Production = 2`), conta externa, escopos, validades, operador da autorização e estado da conexão. Há uma conexão por loja/provedor/ambiente. Reautorização preserva a conta externa: trocar de vendedor exige uma evolução que preserve as conexões históricas, não editar a conta de pagamentos anteriores.
@@ -77,4 +79,4 @@ Validação local com 42 verificações em PostgreSQL 17 temporário e isolado: 
 
 ## Próximas etapas da #93
 
-O fluxo de [cancelamento e estorno recuperáveis](CancelamentoEstorno.md) já persiste intenções, processa fora da transação de catálogo, recupera por consulta e preserva a aprovação tardia. Falta implementar OAuth e adapters reais, webhook assinado e consulta autoritativa do estado financeiro; cotação de frete no checkout e etiquetas. Antes de habilitar pagamentos reais, homologar esses contratos no provedor e adaptar o frontend aos estados pendentes. O adapter ativo continua manual.
+Os fluxos de [cancelamento e estorno recuperáveis](CancelamentoEstorno.md) e de [Mercado Pago](MercadoPago.md) implementam intenção persistida, adapter, OAuth, assinatura e consulta autoritativa. Faltam configurar URLs/segredos e homologar no provedor, adaptar o frontend e implementar cotação de frete/etiquetas. A integração externa permanece desabilitada por padrão.

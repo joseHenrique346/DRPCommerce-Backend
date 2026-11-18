@@ -24,7 +24,9 @@ public sealed class PaymentOperationStore(StoreCommerceDbContext context, IProdu
             return;
 
         var attempt = payment is null ? null : await context.PaymentAttempts.IgnoreQueryFilters().AsNoTracking()
-            .SingleOrDefaultAsync(Attempt => Attempt.EnterpriseId == order.EnterpriseId && Attempt.TransactionId == payment.Id, ct);
+            .Include(Attempt => Attempt.Payments)
+            .SingleOrDefaultAsync(Attempt => Attempt.EnterpriseId == order.EnterpriseId &&
+                (Attempt.TransactionId == payment.Id || Attempt.Payments.Any(Payment => Payment.CapturedTransactionId == payment.Id)), ct);
         var operation = PaymentOperation.Create(order, payment, attempt, kind, reason, source, actorId, now);
         context.PaymentOperations.Add(operation);
 
@@ -108,7 +110,7 @@ public sealed class PaymentOperationStore(StoreCommerceDbContext context, IProdu
             else if (attempt is null || attempt.Provider != operation.Provider || attempt.Environment != operation.Environment ||
                 attempt.ExternalAccountId != operation.ExternalAccountId)
                 await RecordWithoutCallAsync(operationId, lease, PaymentOperationStatus.ReviewRequired, "MissingPaymentContext", now, ct);
-            else if (attempt.Status != PaymentCreationStatus.Created)
+            else if (attempt.Status != PaymentCreationStatus.Created && operation.Kind == PaymentOperationKind.Cancel)
                 await RecordWithoutCallAsync(operationId, lease, PaymentOperationStatus.Requested, "AwaitingPaymentRecovery", now, ct);
             else
             {
@@ -221,7 +223,7 @@ public sealed class PaymentOperationStore(StoreCommerceDbContext context, IProdu
         if (payment.IsCapturedPayment)
             context.Transactions.Add(Transaction.CreateRefund(payment, operation.ResultReference!, time.GetUtcNow().UtcDateTime));
 
-        if (!order.ListTransaction.Any(Transaction => Transaction.IsCapturedPayment))
+        if (order.IsCancelled && !order.ListTransaction.Any(Transaction => Transaction.IsCapturedPayment))
             order.RegisterFullRefund(operation.Source, operation.ConfirmedByUserId ?? operation.ActorId,
                 "Estorno integral confirmado", time.GetUtcNow().UtcDateTime);
     }

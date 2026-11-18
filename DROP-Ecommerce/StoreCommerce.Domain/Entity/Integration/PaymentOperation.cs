@@ -65,15 +65,20 @@ public sealed class PaymentOperation : BaseEntity, ITenantEntity
     public static PaymentOperation Create(Order order, Transaction? payment, PaymentAttempt? attempt,
         PaymentOperationKind kind, string reason, OrderChangeSource source, long? actorId, DateTime now)
     {
-        if (!order.IsCancelled || string.IsNullOrWhiteSpace(reason) || reason.Length > 1000 ||
+        if (kind == PaymentOperationKind.Cancel && !order.IsCancelled || string.IsNullOrWhiteSpace(reason) || reason.Length > 1000 ||
             kind is not (PaymentOperationKind.Cancel or PaymentOperationKind.FullRefund) ||
             payment is not null && (payment.OrderId != order.Id || payment.CustomerId != order.CustomerId) ||
-            attempt is not null && (attempt.OrderId != order.Id || attempt.TransactionId != payment?.Id))
+            attempt is not null && (attempt.OrderId != order.Id ||
+                attempt.TransactionId != payment?.Id && !attempt.Payments.Any(Payment => Payment.CapturedTransactionId == payment?.Id)))
             throw new ArgumentException("Solicitação de pagamento inválida.");
 
         if (payment is not null && (kind == PaymentOperationKind.FullRefund && !payment.IsCapturedPayment ||
             kind == PaymentOperationKind.Cancel && !payment.IsCancellablePayment))
             throw new ArgumentException("O estado do pagamento não permite esta operação.");
+
+        if (!order.IsCancelled && (attempt is null || payment is null || payment.Id == attempt.TransactionId ||
+            !attempt.Payments.Any(Payment => Payment.CapturedTransactionId == payment.Id)))
+            throw new ArgumentException("Estorno sem cancelar o pedido exige um pagamento adicional verificado.");
 
         var manual = payment?.GatewayProvider == IntegrationProviders.Manual;
 

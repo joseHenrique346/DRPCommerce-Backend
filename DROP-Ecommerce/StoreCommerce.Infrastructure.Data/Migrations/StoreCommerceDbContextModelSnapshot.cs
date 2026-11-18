@@ -2620,6 +2620,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_reconciliation_at");
 
+                    b.Property<DateTime>("NextStatusCheckAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_status_check_at");
+
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint")
                         .HasColumnName("order_id");
@@ -2687,6 +2691,9 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasIndex("Status", "NextReconciliationAt")
                         .HasDatabaseName("ix_tentativa_pagamento_status_next_reconciliation_at");
 
+                    b.HasIndex("Provider", "Status", "NextStatusCheckAt")
+                        .HasDatabaseName("ix_tentativa_pagamento_provider_status_next_status_check_at");
+
                     b.HasIndex("Provider", "Environment", "ExternalAccountId", "PreferenceId")
                         .IsUnique()
                         .HasDatabaseName("ix_tentativa_pagamento_provider_environment_external_account_i~")
@@ -2706,6 +2713,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CapturedTransactionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("captured_transaction_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2741,12 +2752,20 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("provider");
 
+                    b.Property<DateTime?>("ProviderUpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("provider_updated_at");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("pk_pagamento_externo");
+
+                    b.HasIndex("CapturedTransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagamento_externo_captured_transaction_id");
 
                     b.HasIndex("Provider", "Environment", "ExternalAccountId", "PaymentId")
                         .IsUnique()
@@ -2929,6 +2948,47 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasFilter("payment_transaction_id IS NULL");
 
                     b.ToTable("operacao_pagamento", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentProviderSelection", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_selecao_provedor_pagamento");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_selecao_provedor_pagamento_enterprise_id");
+
+                    b.ToTable("selecao_provedor_pagamento", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Permission", b =>
@@ -3494,6 +3554,88 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderAuthorization", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BrowserHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("browser_hash");
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<long>("MembershipId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("membership_id");
+
+                    b.Property<string>("ProtectedVerifier")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("protected_verifier");
+
+                    b.Property<string>("StateHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("state_hash");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.Property<long>("UserVersion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_autorizacao_provedor");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_autorizacao_provedor_enterprise_id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_autorizacao_provedor_expires_at");
+
+                    b.HasIndex("StateHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_autorizacao_provedor_state_hash");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_autorizacao_provedor_user_id");
+
+                    b.ToTable("autorizacao_provedor", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderConnection", b =>
                 {
                     b.Property<long>("Id")
@@ -3598,6 +3740,89 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_conexao_provedor_enterprise_id_provider_environment");
 
                     b.ToTable("conexao_provedor", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeliveryHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("delivery_hash");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lease_expires_at");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<long?>("PaymentAttemptId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_attempt_id");
+
+                    b.Property<string>("PaymentId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("payment_id");
+
+                    b.Property<long>("ProviderConnectionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("provider_connection_id");
+
+                    b.Property<string>("ResolutionCode")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("resolution_code");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notificacao_provedor");
+
+                    b.HasIndex("PaymentAttemptId")
+                        .HasDatabaseName("ix_notificacao_provedor_payment_attempt_id");
+
+                    b.HasIndex("ProviderConnectionId", "DeliveryHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_notificacao_provedor_provider_connection_id_delivery_hash");
+
+                    b.HasIndex("Status", "NextAttemptAt")
+                        .HasDatabaseName("ix_notificacao_provedor_status_next_attempt_at");
+
+                    b.ToTable("notificacao_provedor", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>
@@ -5155,6 +5380,11 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         {
                             Id = 3L,
                             Description = "Boleto"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Description = "Saldo Mercado Pago"
                         });
                 });
 
@@ -6234,6 +6464,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentExternalPayment", b =>
                 {
+                    b.HasOne("StoreCommerce.Domain.Entity.Transaction", "CapturedTransaction")
+                        .WithMany()
+                        .HasForeignKey("CapturedTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_pagamento_externo_transacao_captured_transaction_id");
+
                     b.HasOne("StoreCommerce.Domain.Entity.PaymentAttempt", "PaymentAttempt")
                         .WithMany("Payments")
                         .HasForeignKey("PaymentAttemptId", "EnterpriseId", "Provider", "Environment", "ExternalAccountId")
@@ -6241,6 +6477,8 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_pagamento_externo_tentativa_pagamento_payment_attempt_id_en~");
+
+                    b.Navigation("CapturedTransaction");
 
                     b.Navigation("PaymentAttempt");
                 });
@@ -6267,6 +6505,16 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasConstraintName("fk_operacao_pagamento_transacao_payment_transaction_id");
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PaymentProviderSelection", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_selecao_provedor_pagamento_empresa_enterprise_id");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
@@ -6311,6 +6559,23 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderAuthorization", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_autorizacao_provedor_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_autorizacao_provedor_usuario_user_id");
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderConnection", b =>
                 {
                     b.HasOne("StoreCommerce.Domain.Entity.User", null)
@@ -6326,6 +6591,24 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_conexao_provedor_empresa_enterprise_id");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.ProviderNotification", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.PaymentAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentAttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_notificacao_provedor_tentativa_pagamento_payment_attempt_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.ProviderConnection", "Connection")
+                        .WithMany()
+                        .HasForeignKey("ProviderConnectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_notificacao_provedor_conexao_provedor_provider_connection_id");
+
+                    b.Navigation("Connection");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Service", b =>

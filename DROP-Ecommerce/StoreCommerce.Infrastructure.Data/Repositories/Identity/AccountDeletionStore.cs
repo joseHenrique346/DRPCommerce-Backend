@@ -45,10 +45,16 @@ public sealed class AccountDeletionStore(StoreCommerceDbContext context, IIdenti
         var unresolvedOperations = await context.PaymentOperations.IgnoreQueryFilters()
             .CountAsync(Operation => Operation.EnterpriseId == enterpriseId && Operation.Order.CustomerId == customerId &&
                 Operation.Status != PaymentOperationStatus.Succeeded && Operation.Status != PaymentOperationStatus.Superseded, ct);
+        var unresolvedNotifications = await context.Set<ProviderNotification>().IgnoreQueryFilters()
+            .CountAsync(Notification => Notification.EnterpriseId == enterpriseId && Notification.Status != ProviderNotificationStatus.Completed &&
+                context.PaymentAttempts.IgnoreQueryFilters().Any(Attempt => Attempt.EnterpriseId == enterpriseId && Attempt.CustomerId == customerId &&
+                    Attempt.ProviderConnectionId == Notification.ProviderConnectionId &&
+                    (Attempt.Id == Notification.PaymentAttemptId || Attempt.Payments.Any(Payment => Payment.PaymentId == Notification.PaymentId))), ct);
 
-        if (uncertainPayments > 0 || unresolvedOperations > 0)
+        if (uncertainPayments > 0 || unresolvedOperations > 0 || unresolvedNotifications > 0)
             blockers.Add(new AccountDeletionBlocker("AccountDeletion.UnresolvedPaymentOperations",
-                "Resolva os cancelamentos e estornos pendentes antes de excluir a conta.", uncertainPayments + unresolvedOperations));
+                "Resolva os cancelamentos, estornos e notificações pendentes antes de excluir a conta.",
+                uncertainPayments + unresolvedOperations + unresolvedNotifications));
 
         var activeOrders = await context.Orders.IgnoreQueryFilters()
             .CountAsync(Order => Order.EnterpriseId == enterpriseId && Order.CustomerId == customerId &&
@@ -114,6 +120,9 @@ public sealed class AccountDeletionStore(StoreCommerceDbContext context, IIdenti
             await context.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM empresa WHERE id = {enterpriseId} FOR UPDATE", ct);
 
         await context.UserRefreshTokens.Where(Token => Token.UserId == userId).ExecuteDeleteAsync(ct);
+        await context.Set<ProviderAuthorization>().IgnoreQueryFilters().Where(Authorization => Authorization.UserId == userId)
+            .ExecuteUpdateAsync(Setters => Setters.SetProperty(Authorization => Authorization.ConsumedAt, now)
+                .SetProperty(Authorization => Authorization.ProtectedVerifier, string.Empty), ct);
         await context.UserActionTokens.Where(Token => Token.UserId == userId).ExecuteDeleteAsync(ct);
         await context.Employees.IgnoreQueryFilters().Where(Employee => Employee.EnterpriseMembership.UserId == userId)
             .ExecuteUpdateAsync(Setters => Setters.SetProperty(Employee => Employee.FullName, "Funcionário excluído")

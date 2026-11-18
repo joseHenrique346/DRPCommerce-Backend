@@ -41,6 +41,7 @@ public sealed class PaymentAttempt : BaseEntity, ITenantEntity
     public Guid? LeaseToken { get; private set; }
     public DateTime? LeaseExpiresAt { get; private set; }
     public DateTime NextReconciliationAt { get; private set; }
+    public DateTime NextStatusCheckAt { get; private set; }
     public long Version { get; private set; }
     public Order Order { get; private set; } = null!;
     public Transaction Transaction { get; private set; } = null!;
@@ -91,7 +92,8 @@ public sealed class PaymentAttempt : BaseEntity, ITenantEntity
             TransactionMethodId = transaction.TransactionMethodId,
             ExpiresAt = expiresAt,
             Status = PaymentCreationStatus.Requested,
-            NextReconciliationAt = now
+            NextReconciliationAt = now,
+            NextStatusCheckAt = now
         };
     }
 }

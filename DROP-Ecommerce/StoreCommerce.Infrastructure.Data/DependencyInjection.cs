@@ -18,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Infrastructure.Data.Integrations;
+using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 namespace StoreCommerce.Infrastructure.Data;
 
@@ -80,8 +81,27 @@ public static class DependencyInjection
             protection.ProtectKeysWithDpapi();
 
         services.AddScoped<ICustomerAddressRepository, CustomerAddressRepository>();
-        // Troque pelo adaptador do gateway real quando a integração for implementada.
+        services.AddOptions<MercadoPagoOptions>();
+
+        if (configuration is not null)
+            services.Configure<MercadoPagoOptions>(configuration.GetSection("MercadoPago"));
+
+        services.AddHttpClient("MercadoPago", Client =>
+        {
+            Client.BaseAddress = new Uri("https://api.mercadopago.com");
+            Client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        services.AddScoped<MercadoPagoApi>();
+        services.AddScoped<MercadoPagoAccess>();
+        services.AddScoped<MercadoPagoGateway>();
+        services.AddScoped<IPaymentGateway>(Provider => Provider.GetRequiredService<MercadoPagoGateway>());
         services.AddScoped<StoreCommerce.Application.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();
+        services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
+        services.AddScoped<IProviderTokenRefresher, MercadoPagoTokenRefresher>();
+        services.AddScoped<MercadoPagoAuthorizationService>();
+        services.AddScoped<MercadoPagoSignature>();
+        services.AddScoped<MercadoPagoNotifications>();
+        services.AddHostedService<Workers.MercadoPagoReconciliationWorker>();
         services.AddHostedService<Workers.PendingOrderExpirationWorker>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddHostedService<Workers.StockReservationExpirationWorker>();

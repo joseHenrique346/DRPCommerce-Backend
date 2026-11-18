@@ -48,6 +48,7 @@ public sealed class PaymentAttemptConfiguration : IEntityTypeConfiguration<Payme
         builder.HasIndex(Attempt => Attempt.IdempotencyKey).IsUnique();
         builder.HasIndex(Attempt => new { Attempt.EnterpriseId, Attempt.OrderId });
         builder.HasIndex(Attempt => new { Attempt.Status, Attempt.NextReconciliationAt });
+        builder.HasIndex(Attempt => new { Attempt.Provider, Attempt.Status, Attempt.NextStatusCheckAt });
         builder.HasIndex(Attempt => new { Attempt.Provider, Attempt.Environment, Attempt.ExternalAccountId, Attempt.PreferenceId })
             .IsUnique().HasFilter("preference_id IS NOT NULL");
         builder.HasOne(Attempt => Attempt.Order).WithMany(Order => Order.ListPaymentAttempt)
@@ -78,6 +79,9 @@ public sealed class PaymentExternalPaymentConfiguration : IEntityTypeConfigurati
         builder.Property(Payment => Payment.Provider).HasMaxLength(40);
         builder.Property(Payment => Payment.ExternalAccountId).HasMaxLength(200);
         builder.Property(Payment => Payment.PaymentId).HasMaxLength(200);
+        builder.HasOne(Payment => Payment.CapturedTransaction).WithMany()
+            .HasForeignKey(Payment => Payment.CapturedTransactionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(Payment => Payment.CapturedTransactionId).IsUnique();
         // A mesma cobrança não pode ser apropriada por outra loja que use a mesma conta externa.
         builder.HasIndex(Payment => new { Payment.Provider, Payment.Environment, Payment.ExternalAccountId, Payment.PaymentId }).IsUnique();
         builder.HasOne(Payment => Payment.PaymentAttempt).WithMany(Attempt => Attempt.Payments)

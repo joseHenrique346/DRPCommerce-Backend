@@ -43,6 +43,9 @@ public partial class StoreCommerceDbContext
                 Shipment shipment => (entry.State == EntityState.Added || entry.State == EntityState.Modified) && OwnsOrder(shipment.Order, shipment.OrderId),
                 OrderStatusHistory history => entry.State == EntityState.Added && OwnsOrder(history.Order, history.OrderId),
                 Transaction transaction => OwnsOrder(transaction.Order, transaction.OrderId),
+                PaymentExternalPayment external => entry.State == EntityState.Modified &&
+                    OwnsOrder(external.PaymentAttempt.Order, external.PaymentAttempt.OrderId) &&
+                    OnlyModified(entry, nameof(PaymentExternalPayment.CapturedTransactionId), nameof(PaymentExternalPayment.ProviderUpdatedAt)),
                 PaymentOperation operation => OwnsOrder(operation.Order, operation.OrderId) &&
                     (operation.PaymentTransactionId == null || operation.Order.ListTransaction.Any(Transaction =>
                         Transaction.Id == operation.PaymentTransactionId && Transaction.Amount == operation.Amount)),

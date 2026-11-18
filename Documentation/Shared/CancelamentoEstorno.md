@@ -46,7 +46,7 @@ O adapter recebe `PaymentOperationRequest`, incluindo `PaymentProviderContext`, 
 
 Para estorno, é obrigatório um `PaymentId` previamente verificado e correspondente à referência do pagamento capturado. A preferência de Checkout Pro não é aceita como substituto. Um `Succeeded` exige referência verificável; `Failed` exige comprovação de que nada foi aplicado. Ausência de resposta, resposta inválida e dúvida ficam incertas. Se a consulta não permite correlacionar um estorno inequivocamente, manter pendente/em revisão; não deduzir sucesso apenas pelo mesmo valor ou repetir o POST.
 
-O Mercado Pago documenta o [POST de estorno com PaymentId e X-Idempotency-Key](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api-payments/create-refund/post) e a [consulta de estornos de um pagamento](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api-payments/get-refunds/get). Esses métodos ainda precisam ser implementados no adapter; esta entrega não chama o Mercado Pago.
+O [adapter Mercado Pago](MercadoPago.md) implementa o estorno integral com PaymentId e chave estável, seguido de consulta financeira na recuperação. Configuração e homologação externas são necessárias antes da ativação. Referências: [POST de estorno](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api-payments/create-refund/post) e [consulta de estornos](https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-api-payments/get-refunds/get).
 
 ## Banco e validação
 
@@ -54,4 +54,4 @@ Aplicar `AddRecoverablePaymentOperations` antes de executar a nova API/worker. A
 
 Validação em PostgreSQL temporário isolado: 49 verificações do novo fluxo, incluindo checkout real com estoque/cupom, criação concorrente de solicitações, confirmação manual concorrente, persistência antes da chamada, catálogo liberado durante I/O externo, timeout, falha de gravação após sucesso externo, recuperação por consulta, lease abandonada/antiga, worker concorrente, retry explícito com a mesma chave, criação abortada, autorização pendente, aprovação tardia repetida, IDs insuficientes, legado, isolamento por loja e bloqueio de exclusão de conta. Também passaram as 42 verificações anteriores de conexões/checkout e 52 de exclusão de conta. Nenhuma movimentação real ou migração em banco existente do usuário.
 
-Próximo passo: implementar e homologar OAuth/adapter Mercado Pago, incluindo consultas de criação/cancelamento/estorno e webhook assinado com consulta autenticada. Depois, adaptar o frontend aos estados e homologar a venda completa em sandbox.
+OAuth, adapter e webhook estão implementados no backend. Próximo passo: configurar o [ambiente Mercado Pago](MercadoPago.md), adaptar o frontend e homologar a venda completa em sandbox.

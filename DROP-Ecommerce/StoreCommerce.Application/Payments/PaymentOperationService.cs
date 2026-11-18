@@ -3,7 +3,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Payments;
 
-public sealed class PaymentOperationService(IPaymentOperationStore store, IPaymentGateway gateway,
+public sealed class PaymentOperationService(IPaymentOperationStore store, IPaymentGatewayRegistry gateways,
     ILogger<PaymentOperationService> logger, TimeProvider time)
 {
     public async Task ProcessAsync(long enterpriseId, long operationId, CancellationToken ct)
@@ -26,9 +26,9 @@ public sealed class PaymentOperationService(IPaymentOperationStore store, IPayme
                 operation.ExternalReference, operation.PaymentId, operation.PreferenceId, operation.Amount,
                 operation.CurrencyCode, operation.Reason);
 
-            if (gateway.Provider != operation.Provider)
-                result = new PaymentOperationResult(PaymentOperationStatus.ReviewRequired);
-            else if (work.RecoverOnly)
+            var gateway = gateways.Resolve(operation.Provider);
+
+            if (work.RecoverOnly)
                 result = await gateway.RecoverOperationAsync(request, timeout.Token);
             else
                 result = await gateway.ExecuteOperationAsync(request, timeout.Token);
@@ -41,6 +41,10 @@ public sealed class PaymentOperationService(IPaymentOperationStore store, IPayme
                 result.Status == PaymentOperationStatus.AwaitingManualConfirmation &&
                     (operation.Provider != "manual" || operation.Kind != PaymentOperationKind.FullRefund))
                 result = new PaymentOperationResult(PaymentOperationStatus.OutcomeUnknown);
+        }
+        catch (PaymentNotSubmittedException) when (!work.RecoverOnly)
+        {
+            result = new PaymentOperationResult(PaymentOperationStatus.Failed);
         }
         catch (Exception)
         {

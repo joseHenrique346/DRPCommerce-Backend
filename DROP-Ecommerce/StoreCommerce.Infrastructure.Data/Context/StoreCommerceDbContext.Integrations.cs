@@ -21,7 +21,8 @@ public partial class StoreCommerceDbContext
         foreach (var entry in changes)
         {
             if (entry.State == EntityState.Deleted || entry.Entity is not ITenantEntity entity || entity.EnterpriseId != tenant ||
-                entry.Entity is not (ProviderConnection or PaymentAttempt or PaymentExternalPayment))
+                entry.Entity is not (ProviderConnection or PaymentAttempt or PaymentExternalPayment or
+                    ProviderAuthorization or PaymentProviderSelection or ProviderNotification))
                 throw new SecurityFailure(403, "Integration.InvalidScope", "Gravação fora do escopo da integração.");
         }
 

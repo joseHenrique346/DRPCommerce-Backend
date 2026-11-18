@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace StoreCommerce.Application.Payments;
 
-public sealed class PaymentAttemptService(IPaymentAttemptStore store, IPaymentGateway gateway,
+public sealed class PaymentAttemptService(IPaymentAttemptStore store, IPaymentGatewayRegistry gateways,
     TimeProvider time, ILogger<PaymentAttemptService> logger)
 {
     public async Task ProcessAsync(long enterpriseId, long attemptId, CancellationToken ct)
@@ -13,8 +13,13 @@ public sealed class PaymentAttemptService(IPaymentAttemptStore store, IPaymentGa
             return;
 
         var attempt = work.Attempt;
+        IPaymentGateway gateway;
 
-        if (attempt.Provider != gateway.Provider)
+        try
+        {
+            gateway = gateways.Resolve(attempt.Provider);
+        }
+        catch (Exception)
         {
             await MarkUnknownAsync(work);
 
@@ -36,6 +41,14 @@ public sealed class PaymentAttemptService(IPaymentAttemptStore store, IPaymentGa
             session = work.RecoverOnly
                 ? await gateway.RecoverPaymentAsync(request, timeout.Token)
                 : await gateway.CreatePaymentAsync(request, timeout.Token);
+        }
+        catch (PaymentNotSubmittedException) when (!work.RecoverOnly)
+        {
+            using var persistence = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await store.MarkNotSubmittedAsync(work, time.GetUtcNow().UtcDateTime.AddMinutes(1), persistence.Token);
+            ct.ThrowIfCancellationRequested();
+
+            return;
         }
         catch (Exception)
         {

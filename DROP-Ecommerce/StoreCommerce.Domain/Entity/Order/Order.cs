@@ -277,6 +277,13 @@ public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
                 "Pagamento aprovado após cancelamento; estorno solicitado", now);
     }
 
+    public void RegisterExternalFullRefund(DateTime now)
+    {
+        if (OrderPaymentStatusId != OrderPaymentStatus.FullRefund.Id)
+            Transition(OrderStatusId, OrderPaymentStatus.FullRefund.Id, OrderChangeSource.PaymentGateway, null,
+                "Reembolso integral confirmado por consulta ao provedor", now);
+    }
+
     /// <summary>
     /// Status em que o pedido conta como compra concluída no histórico do cliente (condições de cupom).
     /// </summary>

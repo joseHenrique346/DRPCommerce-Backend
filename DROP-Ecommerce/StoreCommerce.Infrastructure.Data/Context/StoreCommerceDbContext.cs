@@ -161,6 +161,9 @@ public partial class StoreCommerceDbContext : DbContext
         modelBuilder.Entity<ProviderConnection>().HasQueryFilter(ProviderConnection => ProviderConnection.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(PaymentAttempt => PaymentAttempt.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PaymentOperation>().HasQueryFilter(PaymentOperation => PaymentOperation.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<ProviderAuthorization>().HasQueryFilter(ProviderAuthorization => ProviderAuthorization.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentProviderSelection>().HasQueryFilter(PaymentProviderSelection => PaymentProviderSelection.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<ProviderNotification>().HasQueryFilter(ProviderNotification => ProviderNotification.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PaymentExternalPayment>().HasQueryFilter(PaymentExternalPayment => PaymentExternalPayment.EnterpriseId == _tenantProvider.GetEnterpriseId());
 
         // Dependents of filtered aggregates must use the same visibility rules.

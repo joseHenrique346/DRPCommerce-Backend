@@ -1,5 +1,7 @@
 # Integrações externas — situação e próximos passos
 
+Atualização de 18/11/2026: [backend Mercado Pago](MercadoPago.md) implementado com OAuth, Checkout Pro, webhook assinado e reconciliação. Desabilitado por padrão; faltam URLs/segredos, frontend e homologação real em sandbox. Os registros anteriores abaixo devem ser lidos como histórico.
+
 Atualização de 16/11/2026 na #93: implementada a [fundação de conexões e tentativas de pagamento](PreparacaoPagamentos.md), com tokens protegidos, snapshot financeiro, IDs separados e recuperação de criação interrompida. O adapter ativo continua manual; OAuth, webhooks e adapters reais permanecem pendentes. As tabelas abaixo descrevem a base anterior e devem ser lidas junto dessa atualização.
 
 Atualizado em 03/11/2026. O Store já possui catálogo por SKU, estoque, carrinho, checkout, cupons e ciclo do pedido. **Mercado Pago e Melhor Envio foram escolhidos**, e as contas já existem; os adapters ainda não foram implementados. Emissão fiscal depende de definição/contratação de API e habilitação do emitente.
@@ -11,8 +13,8 @@ O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisit
 | Capacidade | Implementado | Pendente |
 | --- | --- | --- |
 | Venda Store | Checkout idempotente, totais do servidor, compromisso de estoque/cupom, numeração e histórico. | Ligar pagamento e frete reais preservando essas invariantes. |
-| Pagamento | IPaymentGateway, sessão/instruções e aplicação interna de resultado; ManualPaymentGateway registrado. | Adapter Mercado Pago, conexão por loja, notificações validadas, consulta e reconciliação. |
-| Reembolso | Intenção persistida, I/O fora do lock, estados financeiros e recuperação por consulta; confirmação manual auditada. | Adapter real de execução/consulta e homologação de devolução no provedor. |
+| Pagamento | Seleção por loja, adapter Mercado Pago, OAuth, webhook assinado e consulta/reconciliação; modo manual preservado. | Configuração do ambiente, frontend e homologação em sandbox. |
+| Reembolso | Intenção persistida, I/O fora do lock, adapter de estorno integral e recuperação por consulta. | Homologação no provedor e fluxo operacional de parcial/contestação. |
 | Frete | Dimensões/peso por produto e sobrescritas por SKU; Shipment com dados de envio. | Cotar, selecionar, congelar custo, comprar/gerar/imprimir etiqueta e rastrear pelo Melhor Envio. ShippingCost permanece zero no cálculo atual. |
 | Fiscal | Entidade Invoice e referências comerciais. | Emitente/perfil fiscal, transmissão, autorização, XML/DANFE, consulta e cancelamento. |
 | Drop | Evento, inscrição, entrada na fila e consultas privadas. | Admissão, reserva no estoque canônico, correlação com venda Store e recuperação entre bancos. |

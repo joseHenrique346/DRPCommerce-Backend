@@ -27,7 +27,7 @@ public sealed record ShipmentDetails(long ShipmentTypeId, string? CarrierName, s
 /// Máquina de estados do pedido com seus efeitos: baixa e devolução de estoque, uso do cupom e pagamento.
 /// Trabalha sempre com a loja informada (sem depender da requisição), para servir backoffice, vitrine, worker e webhook.
 /// </summary>
-public sealed class OrderLifecycleService(
+public sealed partial class OrderLifecycleService(
     IOrderRepository orders,
     IRepository<Transaction> transactions,
     IRepository<CouponRedemption> redemptions,
@@ -35,7 +35,6 @@ public sealed class OrderLifecycleService(
     IProductRepository products,
     IUnitOfWork unitOfWork,
     StoreSettingsReader storeSettings,
-    IPaymentGateway gateway,
     IPaymentOperationStore operations,
     OrderWorkflowScope scope,
     ICurrentIdentity actor,
@@ -77,7 +76,7 @@ public sealed class OrderLifecycleService(
             {
                 var method = transactionMethodId ?? order.PaymentMethodId
                     ?? throw new SecurityFailure(400, "Payment.MethodRequired", "Informe a forma de pagamento recebida.");
-                payment = Transaction.CreatePendingPayment(order, method, gateway.Provider);
+                payment = Transaction.CreatePendingPayment(order, method, IntegrationProviders.Manual);
                 transactions.Add(payment);
             }
 

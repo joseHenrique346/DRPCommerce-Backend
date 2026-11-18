@@ -147,6 +147,30 @@ public sealed class PaymentAttemptStore(StoreCommerceDbContext context, Integrat
                 .SetProperty(Attempt => Attempt.UpdatedAt, time.GetUtcNow().UtcDateTime), ct);
     }
 
+    public async Task MarkNotSubmittedAsync(PaymentAttemptWork work, DateTime nextAttemptAt, CancellationToken ct)
+    {
+        if (work.RecoverOnly)
+            throw new ArgumentException("Uma recuperação não comprova ausência de escrita anterior.");
+
+        await using var transaction = await context.Database.BeginTransactionAsync(ct);
+        var tenant = work.Attempt.EnterpriseId;
+        await context.Database.ExecuteSqlInterpolatedAsync($"SELECT id FROM empresa WHERE id = {tenant} FOR UPDATE", ct);
+        var stillPending = await context.Orders.IgnoreQueryFilters().AsNoTracking()
+            .AnyAsync(Order => Order.Id == work.Attempt.OrderId && Order.EnterpriseId == tenant && !Order.IsDeleted &&
+                Order.OrderStatusId == OrderStatus.Pending.Id && Order.OrderPaymentStatusId == OrderPaymentStatus.Pending.Id &&
+                Order.PaymentExpiresAt > time.GetUtcNow().UtcDateTime, ct);
+
+        await context.PaymentAttempts.IgnoreQueryFilters()
+            .Where(Attempt => Attempt.Id == work.Attempt.Id && Attempt.EnterpriseId == tenant && Attempt.LeaseToken == work.LeaseToken)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(Attempt => Attempt.Status, stillPending ? PaymentCreationStatus.Requested : PaymentCreationStatus.Aborted)
+                .SetProperty(Attempt => Attempt.LeaseToken, (Guid?)null)
+                .SetProperty(Attempt => Attempt.LeaseExpiresAt, (DateTime?)null)
+                .SetProperty(Attempt => Attempt.NextReconciliationAt, nextAttemptAt)
+                .SetProperty(Attempt => Attempt.Version, Attempt => Attempt.Version + 1), ct);
+        await transaction.CommitAsync(ct);
+    }
+
     public async Task<ExternalPaymentOwner> RegisterVerifiedPaymentAsync(VerifiedExternalPayment payment, CancellationToken ct)
     {
         var attempt = await context.PaymentAttempts.IgnoreQueryFilters().AsNoTracking()
@@ -165,6 +189,12 @@ public sealed class PaymentAttemptStore(StoreCommerceDbContext context, Integrat
             await context.SaveChangesAsync(ct);
 
         await transaction.CommitAsync(ct);
+
+        // A associação precede a aquisição do lock comercial. Não levar uma cópia antiga desse vínculo
+        // para o workflow: outro worker pode ter registrado a captura enquanto aguardávamos o catálogo.
+        foreach (var entry in context.ChangeTracker.Entries<PaymentExternalPayment>()
+            .Where(Entry => Entry.Entity.PaymentAttemptId == attempt.Id && Entry.Entity.PaymentId == payment.PaymentId).ToList())
+            entry.State = EntityState.Detached;
 
         return new ExternalPaymentOwner(attempt.EnterpriseId, attempt.OrderId, attempt.Id);
     }

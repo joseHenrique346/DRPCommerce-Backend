@@ -157,6 +157,21 @@ public class Transaction : BaseEntity
     public bool IsCancellablePayment => TransactionTypeId == TransactionType.Payment.Id &&
         (TransactionStatusId == TransactionStatus.Pending.Id || TransactionStatusId == TransactionStatus.Authorized.Id);
 
+    public void MarkAuthorized(string reference)
+    {
+        if (!IsPendingPayment || string.IsNullOrWhiteSpace(reference) || reference.Length > GatewayReferenceMaxLength)
+            throw new ArgumentException("Autorização de pagamento inválida.");
+
+        GatewayReference = reference;
+        TransactionStatusId = TransactionStatus.Authorized.Id;
+    }
+
+    public void SetVerifiedMethod(long methodId)
+    {
+        ValidateMethod(methodId);
+        TransactionMethodId = methodId;
+    }
+
     public bool IsCapturedPayment => TransactionTypeId == TransactionType.Payment.Id && TransactionStatusId == TransactionStatus.Captured.Id;
 
     /// <summary>

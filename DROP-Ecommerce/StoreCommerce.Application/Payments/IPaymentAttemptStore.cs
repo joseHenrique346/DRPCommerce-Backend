@@ -18,6 +18,7 @@ public interface IPaymentAttemptStore
     Task<PaymentAttemptWork?> TryClaimAsync(long enterpriseId, long attemptId, DateTime now, CancellationToken ct);
     Task CompleteAsync(PaymentAttemptWork work, PaymentSession session, CancellationToken ct);
     Task MarkUnknownAsync(PaymentAttemptWork work, DateTime nextReconciliationAt, CancellationToken ct);
+    Task MarkNotSubmittedAsync(PaymentAttemptWork work, DateTime nextAttemptAt, CancellationToken ct);
     /// <summary>
     /// Chamado pelo adapter após consultar o provedor. Valida o escopo/valor e vincula um PaymentId sem confirmar a venda.
     /// </summary>

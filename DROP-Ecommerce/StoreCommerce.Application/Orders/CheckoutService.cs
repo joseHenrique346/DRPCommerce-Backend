@@ -5,6 +5,7 @@ using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.Integrations;
 
 namespace StoreCommerce.Application.Orders;
 
@@ -28,7 +29,7 @@ public sealed class CheckoutService(
     CategoryCatalogReader categoryReader,
     StoreSettingsReader storeSettings,
     OrderLifecycleService lifecycle,
-    IPaymentGateway gateway,
+    IPaymentGatewayRegistry gateways,
     IPaymentAttemptStore paymentAttempts,
     PaymentAttemptService paymentAttemptService,
     OrderWorkflowScope scope,
@@ -56,7 +57,6 @@ public sealed class CheckoutService(
         var settings = await storeSettings.GetCurrentAsync(ct);
         var visible = categories.Content!.Select(category => category.Id).ToHashSet();
         var now = time.GetUtcNow().UtcDateTime;
-        var providerContext = await gateway.GetContextAsync(enterpriseId, ct);
         long orderId;
 
         await using (var transaction = await unitOfWork.BeginTransactionAsync(ct))
@@ -109,9 +109,14 @@ public sealed class CheckoutService(
             if (!settings.MeetsMinOrderValue(order.SubTotal))
                 throw new SecurityFailure(400, "Checkout.MinOrderValue", $"O valor mínimo para comprar nesta loja é {settings.MinOrderValue:0.00}.");
 
+            // A seleção consulta apenas configuração local. Pedido gratuito não depende de uma conexão financeira.
+            var providerContext = order.TotalAmount == 0
+                ? new PaymentProviderContext(IntegrationProviders.Manual, IntegrationEnvironment.Sandbox, $"manual-{enterpriseId}", null)
+                : await gateways.GetContextAsync(enterpriseId, ct);
+
             ReserveCouponUse(order, now);
             ReserveStock(order, selected, settings, key, expiresAt, now);
-            var payment = Transaction.CreatePendingPayment(order, request.PaymentMethodId, gateway.Provider);
+            var payment = Transaction.CreatePendingPayment(order, request.PaymentMethodId, providerContext.Provider);
             transactions.Add(payment);
 
             if (order.TotalAmount > 0)
