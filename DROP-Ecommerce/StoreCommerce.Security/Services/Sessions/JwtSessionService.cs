@@ -36,6 +36,13 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
 
         if (membership is not null)
         {
+            var contract = await data.Enterprises.GetContractStateAsync(membership.EnterpriseId, ct)
+                ?? throw new SecurityFailure(401, "Contract.Unavailable", "Contrato da loja indisponível.");
+
+            claims.Add(Number(SecurityNames.Plan, contract.PlanId));
+            claims.Add(Number(SecurityNames.ContractRevision, contract.Revision));
+            claims.Add(Number(SecurityNames.CatalogVersion, contract.CatalogVersion));
+
             claims.AddRange([Number(SecurityNames.Enterprise, membership.EnterpriseId), Number(SecurityNames.Membership, membership.Id),
                 Number(SecurityNames.AccessVersion, membership.AccessVersion),
                 new(SecurityNames.Kind, membership.KindId switch { 1 => "primary_owner", 2 => "co_owner", _ => "staff" })]);
@@ -148,6 +155,13 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
                 var membershipId = SecurityNames.Id(principal, SecurityNames.Membership);
                 var accessVersion = SecurityNames.Id(principal, SecurityNames.AccessVersion);
                 var member = await data.EnterpriseMemberships.FindAsync(x => x.Id == membershipId && x.UserId == id && x.EnterpriseId == tenantId && x.IsActive && x.Enterprise.IsActive, ct, ignoreQueryFilters: true, tracking: false);
+
+                var contract = await data.Enterprises.GetContractStateAsync(tenantId, ct);
+
+                if (contract is null || contract.PlanId != SecurityNames.Id(principal, SecurityNames.Plan) ||
+                    contract.Revision != SecurityNames.Id(principal, SecurityNames.ContractRevision) ||
+                    contract.CatalogVersion != SecurityNames.Id(principal, SecurityNames.CatalogVersion))
+                    return false;
 
                 return member is not null && member.AccessVersion == accessVersion &&
                     principal.FindFirst(SecurityNames.Kind)?.Value == (member.KindId switch

@@ -1664,17 +1664,34 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("AddOnId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("add_on_id");
+
                     b.Property<string>("AddressLine")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("address_line");
 
+                    b.Property<int>("CatalogVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("catalog_version");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("city");
+
+                    b.Property<long>("ContractRevision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("contract_revision");
 
                     b.Property<string>("Country")
                         .IsRequired()
@@ -1695,6 +1712,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("legal_name");
+
+                    b.Property<long>("PlanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("plan_id");
 
                     b.Property<long>("StateId")
                         .HasColumnType("bigint")
@@ -1719,10 +1742,117 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_empresa");
 
+                    b.HasIndex("AddOnId")
+                        .HasDatabaseName("ix_empresa_add_on_id");
+
                     b.HasIndex("StateId")
                         .HasDatabaseName("ix_empresa_state_id");
 
+                    b.HasIndex("PlanId", "AddOnId")
+                        .HasDatabaseName("ix_empresa_plan_id_add_on_id");
+
                     b.ToTable("empresa", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseContractChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AddOnId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("add_on_id");
+
+                    b.Property<decimal>("AddOnMonthlyPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("add_on_monthly_price");
+
+                    b.Property<int>("CatalogVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("catalog_version");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<long>("ExpectedContractRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("expected_contract_revision");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<long>("PlanId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("plan_id");
+
+                    b.Property<decimal>("PlanMonthlyPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("plan_monthly_price");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<long?>("RequestedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("SupersededAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("superseded_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_solicitacao_contrato_empresa");
+
+                    b.HasIndex("AddOnId")
+                        .HasDatabaseName("ix_solicitacao_contrato_empresa_add_on_id");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_solicitacao_contrato_empresa_pendente")
+                        .HasFilter("status = 1");
+
+                    b.HasIndex("RequestedByUserId")
+                        .HasDatabaseName("ix_solicitacao_contrato_empresa_requested_by_user_id");
+
+                    b.HasIndex("EnterpriseId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_solicitacao_contrato_empresa_enterprise_id_idempotency_key");
+
+                    b.HasIndex("PlanId", "AddOnId")
+                        .HasDatabaseName("ix_solicitacao_contrato_empresa_plan_id_add_on_id");
+
+                    b.ToTable("solicitacao_contrato_empresa", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseDomain", b =>
@@ -4883,6 +5013,96 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterpriseAddOn", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("MonthlyPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("monthly_price");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("ResourceCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("resource_code");
+
+                    b.HasKey("Id")
+                        .HasName("pk_adicional_empresa");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_adicional_empresa_code");
+
+                    b.ToTable("adicional_empresa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Code = "team-small",
+                            Description = "Equipe pequena",
+                            MonthlyPrice = 9.90m,
+                            Quantity = 1,
+                            ResourceCode = "employees"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Code = "team-large",
+                            Description = "Equipe ampliada",
+                            MonthlyPrice = 29.90m,
+                            Quantity = 5,
+                            ResourceCode = "employees"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Code = "catalog-small",
+                            Description = "Catálogo pequeno",
+                            MonthlyPrice = 9.90m,
+                            Quantity = 100,
+                            ResourceCode = "store_products"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Code = "catalog-large",
+                            Description = "Catálogo ampliado",
+                            MonthlyPrice = 19.90m,
+                            Quantity = 500,
+                            ResourceCode = "store_products"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Code = "launches",
+                            Description = "Lançamentos",
+                            MonthlyPrice = 14.90m,
+                            Quantity = 25,
+                            ResourceCode = "drop_products"
+                        });
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterpriseMembershipKind", b =>
                 {
                     b.Property<long>("Id")
@@ -4915,6 +5135,281 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         {
                             Id = 3L,
                             Description = "Funcionario"
+                        });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterprisePlan", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("AllowsCustomDomain")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_custom_domain");
+
+                    b.Property<bool>("AllowsCustomTheme")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_custom_theme");
+
+                    b.Property<bool>("AllowsEmployees")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_employees");
+
+                    b.Property<bool>("AllowsFullCustomization")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_full_customization");
+
+                    b.Property<bool>("AllowsLogoCustomization")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_logo_customization");
+
+                    b.Property<bool>("AllowsVitrine")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_vitrine");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DropProductLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("drop_product_limit");
+
+                    b.Property<int>("DropThemeLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("drop_theme_limit");
+
+                    b.Property<int>("EmployeeLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_limit");
+
+                    b.Property<bool>("IncludesDropModule")
+                        .HasColumnType("boolean")
+                        .HasColumnName("includes_drop_module");
+
+                    b.Property<decimal>("MonthlyPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("monthly_price");
+
+                    b.Property<int>("StoreProductLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_product_limit");
+
+                    b.Property<int>("StoreThemeLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_theme_limit");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("summary");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plano_empresa");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_plano_empresa_code");
+
+                    b.ToTable("plano_empresa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            AllowsCustomDomain = false,
+                            AllowsCustomTheme = false,
+                            AllowsEmployees = false,
+                            AllowsFullCustomization = false,
+                            AllowsLogoCustomization = false,
+                            AllowsVitrine = true,
+                            Code = "free",
+                            Description = "Gratuito",
+                            DropProductLimit = 0,
+                            DropThemeLimit = 0,
+                            EmployeeLimit = 0,
+                            IncludesDropModule = false,
+                            MonthlyPrice = 0m,
+                            StoreProductLimit = 50,
+                            StoreThemeLimit = 1,
+                            Summary = "Gratuito: recursos e limites por loja, conforme o catálogo comercial."
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            AllowsCustomDomain = false,
+                            AllowsCustomTheme = true,
+                            AllowsEmployees = true,
+                            AllowsFullCustomization = false,
+                            AllowsLogoCustomization = true,
+                            AllowsVitrine = true,
+                            Code = "initial",
+                            Description = "Inicial",
+                            DropProductLimit = 0,
+                            DropThemeLimit = 0,
+                            EmployeeLimit = 1,
+                            IncludesDropModule = false,
+                            MonthlyPrice = 49m,
+                            StoreProductLimit = 100,
+                            StoreThemeLimit = 3,
+                            Summary = "Inicial: recursos e limites por loja, conforme o catálogo comercial."
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            AllowsCustomDomain = true,
+                            AllowsCustomTheme = true,
+                            AllowsEmployees = true,
+                            AllowsFullCustomization = true,
+                            AllowsLogoCustomization = true,
+                            AllowsVitrine = true,
+                            Code = "pro",
+                            Description = "Pro",
+                            DropProductLimit = 0,
+                            DropThemeLimit = 0,
+                            EmployeeLimit = 3,
+                            IncludesDropModule = false,
+                            MonthlyPrice = 99m,
+                            StoreProductLimit = 500,
+                            StoreThemeLimit = 10,
+                            Summary = "Pro: recursos e limites por loja, conforme o catálogo comercial."
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            AllowsCustomDomain = true,
+                            AllowsCustomTheme = true,
+                            AllowsEmployees = true,
+                            AllowsFullCustomization = true,
+                            AllowsLogoCustomization = true,
+                            AllowsVitrine = true,
+                            Code = "drpcommerce",
+                            Description = "DRPCommerce",
+                            DropProductLimit = 100,
+                            DropThemeLimit = 10,
+                            EmployeeLimit = 5,
+                            IncludesDropModule = true,
+                            MonthlyPrice = 199m,
+                            StoreProductLimit = 2000,
+                            StoreThemeLimit = 20,
+                            Summary = "DRPCommerce: recursos e limites por loja, conforme o catálogo comercial."
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            AllowsCustomDomain = true,
+                            AllowsCustomTheme = true,
+                            AllowsEmployees = true,
+                            AllowsFullCustomization = true,
+                            AllowsLogoCustomization = true,
+                            AllowsVitrine = false,
+                            Code = "drpdrop",
+                            Description = "DRPDrop",
+                            DropProductLimit = 100,
+                            DropThemeLimit = 10,
+                            EmployeeLimit = 5,
+                            IncludesDropModule = true,
+                            MonthlyPrice = 149m,
+                            StoreProductLimit = 0,
+                            StoreThemeLimit = 0,
+                            Summary = "DRPDrop: recursos e limites por loja, conforme o catálogo comercial."
+                        });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterprisePlanAddOn", b =>
+                {
+                    b.Property<long>("PlanId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("plan_id");
+
+                    b.Property<long>("AddOnId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("add_on_id");
+
+                    b.HasKey("PlanId", "AddOnId")
+                        .HasName("pk_plano_adicional_empresa");
+
+                    b.HasIndex("AddOnId")
+                        .HasDatabaseName("ix_plano_adicional_empresa_add_on_id");
+
+                    b.ToTable("plano_adicional_empresa", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PlanId = 4L,
+                            AddOnId = 1L
+                        },
+                        new
+                        {
+                            PlanId = 2L,
+                            AddOnId = 1L
+                        },
+                        new
+                        {
+                            PlanId = 3L,
+                            AddOnId = 1L
+                        },
+                        new
+                        {
+                            PlanId = 5L,
+                            AddOnId = 1L
+                        },
+                        new
+                        {
+                            PlanId = 2L,
+                            AddOnId = 2L
+                        },
+                        new
+                        {
+                            PlanId = 3L,
+                            AddOnId = 2L
+                        },
+                        new
+                        {
+                            PlanId = 5L,
+                            AddOnId = 2L
+                        },
+                        new
+                        {
+                            PlanId = 4L,
+                            AddOnId = 3L
+                        },
+                        new
+                        {
+                            PlanId = 2L,
+                            AddOnId = 3L
+                        },
+                        new
+                        {
+                            PlanId = 2L,
+                            AddOnId = 4L
+                        },
+                        new
+                        {
+                            PlanId = 3L,
+                            AddOnId = 4L
+                        },
+                        new
+                        {
+                            PlanId = 3L,
+                            AddOnId = 5L
+                        },
+                        new
+                        {
+                            PlanId = 5L,
+                            AddOnId = 5L
                         });
                 });
 
@@ -6037,12 +6532,31 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Enterprise", b =>
                 {
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterpriseAddOn", null)
+                        .WithMany()
+                        .HasForeignKey("AddOnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_empresa_adicional_empresa_add_on_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterprisePlan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_empresa_plano_empresa_plan_id");
+
                     b.HasOne("StoreCommerce.Domain.StaticEntity.State", "State")
                         .WithMany()
                         .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_empresa_estado_state_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterprisePlanAddOn", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId", "AddOnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_empresa_plano_adicional_empresa_plan_id_add_on_id");
 
                     b.OwnsOne("StoreCommerce.Domain.Entity.EnterpriseEmail", "Email", b1 =>
                         {
@@ -6095,6 +6609,41 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("State");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseContractChange", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterpriseAddOn", null)
+                        .WithMany()
+                        .HasForeignKey("AddOnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_solicitacao_contrato_empresa_adicional_empresa_add_on_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_solicitacao_contrato_empresa_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterprisePlan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_solicitacao_contrato_empresa_plano_empresa_plan_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_solicitacao_contrato_empresa_usuario_requested_by_user_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterprisePlanAddOn", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId", "AddOnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_solicitacao_contrato_empresa_plano_adicional_empresa_plan_i~");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.EnterpriseDomain", b =>
@@ -6915,6 +7464,23 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasConstraintName("fk_usuario_refresh_token_usuario_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.StaticEntity.EnterprisePlanAddOn", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterpriseAddOn", null)
+                        .WithMany()
+                        .HasForeignKey("AddOnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plano_adicional_empresa_adicional_empresa_add_on_id");
+
+                    b.HasOne("StoreCommerce.Domain.StaticEntity.EnterprisePlan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plano_adicional_empresa_plano_empresa_plan_id");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.AccessRole", b =>

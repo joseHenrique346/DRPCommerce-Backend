@@ -20,6 +20,9 @@ public static class SecurityNames
     public const string Session = "session_id";
     public const string SecurityVersion = "security_version";
     public const string AccessVersion = "access_version";
+    public const string Plan = "plan_id";
+    public const string ContractRevision = "contract_revision";
+    public const string CatalogVersion = "catalog_version";
     public const string Kind = "membership_kind";
     public const string Permission = "permission";
     public const string ResolvedTenant = "Commerce.ResolvedTenant";

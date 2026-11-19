@@ -1,0 +1,313 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using SharedCommerce.Api.Configuration;
+using StoreCommerce.Api.Configuration;
+using StoreCommerce.Api.Controllers;
+using StoreCommerce.Application.Contracts;
+using StoreCommerce.Application.Identity;
+using StoreCommerce.Domain.Entity;
+using StoreCommerce.Infrastructure.Data.Context;
+using StoreCommerce.Security.Services;
+using Xunit;
+
+namespace StoreCommerce.Contracts.Tests;
+
+[CollectionDefinition("contracts-postgres", DisableParallelization = true)]
+public sealed class ContractsPostgresCollection : ICollectionFixture<ContractsApiFixture>
+{
+}
+
+public sealed class ContractsApiFixture : IAsyncLifetime
+{
+    private WebApplication? app;
+    private string adminConnectionString = string.Empty;
+    private string databaseName = string.Empty;
+    private string connectionString = string.Empty;
+    private bool created;
+    public List<long> LegacyEnterpriseIds { get; } = [];
+
+    public IServiceProvider Services => app?.Services ?? throw new InvalidOperationException("Fixture não iniciada.");
+
+    public async Task InitializeAsync()
+    {
+        var source = Environment.GetEnvironmentVariable("DRP_CONTRACTS_TEST_POSTGRES");
+
+        if (string.IsNullOrWhiteSpace(source))
+            return;
+
+        var connection = new NpgsqlConnectionStringBuilder(source);
+
+        if (connection.Host is not ("127.0.0.1" or "localhost" or "::1"))
+            throw new InvalidOperationException("Os testes só criam banco descartável em PostgreSQL local.");
+
+        databaseName = "drp_contract_checks_" + Guid.NewGuid().ToString("N")[..12];
+        connection.Database = "postgres";
+        connection.Pooling = false;
+        adminConnectionString = connection.ConnectionString;
+        await using (var admin = new NpgsqlConnection(adminConnectionString))
+        {
+            await admin.OpenAsync();
+            await using var create = new NpgsqlCommand($"CREATE DATABASE \"{databaseName}\"", admin);
+            await create.ExecuteNonQueryAsync();
+            created = true;
+        }
+
+        connection.Database = databaseName;
+        connectionString = connection.ConnectionString;
+
+        try
+        {
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+            {
+                EnvironmentName = Environments.Development
+            });
+            builder.Logging.ClearProviders();
+            builder.WebHost.UseTestServer();
+            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = connectionString,
+                ["Security:SigningKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
+                ["Security:Issuer"] = "DRPCommerce.Contracts.Tests",
+                ["Security:StorefrontBaseDomain"] = "shops.example.invalid",
+                ["Security:BackofficeUrl"] = "https://backoffice.example.invalid",
+                ["Security:InternalServiceKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
+                ["Security:ApiRequestsPerMinute"] = "10000",
+                ["MercadoPago:Enabled"] = "false",
+                ["MercadoPago:AllowProduction"] = "false"
+            });
+
+            var previousConnection = Environment.GetEnvironmentVariable("STORECOMMERCE_CONNECTION_STRING");
+
+            try
+            {
+                Environment.SetEnvironmentVariable("STORECOMMERCE_CONNECTION_STRING", connectionString);
+                builder.Services.AddApiConfiguration(builder.Configuration);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("STORECOMMERCE_CONNECTION_STRING", previousConnection);
+            }
+
+            builder.Services.AddControllers().AddApplicationPart(typeof(EnterpriseContractController).Assembly);
+            builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
+
+            foreach (var service in builder.Services.Where(Service =>
+                Service.ServiceType == typeof(IHostedService) &&
+                Service.ImplementationType?.Namespace?.StartsWith("StoreCommerce.", StringComparison.Ordinal) == true).ToArray())
+                builder.Services.Remove(service);
+
+            app = builder.Build();
+            app.UseExceptionHandler();
+            app.UseCommerceSecurity();
+            app.MapControllers();
+
+            await PrepareMigrationsAsync();
+            await app.StartAsync();
+        }
+        catch
+        {
+            await DisposeAsync();
+
+            throw;
+        }
+    }
+
+    private async Task PrepareMigrationsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
+        var migrator = db.GetService<IMigrator>();
+        await migrator.MigrateAsync("20261118154835_SupportMercadoPagoBalance");
+
+        await using (var connection = new NpgsqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+
+            foreach (var legacyPlanId in new long[] { 1, 2, 3 })
+            {
+                await using var command = new NpgsqlCommand("""
+                    INSERT INTO empresa
+                        (trade_name, legal_name, email, phone, address_line, city, state_id, zip_code, country, is_active, plan_id, created_at)
+                    VALUES
+                        (@name, @name, 'legacy@example.invalid', '11999999999', 'Rua Teste', 'São Paulo', 1, '01001000', 'BR', TRUE, @plan, now())
+                    RETURNING id
+                    """, connection);
+                command.Parameters.AddWithValue("name", "Legacy-" + legacyPlanId);
+                command.Parameters.AddWithValue("plan", legacyPlanId);
+                LegacyEnterpriseIds.Add((long)(await command.ExecuteScalarAsync())!);
+            }
+        }
+
+        await migrator.MigrateAsync();
+    }
+
+    public HttpClient Client(string? token = null)
+    {
+        var client = app!.GetTestClient();
+        client.BaseAddress = new Uri("https://backoffice.example.invalid");
+
+        if (token is not null)
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        return client;
+    }
+
+    public async Task<StoreActor> CreateStoreAsync(long planId = 1, long? addOnId = null, int activeProducts = 0, int inactiveProducts = 0)
+    {
+        using var serviceScope = Services.CreateScope();
+        var services = serviceScope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var suffix = Guid.NewGuid().ToString("N");
+        var user = User.Create("Dono", UserEmail.Create(suffix + "@example.invalid"), true);
+        var enterprise = Enterprise.Create("Loja-" + suffix, "Loja Teste",
+            EnterpriseEmail.Create("shop-" + suffix + "@example.invalid"),
+            EnterprisePhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", true);
+        db.Users.Add(user);
+        db.Enterprises.Add(enterprise);
+        await db.SaveChangesAsync();
+
+        if (planId != 1 || addOnId.HasValue)
+        {
+            using var grant = services.GetRequiredService<EnterpriseContractWriteScope>().Begin(enterprise.Id);
+            enterprise.ChangeContract(planId, addOnId);
+            await db.SaveChangesAsync();
+        }
+
+        var owner = EnterpriseMembership.Create(enterprise.Id, user.Id, 1, true, DateTime.UtcNow);
+        db.EnterpriseMemberships.Add(owner);
+        await db.SaveChangesAsync();
+
+        if (activeProducts + inactiveProducts > 0)
+        {
+            var category = Category.Create(enterprise.Id, null, "Categoria", "category-" + suffix, "", "", 0, true);
+            db.Categories.Add(category);
+            await db.SaveChangesAsync();
+
+            for (var index = 0; index < activeProducts + inactiveProducts; index++)
+            {
+                db.Products.Add(Product.Create(
+                    enterprise.Id, category.Id, null, "Produto " + index, "product-" + suffix + "-" + index,
+                    "", "SKU-" + suffix + "-" + index, "", 10m, 1m, 1m, 10m, 10m, 10m, "", "",
+                    index < activeProducts, false));
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        var token = await IssueTokenAsync(services, db, user, owner);
+
+        return new StoreActor(enterprise.Id, user.Id, owner.Id, token);
+    }
+
+    public async Task<StoreActor> CreateStaffAsync(long enterpriseId, long kindId = 3)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var user = User.Create("Funcionário", UserEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"), true);
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        var membership = EnterpriseMembership.Create(enterpriseId, user.Id, kindId, true, DateTime.UtcNow);
+        db.EnterpriseMemberships.Add(membership);
+        await db.SaveChangesAsync();
+        var token = await IssueTokenAsync(services, db, user, membership);
+
+        return new StoreActor(enterpriseId, user.Id, membership.Id, token);
+    }
+
+    public async Task<StoreActor> CreateAnotherStoreForUserAsync(StoreActor actor)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var user = await db.Users.SingleAsync(User => User.Id == actor.UserId);
+        var enterprise = Enterprise.Create("Outra Loja", "Outra Loja Teste",
+            EnterpriseEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"),
+            EnterprisePhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", true);
+        db.Enterprises.Add(enterprise);
+        await db.SaveChangesAsync();
+        var membership = EnterpriseMembership.Create(enterprise.Id, user.Id, 1, true, DateTime.UtcNow);
+        db.EnterpriseMemberships.Add(membership);
+        await db.SaveChangesAsync();
+        var token = await IssueTokenAsync(services, db, user, membership);
+
+        return new StoreActor(enterprise.Id, user.Id, membership.Id, token);
+    }
+
+    public async Task ChangeContractAsync(long enterpriseId, long planId, long? addOnId)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        using var grant = services.GetRequiredService<EnterpriseContractWriteScope>().Begin(enterpriseId);
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var enterprise = await db.Enterprises.IgnoreQueryFilters().SingleAsync(Enterprise => Enterprise.Id == enterpriseId);
+        enterprise.ChangeContract(planId, addOnId);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<string> FreshTokenAsync(StoreActor actor)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var user = await db.Users.SingleAsync(User => User.Id == actor.UserId);
+        var membership = await db.EnterpriseMemberships.IgnoreQueryFilters()
+            .SingleAsync(Membership => Membership.Id == actor.MembershipId);
+
+        return await IssueTokenAsync(services, db, user, membership);
+    }
+
+    private static async Task<string> IssueTokenAsync(IServiceProvider services, StoreCommerceDbContext db,
+        User user, EnterpriseMembership membership)
+    {
+        var family = Guid.NewGuid();
+        db.UserRefreshTokens.Add(UserRefreshToken.Create(user,
+            Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), family, DateTime.UtcNow.AddDays(1), membership.Id));
+        await db.SaveChangesAsync();
+        var access = await services.GetRequiredService<JwtSessionService>().IssueUserAsync(user, family, membership, default);
+
+        return access.Token;
+    }
+
+    public async Task DisposeAsync()
+    {
+        if (app is not null)
+        {
+            await app.DisposeAsync();
+            app = null;
+        }
+
+        if (!created)
+            return;
+
+        if (!databaseName.StartsWith("drp_contract_checks_", StringComparison.Ordinal) ||
+            databaseName.Length != "drp_contract_checks_".Length + 12)
+            throw new InvalidOperationException("Recusada remoção de banco fora do teste.");
+
+        await using var admin = new NpgsqlConnection(adminConnectionString);
+        await admin.OpenAsync();
+        await using var drop = new NpgsqlCommand($"DROP DATABASE IF EXISTS \"{databaseName}\" WITH (FORCE)", admin);
+        await drop.ExecuteNonQueryAsync();
+        created = false;
+    }
+}
+
+public sealed record StoreActor(long EnterpriseId, long UserId, long MembershipId, string Token);

@@ -33,6 +33,7 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "StorefrontAuth" or
             "User" or
             "Enterprise" or
+            "EnterpriseContract" or
             "EnterpriseMembership" or
             "AccessRole" or
             "AccessRolePermission" or

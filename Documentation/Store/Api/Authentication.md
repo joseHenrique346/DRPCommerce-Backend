@@ -50,6 +50,11 @@ Cookies de refresh e CSRF são Secure. Use HTTPS também no desenvolvimento e co
 
 ## Frontend: sequência de autenticação
 
+Tokens administrativos com loja selecionada incluem `plan_id`, `contract_revision` e
+`catalog_version`. Uma alteração efetiva de plano/adicional exige renovar o token daquela loja;
+tokens anteriores à implantação também precisam ser renovados. Veja
+[planos e contratos](../../Shared/PlanosEContratos.md) para catálogo, leitura de direitos e solicitação sem concessão.
+
 1. Faça GET `/api/auth/csrf` ou `/api/storefront/auth/csrf` com `credentials: "include"`.
 2. Guarde `requestToken` em memória. O servidor também configura o cookie CSRF HttpOnly.
 3. Envie POST de cadastro/login com `X-CSRF-TOKEN: requestToken` e `credentials: "include"`.

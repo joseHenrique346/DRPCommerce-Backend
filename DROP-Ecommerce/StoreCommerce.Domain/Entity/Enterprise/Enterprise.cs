@@ -15,6 +15,10 @@ public class Enterprise : BaseEntity
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
+    public long PlanId { get; private set; } = StaticEntity.EnterprisePlan.Default.Id;
+    public long? AddOnId { get; private set; }
+    public long ContractRevision { get; private set; } = 1;
+    public int CatalogVersion { get; private set; } = Contracts.EnterpriseCommercialCatalog.Version;
 
     #region Navigation Properties
     private readonly List<EnterpriseMembership> _listEnterpriseMembership = [];
@@ -72,6 +76,25 @@ public class Enterprise : BaseEntity
 
     #region Functions
     public void SetActive(bool active) => IsActive = active;
+
+    /// <summary>
+    /// Mutação reservada a um fluxo confiável de concessão, nunca à solicitação HTTP do dono.
+    /// </summary>
+    public void ChangeContract(long planId, long? addOnId)
+    {
+        var rights = Contracts.EnterpriseEntitlements.Resolve(planId, addOnId);
+
+        if (PlanId == rights.PlanId && AddOnId == rights.AddOnId &&
+            CatalogVersion == Contracts.EnterpriseCommercialCatalog.Version)
+            return;
+
+        var revision = checked(ContractRevision + 1);
+        PlanId = rights.PlanId;
+        AddOnId = rights.AddOnId;
+        CatalogVersion = Contracts.EnterpriseCommercialCatalog.Version;
+        ContractRevision = revision;
+    }
+
     public static Enterprise Create(string tradeName, string legalName, EnterpriseEmail email, EnterprisePhone phone, string addressLine, string city, long stateId, string zipCode, string country, bool isActive)
     {
         BaseValidate.ValidateNotNullOrEmpty(tradeName, nameof(TradeName));

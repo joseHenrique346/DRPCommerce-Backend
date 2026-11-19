@@ -58,7 +58,9 @@ public sealed class IdentityRepositories(
         return await context.EnterpriseMemberships.IgnoreQueryFilters().AsNoTracking()
             .Where(Membership => Membership.UserId == userId && Membership.IsActive)
             .OrderBy(Membership => Membership.Enterprise.TradeName)
-            .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId, Membership.Enterprise.TradeName, Membership.KindId))
+            .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId,
+                Membership.Enterprise.TradeName, Membership.KindId,
+                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision))
             .ToListAsync(cancellationToken);
     }
 }

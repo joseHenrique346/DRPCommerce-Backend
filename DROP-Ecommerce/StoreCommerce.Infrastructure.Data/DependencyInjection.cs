@@ -43,6 +43,8 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
         services.AddScoped<IIdentityRepositories, IdentityRepositories>();
+        services.AddScoped<StoreCommerce.Application.Contracts.EnterpriseContractWriteScope>();
+        services.AddScoped<StoreCommerce.Application.Contracts.IEnterpriseContractUsageReader, EnterpriseContractUsageReader>();
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
         services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
 

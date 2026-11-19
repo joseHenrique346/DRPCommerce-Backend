@@ -20,6 +20,22 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
         builder.Property(e => e.ZipCode).HasMaxLength(20);
         builder.Property(e => e.Country).HasMaxLength(100);
 
+        builder.Property(Enterprise => Enterprise.PlanId).HasDefaultValue(1L);
+        builder.Property(Enterprise => Enterprise.ContractRevision).HasDefaultValue(1L).IsConcurrencyToken();
+        builder.Property(Enterprise => Enterprise.CatalogVersion).HasDefaultValue(1);
+        builder.HasOne<StoreCommerce.Domain.StaticEntity.EnterpriseAddOn>()
+            .WithMany()
+            .HasForeignKey(Enterprise => Enterprise.AddOnId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<StoreCommerce.Domain.StaticEntity.EnterprisePlanAddOn>()
+            .WithMany()
+            .HasForeignKey(Enterprise => new { Enterprise.PlanId, Enterprise.AddOnId })
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<StoreCommerce.Domain.StaticEntity.EnterprisePlan>()
+            .WithMany()
+            .HasForeignKey(Enterprise => Enterprise.PlanId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.OwnsOne(e => e.Email, nav =>
         {
             nav.Property<long>("EnterpriseId").HasColumnName("id");

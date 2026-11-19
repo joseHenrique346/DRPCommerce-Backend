@@ -19,6 +19,11 @@ Referência dos endpoints acrescentados pelas regras do Store e integrados à `m
 
 ## Como chamar e interpretar
 
+O catálogo e as cinco rotas da Parte 1 de planos/contratos estão documentados separadamente em
+[Planos e contratos por loja](../../Shared/PlanosEContratos.md). Seus sucessos usam DTO direto;
+solicitar mudança retorna 202 e não concede acesso ou inicia cobrança. Essas rotas não alteram
+a contagem histórica das regras comerciais apresentada neste documento.
+
 - As rotas abaixo são as rotas **do serviço Store**. No Gateway atual, `/api/store` é removido antes do encaminhamento: `/api/store/api/storefront/cart` chega ao Store como `/api/storefront/cart`. O Gateway envia o domínio da vitrine em `X-Forwarded-Host`; Store e Drop o aceitam dos proxies confiáveis antes de resolver a loja. A configuração padrão permite o Gateway local (`127.0.0.1` e `::1`), mantendo o Host do destino para validar o certificado HTTPS do backend. Conferir o endereço publicado do ambiente.
 - JSON usa propriedades em camelCase. `{id:long}` representa um inteiro de 64 bits positivo; não enviar as chaves nem `:long` na URL.
 - Backoffice exige Bearer de usuário com vínculo ativo na loja e a permissão indicada. O dono principal segue as regras de autorização central. Ter um ID de outra loja não concede acesso.

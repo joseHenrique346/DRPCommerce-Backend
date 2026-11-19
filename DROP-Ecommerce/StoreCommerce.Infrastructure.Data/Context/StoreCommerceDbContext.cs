@@ -20,13 +20,15 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Orders.OrderWorkflowScope _orderWorkflow;
     private readonly StoreCommerce.Application.Carts.CustomerAddressWriteScope _customerAddressWrites;
     private readonly StoreCommerce.Application.Integrations.IntegrationWriteScope _integrationWrites;
+    private readonly StoreCommerce.Application.Contracts.EnterpriseContractWriteScope _contractWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
         InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites,
         StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow,
         StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites,
-        StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites)
+        StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites,
+        StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -38,6 +40,7 @@ public partial class StoreCommerceDbContext : DbContext
         _orderWorkflow = orderWorkflow;
         _customerAddressWrites = customerAddressWrites;
         _integrationWrites = integrationWrites;
+        _contractWrites = contractWrites;
     }
 
     #region DbSets
@@ -63,6 +66,10 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Enterprise> Enterprises => Set<Enterprise>();
+    public DbSet<EnterprisePlan> EnterprisePlans => Set<EnterprisePlan>();
+    public DbSet<EnterpriseAddOn> EnterpriseAddOns => Set<EnterpriseAddOn>();
+    public DbSet<EnterprisePlanAddOn> EnterprisePlanAddOns => Set<EnterprisePlanAddOn>();
+    public DbSet<EnterpriseContractChange> EnterpriseContractChanges => Set<EnterpriseContractChange>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<EmployeePosition> EmployeePositions => Set<EmployeePosition>();
@@ -145,6 +152,8 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<EmployeePosition>(modelBuilder);
         ApplyTenantFilter<Department>(modelBuilder);
         ApplyTenantFilter<EnterpriseMembership>(modelBuilder);
+        modelBuilder.Entity<EnterpriseContractChange>().HasQueryFilter(EnterpriseContractChange =>
+            EnterpriseContractChange.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantFilter<EnterpriseDomain>(modelBuilder);
         ApplyTenantFilter<AccessRole>(modelBuilder);
         modelBuilder.Entity<AccessRolePermission>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
@@ -208,6 +217,7 @@ public partial class StoreCommerceDbContext : DbContext
             ? await Database.BeginTransactionAsync(cancellationToken)
             : null;
 
+        GuardContractWrites();
         _appearanceWrites.Guard(this);
         await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
