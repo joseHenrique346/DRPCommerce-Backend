@@ -1,0 +1,31 @@
+name: drp-store
+
+services:
+  store:
+    image: ${STORE_IMAGE:?Defina STORE_IMAGE no arquivo .env}
+    platform: linux/arm64
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DOTNET_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "${BIND_IP:-10.0.2.96}:8080:8080"
+    volumes:
+      - data-protection-keys:/home/app/.aspnet/DataProtection-Keys
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  data-protection-keys:

@@ -27,6 +27,7 @@ Documentos compartilhados:
 
 - [Infraestrutura](Shared/Infrastructure.md)
 - [Startup do projeto](Shared/StartupProject.md)
+- [Deploy Docker ARM64 na Oracle, separado por VM](../deploy/oracle/README.md)
 - [Organização dos projetos Security](Shared/Security.md)
 - [Aparência versionada, presets e contratos do frontend](Shared/Appearance.md)
 - [Integrações externas — situação e próximos passos](Shared/PlanejamentoIntegracoes.md)

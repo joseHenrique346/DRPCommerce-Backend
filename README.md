@@ -4,6 +4,7 @@ Backend do TCC para loja virtual (Store) e eventos de venda com fila (Drop), em 
 
 - [Índice da documentação](Documentation/README.md)
 - [Configuração e execução local](Documentation/Shared/StartupProject.md)
+- [Deploy Docker ARM64 na Oracle, separado por VM](deploy/oracle/README.md)
 - [Endpoints comerciais do Store](Documentation/Store/Api/Endpoints.md)
 - [Autenticação e permissões](Documentation/Store/Api/Authentication.md)
 
