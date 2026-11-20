@@ -70,7 +70,7 @@ public sealed class ContractsApiTests(ContractsApiFixture fixture)
     [PostgresFact]
     public async Task Usage_counts_inactive_products_and_co_owners_but_not_the_primary_owner()
     {
-        var actor = await fixture.CreateStoreAsync(activeProducts: 10, inactiveProducts: 39);
+        var actor = await fixture.CreateStoreAsync(planId: 2, activeProducts: 10, inactiveProducts: 39);
         await fixture.CreateStaffAsync(actor.EnterpriseId);
         await fixture.CreateStaffAsync(actor.EnterpriseId, kindId: 2);
         using var client = fixture.Client(actor.Token);
@@ -83,7 +83,7 @@ public sealed class ContractsApiTests(ContractsApiFixture fixture)
         Assert.Equal(10, usage.GetProperty("activeStoreProducts").GetInt64());
         Assert.Equal(39, usage.GetProperty("inactiveStoreProducts").GetInt64());
         Assert.Equal(2, usage.GetProperty("activeAdditionalMembers").GetInt64());
-        Assert.Equal(1, json.RootElement.GetProperty("remainingStoreProducts").GetInt64());
+        Assert.Equal(451, json.RootElement.GetProperty("remainingStoreProducts").GetInt64());
         Assert.False(usage.GetProperty("dropUsageAvailable").GetBoolean());
         Assert.Equal(JsonValueKind.Null, usage.GetProperty("dropProducts").ValueKind);
     }
@@ -209,7 +209,7 @@ public sealed class ContractsApiTests(ContractsApiFixture fixture)
     [PostgresFact]
     public async Task Staff_cannot_choose_offers_or_read_usage_without_settings_permission()
     {
-        var owner = await fixture.CreateStoreAsync();
+        var owner = await fixture.CreateStoreAsync(planId: 4);
         var staff = await fixture.CreateStaffAsync(owner.EnterpriseId);
         using var client = fixture.Client(staff.Token);
         using var choice = await client.PostAsJsonAsync(ContractPath + "/requests", Request("staff"));

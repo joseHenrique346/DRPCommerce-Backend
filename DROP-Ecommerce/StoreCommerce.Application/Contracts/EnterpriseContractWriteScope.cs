@@ -6,13 +6,15 @@ namespace StoreCommerce.Application.Contracts;
 public sealed class EnterpriseContractWriteScope
 {
     public long? EnterpriseId { get; private set; }
+    public IReadOnlyList<long>? RetainedMembershipIds { get; private set; }
 
-    public IDisposable Begin(long enterpriseId)
+    public IDisposable Begin(long enterpriseId, IReadOnlyList<long>? retainedMembershipIds = null)
     {
         if (enterpriseId <= 0 || EnterpriseId.HasValue)
             throw new InvalidOperationException("Escopo de contrato inválido ou já aberto.");
 
         EnterpriseId = enterpriseId;
+        RetainedMembershipIds = retainedMembershipIds?.ToArray();
 
         return new Lease(this);
     }
@@ -22,6 +24,7 @@ public sealed class EnterpriseContractWriteScope
         public void Dispose()
         {
             owner.EnterpriseId = null;
+            owner.RetainedMembershipIds = null;
         }
     }
 }

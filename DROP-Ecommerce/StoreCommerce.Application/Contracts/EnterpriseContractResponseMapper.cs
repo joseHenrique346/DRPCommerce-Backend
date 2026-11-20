@@ -46,6 +46,7 @@ public static class EnterpriseContractResponseMapper
             change.PlanMonthlyPrice + change.AddOnMonthlyPrice,
             change.RequestedAt,
             change.SupersededAt,
-            GrantsAccess: false);
+            GrantsAccess: false,
+            RetainedMembershipIds: change.RetainedMembershipIds);
     }
 }

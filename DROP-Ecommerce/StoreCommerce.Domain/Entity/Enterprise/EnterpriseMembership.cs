@@ -11,6 +11,8 @@ public class EnterpriseMembership : BaseEntity, ITenantEntity
     public long UserId { get; private set; }
     public long KindId { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsContractBlocked { get; private set; }
+    public DateTime? ContractBlockedAt { get; private set; }
     public long AccessVersion { get; private set; } = 1;
     public DateTime JoinedAt { get; private set; }
 
@@ -56,11 +58,35 @@ public class EnterpriseMembership : BaseEntity, ITenantEntity
         KindId = kindId;
         IsActive = isActive;
         JoinedAt = joinedAt;
+
+        if (!isActive)
+            UnblockForContract();
     }
 
     public void Deactivate()
     {
         IsActive = false;
+        UnblockForContract();
+        InvalidateAccess();
+    }
+
+    public void BlockForContract(DateTime now)
+    {
+        if (KindId == 1 || !IsActive || IsContractBlocked)
+            return;
+
+        IsContractBlocked = true;
+        ContractBlockedAt = now;
+        InvalidateAccess();
+    }
+
+    public void UnblockForContract()
+    {
+        if (!IsContractBlocked)
+            return;
+
+        IsContractBlocked = false;
+        ContractBlockedAt = null;
         InvalidateAccess();
     }
 

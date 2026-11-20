@@ -65,4 +65,14 @@ public sealed class EnterpriseContractController(IMediator mediator) : Controlle
     {
         return this.ToIdentityActionResult(await mediator.Send(new PreviewProductContractImpactQuery(request), ct));
     }
+
+    /// <summary>
+    /// Exibe os acessos a escolher e os domínios afetados pela oferta, sem alterar o contrato.
+    /// </summary>
+    [HttpPost("access-impact")]
+    [Authorize(Policy = SecurityNames.PrimaryOwner)]
+    public async Task<IActionResult> PreviewAccessImpact(AccessContractImpactRequest request, CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new PreviewAccessContractImpactQuery(request), ct));
+    }
 }

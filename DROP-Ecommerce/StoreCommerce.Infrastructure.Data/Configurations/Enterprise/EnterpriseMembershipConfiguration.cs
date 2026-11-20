@@ -13,6 +13,7 @@ public class EnterpriseMembershipConfiguration : IEntityTypeConfiguration<Enterp
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
         builder.Property(e => e.AccessVersion).HasDefaultValue(1L);
+        builder.Property(Membership => Membership.IsContractBlocked).HasDefaultValue(false);
         builder.HasAlternateKey(e => new { e.EnterpriseId, e.Id });
         builder.HasIndex(e => new { e.EnterpriseId, e.UserId }).IsUnique();
         builder.HasIndex(e => e.EnterpriseId).IsUnique()

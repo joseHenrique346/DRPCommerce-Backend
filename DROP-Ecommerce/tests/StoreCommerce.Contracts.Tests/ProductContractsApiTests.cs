@@ -248,7 +248,7 @@ public sealed class ProductContractsApiTests(ContractsApiFixture fixture)
     [PostgresFact]
     public async Task History_requires_its_own_permission_and_cannot_cross_tenants()
     {
-        var actor = await fixture.CreateStoreAsync(activeProducts: 1);
+        var actor = await fixture.CreateStoreAsync(planId: 4, activeProducts: 1);
         var foreign = await fixture.CreateStoreAsync(activeProducts: 1);
         var staff = await fixture.CreateStaffAsync(actor.EnterpriseId);
         using var employee = fixture.Client(staff.Token);
@@ -428,7 +428,7 @@ public sealed class ProductContractsApiTests(ContractsApiFixture fixture)
     [PostgresFact]
     public async Task History_permission_can_be_assigned_without_product_edit_permission()
     {
-        var actor = await fixture.CreateStoreAsync(activeProducts: 1);
+        var actor = await fixture.CreateStoreAsync(planId: 4, activeProducts: 1);
         var staff = await fixture.CreateStaffAsync(actor.EnterpriseId);
         using (var scope = fixture.Services.CreateScope())
         {

@@ -26,6 +26,10 @@ public sealed class UpdateMembershipCommandHandler(IdentityHandlerContext contex
             throw new SecurityFailure(409, "Access.UserInactive", "A conta global está inativa.");
 
         member.UpdateDetails(request.KindId, request.IsActive, member.JoinedAt);
+
+        if (request.IsActive)
+            member.UnblockForContract();
+
         await unitOfWork.CommitAsync(ct);
         await tx.CommitAsync(ct);
 

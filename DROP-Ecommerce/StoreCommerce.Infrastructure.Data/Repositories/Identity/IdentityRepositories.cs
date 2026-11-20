@@ -55,12 +55,12 @@ public sealed class IdentityRepositories(
 
     public async Task<IReadOnlyList<MembershipChoice>> GetMembershipChoicesAsync(long userId, CancellationToken cancellationToken)
     {
-        return await context.EnterpriseMemberships.IgnoreQueryFilters().AsNoTracking()
-            .Where(Membership => Membership.UserId == userId && Membership.IsActive)
-            .OrderBy(Membership => Membership.Enterprise.TradeName)
+        var memberships = await EnterpriseMemberships.GetActiveForUserAsync(userId, cancellationToken);
+
+        return memberships
             .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId,
                 Membership.Enterprise.TradeName, Membership.KindId,
                 Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision))
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 }

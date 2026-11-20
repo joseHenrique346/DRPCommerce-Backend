@@ -27,7 +27,7 @@ public sealed class GetEnterpriseContractUsageQueryHandler(
             Math.Max(0, rights.StoreProductLimit - usage.TotalStoreProducts),
             Math.Max(0, usage.TotalStoreProducts - rights.StoreProductLimit),
             rights.EmployeeLimit,
-            Math.Max(0, rights.EmployeeLimit - usage.ActiveAdditionalMembers),
+            Math.Max(0, rights.EmployeeLimit - usage.ActiveAdditionalMembers - usage.PendingInvitations),
             Math.Max(0, usage.ActiveAdditionalMembers - rights.EmployeeLimit),
             rights.DropProductLimit);
     }

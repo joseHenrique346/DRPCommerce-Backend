@@ -18,6 +18,7 @@ public sealed class EnterpriseContractChangeConfiguration : IEntityTypeConfigura
         builder.Property(Change => Change.AddOnMonthlyPrice).HasPrecision(12, 2);
         builder.Property(Change => Change.Currency).IsRequired().HasMaxLength(3);
         builder.Property(Change => Change.Status).HasConversion<int>();
+        builder.Property(Change => Change.RetainedMembershipIdsJson).HasColumnType("jsonb");
         builder.HasIndex(Change => new { Change.EnterpriseId, Change.IdempotencyKey }).IsUnique();
         builder.HasIndex(Change => Change.EnterpriseId).IsUnique().HasFilter("status = 1")
             .HasDatabaseName("ux_solicitacao_contrato_empresa_pendente");

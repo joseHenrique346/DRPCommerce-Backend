@@ -10,7 +10,8 @@ namespace StoreCommerce.Application.Features.Commands;
 
 public sealed class RequestEnterpriseContractChangeCommandHandler(
     IdentityHandlerContext context,
-    IEntityRepository<EnterpriseContractChange> changes)
+    IEntityRepository<EnterpriseContractChange> changes,
+    AccessContractPolicyService accessPolicy)
     : EnterpriseContractHandlerBase<RequestEnterpriseContractChangeCommand, EnterpriseContractChangeResponse>(context)
 {
     protected override async Task<EnterpriseContractChangeResponse> ExecuteAsync(
@@ -21,6 +22,11 @@ public sealed class RequestEnterpriseContractChangeCommandHandler(
         if (request is null || string.IsNullOrWhiteSpace(request.IdempotencyKey) ||
             request.IdempotencyKey.Trim().Length > 100 || request.ExpectedContractRevision <= 0)
             throw new SecurityFailure(400, "Contract.InvalidRequest", "Solicitação de contrato inválida.");
+
+        if (request.RetainedMembershipIds is not null && (request.RetainedMembershipIds.Count > 10000 ||
+            request.RetainedMembershipIds.Any(Id => Id <= 0) ||
+            request.RetainedMembershipIds.Distinct().Count() != request.RetainedMembershipIds.Count))
+            throw new SecurityFailure(400, "Team.InvalidSelection", "Seleção de equipe inválida.");
 
         using var operation = scope.Begin();
         await using var transaction = await BeginOwnerOperationAsync(ct);
@@ -34,7 +40,10 @@ public sealed class RequestEnterpriseContractChangeCommandHandler(
         {
             if (existing.PlanId != request.PlanId || existing.AddOnId != request.AddOnId ||
                 existing.ExpectedContractRevision != request.ExpectedContractRevision ||
-                existing.CatalogVersion != request.CatalogVersion)
+                existing.CatalogVersion != request.CatalogVersion ||
+                (existing.RetainedMembershipIds is null) != (request.RetainedMembershipIds is null) ||
+                existing.RetainedMembershipIds is not null &&
+                    !existing.RetainedMembershipIds.SequenceEqual(request.RetainedMembershipIds!.OrderBy(Id => Id)))
                 throw new SecurityFailure(409, "Contract.IdempotencyConflict",
                     "A chave já foi utilizada com outra solicitação.");
 
@@ -58,6 +67,9 @@ public sealed class RequestEnterpriseContractChangeCommandHandler(
         if (current.Revision != request.ExpectedContractRevision)
             throw new SecurityFailure(409, "Contract.RevisionChanged", "O contrato mudou. Consulte os direitos atuais.");
 
+        var selection = await accessPolicy.ValidateSelectionAsync(tenant, request.PlanId, request.AddOnId,
+            request.RetainedMembershipIds, true, ct);
+
         var now = Now;
         var pending = await changes.FindAsync(Change =>
             Change.EnterpriseId == tenant && Change.Status == EnterpriseContractChangeStatus.Requested,
@@ -70,7 +82,7 @@ public sealed class RequestEnterpriseContractChangeCommandHandler(
         }
 
         var change = EnterpriseContractChange.Request(
-            tenant, actor.UserId, key, request.PlanId, request.AddOnId, current.Revision, now);
+            tenant, actor.UserId, key, request.PlanId, request.AddOnId, current.Revision, now, selection);
         changes.Add(change);
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);

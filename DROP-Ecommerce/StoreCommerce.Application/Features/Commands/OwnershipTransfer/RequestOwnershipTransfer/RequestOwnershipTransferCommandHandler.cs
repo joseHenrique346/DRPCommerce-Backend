@@ -20,7 +20,7 @@ public sealed class RequestOwnershipTransferCommandHandler(IdentityHandlerContex
             throw new SecurityFailure(401, "Identity.InvalidCredentials", "Credenciais inválidas.");
 
         var recipient = await data.EnterpriseMemberships.FindAsync(x => x.Id == request.RecipientMembershipId &&
-            x.EnterpriseId == tenant && x.IsActive && x.User.IsActive && x.KindId != 1, ct, ignoreQueryFilters: true) ?? throw NotFound();
+            x.EnterpriseId == tenant && x.IsActive && !x.IsContractBlocked && x.User.IsActive && x.KindId != 1, ct, ignoreQueryFilters: true) ?? throw NotFound();
 
         foreach (var old in await data.OwnershipTransfers.ListAsync(
             x => x.EnterpriseId == tenant && x.AcceptedAt == null && x.RevokedAt == null,

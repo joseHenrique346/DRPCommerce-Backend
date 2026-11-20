@@ -20,7 +20,7 @@ public sealed class EnterpriseContractUsageReader(StoreCommerceDbContext context
                 context.Products.IgnoreQueryFilters().LongCount(Product =>
                     Product.EnterpriseId == enterpriseId && !Product.IsDeleted && !Product.IsActive),
                 context.EnterpriseMemberships.IgnoreQueryFilters().LongCount(Membership =>
-                    Membership.EnterpriseId == enterpriseId && Membership.IsActive &&
+                    Membership.EnterpriseId == enterpriseId && Membership.IsActive && !Membership.IsContractBlocked &&
                     Membership.KindId != 1 && Membership.User.IsActive),
                 context.EnterpriseInvitations.IgnoreQueryFilters().LongCount(Invitation =>
                     Invitation.EnterpriseId == enterpriseId && Invitation.AcceptedAt == null &&
@@ -30,7 +30,9 @@ public sealed class EnterpriseContractUsageReader(StoreCommerceDbContext context
                 context.Products.IgnoreQueryFilters().LongCount(Product =>
                     Product.EnterpriseId == enterpriseId && !Product.IsDeleted && Product.IsContractBlocked),
                 context.Products.IgnoreQueryFilters().LongCount(Product =>
-                    Product.EnterpriseId == enterpriseId && !Product.IsDeleted && Product.IsActive && !Product.IsContractBlocked)))
+                    Product.EnterpriseId == enterpriseId && !Product.IsDeleted && Product.IsActive && !Product.IsContractBlocked),
+                context.EnterpriseMemberships.IgnoreQueryFilters().LongCount(Membership =>
+                    Membership.EnterpriseId == enterpriseId && Membership.IsContractBlocked && Membership.KindId != 1)))
             .SingleAsync(cancellationToken);
     }
 }

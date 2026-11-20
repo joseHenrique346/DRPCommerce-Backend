@@ -1,8 +1,6 @@
 using SharedCommerce.Application.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -11,7 +9,7 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalTenantController(StoreCommerceDbContext db) : ControllerBase
+public sealed class InternalTenantController(StoreCommerce.Application.Contracts.IEnterpriseDomainAccess domains) : ControllerBase
 {
     /// <summary>
     /// Identifica a loja pelo domínio para integração interna.
@@ -20,16 +18,9 @@ public sealed class InternalTenantController(StoreCommerceDbContext db) : Contro
     public async Task<IActionResult> Resolve([FromQuery] string host, CancellationToken ct)
     {
         var normalized = HostName.Normalize(host);
-        var domain = await db.EnterpriseDomains
-            .IgnoreQueryFilters()
-            .Where(x => x.NormalizedHost == normalized && x.IsVerified && x.IsActive && x.Enterprise.IsActive)
-            .Select(x => new
-            {
-                x.EnterpriseId
-            })
-            .SingleOrDefaultAsync(ct);
+        var tenantId = await domains.ResolveAsync(normalized, null, ct);
 
-        return domain is null ? NotFound() : Ok(domain);
+        return tenantId is null ? NotFound() : Ok(new { EnterpriseId = tenantId.Value });
     }
 }
 

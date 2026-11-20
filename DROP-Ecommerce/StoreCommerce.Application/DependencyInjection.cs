@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddSharedApplication(assembly);
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
+        services.AddScoped<AccessContractPolicyService>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponEligibilityService>();
         services.AddScoped<CartService>();

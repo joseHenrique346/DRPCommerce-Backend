@@ -16,7 +16,9 @@ namespace StoreCommerce.Security.Services;
 /// <summary>
 /// Emite JWTs e valida o estado das sessões para manter autenticação e revogação consistentes.
 /// </summary>
-public sealed class JwtSessionService(IIdentityRepositories data, IOptions<SecurityOptions> settings, TimeProvider time) : ISessionValidator, ISessionTokenIssuer
+public sealed class JwtSessionService(
+    IIdentityRepositories data, IOptions<SecurityOptions> settings, TimeProvider time,
+    StoreCommerce.Application.Contracts.IEnterpriseDomainAccess domains) : ISessionValidator, ISessionTokenIssuer
 {
     private SecurityOptions Options => settings.Value;
     private DateTime Now => time.GetUtcNow().UtcDateTime;
@@ -36,8 +38,14 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
 
         if (membership is not null)
         {
+            if (!membership.IsActive || membership.IsContractBlocked)
+                throw new SecurityFailure(403, "Identity.MembershipUnavailable", "Acesso à loja indisponível.");
+
             var contract = await data.Enterprises.GetContractStateAsync(membership.EnterpriseId, ct)
                 ?? throw new SecurityFailure(401, "Contract.Unavailable", "Contrato da loja indisponível.");
+
+            if (!await FitsTeamAsync(membership, contract.PlanId, contract.AddOnId, ct))
+                throw new SecurityFailure(403, "Team.SelectionRequired", "O dono precisa ajustar a equipe ao contrato atual.");
 
             claims.Add(Number(SecurityNames.Plan, contract.PlanId));
             claims.Add(Number(SecurityNames.ContractRevision, contract.Revision));
@@ -154,13 +162,18 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
                 var tenantId = SecurityNames.Id(principal, SecurityNames.Enterprise);
                 var membershipId = SecurityNames.Id(principal, SecurityNames.Membership);
                 var accessVersion = SecurityNames.Id(principal, SecurityNames.AccessVersion);
-                var member = await data.EnterpriseMemberships.FindAsync(x => x.Id == membershipId && x.UserId == id && x.EnterpriseId == tenantId && x.IsActive && x.Enterprise.IsActive, ct, ignoreQueryFilters: true, tracking: false);
+                var member = await data.EnterpriseMemberships.FindAsync(x => x.Id == membershipId && x.UserId == id &&
+                    x.EnterpriseId == tenantId && x.IsActive && !x.IsContractBlocked && x.Enterprise.IsActive,
+                    ct, ignoreQueryFilters: true, tracking: false);
 
                 var contract = await data.Enterprises.GetContractStateAsync(tenantId, ct);
 
                 if (contract is null || contract.PlanId != SecurityNames.Id(principal, SecurityNames.Plan) ||
                     contract.Revision != SecurityNames.Id(principal, SecurityNames.ContractRevision) ||
                     contract.CatalogVersion != SecurityNames.Id(principal, SecurityNames.CatalogVersion))
+                    return false;
+
+                if (member is not null && !await FitsTeamAsync(member, contract.PlanId, contract.AddOnId, ct))
                     return false;
 
                 return member is not null && member.AccessVersion == accessVersion &&
@@ -182,8 +195,7 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
 
             var normalizedHost = HostName.Normalize(host);
 
-            if (!await data.EnterpriseDomains.ExistsAsync(x => x.NormalizedHost == normalizedHost && x.EnterpriseId == tenant &&
-                x.IsVerified && x.IsActive && x.Enterprise.IsActive, ct, ignoreQueryFilters: true))
+            if (await domains.ResolveAsync(normalizedHost, tenant, ct) is null)
                 return false;
 
             var customer = await data.Customers.FindAsync(x => x.Id == id && x.EnterpriseId == tenant, ct, ignoreQueryFilters: true, tracking: false);
@@ -199,5 +211,19 @@ public sealed class JwtSessionService(IIdentityRepositories data, IOptions<Secur
         {
             return false;
         }
+    }
+
+    private async Task<bool> FitsTeamAsync(EnterpriseMembership membership, long planId, long? addOnId, CancellationToken ct)
+    {
+        if (membership.KindId == 1)
+            return true;
+
+        var limit = StoreCommerce.Domain.Contracts.EnterpriseEntitlements.Resolve(planId, addOnId).EmployeeLimit;
+        var active = await data.EnterpriseMemberships.CountAsync(Membership =>
+            Membership.EnterpriseId == membership.EnterpriseId && Membership.KindId != 1 &&
+            Membership.IsActive && !Membership.IsContractBlocked && Membership.User.IsActive,
+            ct, ignoreQueryFilters: true);
+
+        return active <= limit;
     }
 }

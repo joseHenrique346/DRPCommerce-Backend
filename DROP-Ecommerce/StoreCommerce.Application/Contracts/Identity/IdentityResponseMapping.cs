@@ -14,11 +14,13 @@ public sealed partial record CustomerResponse
 }
 public sealed partial record EnterpriseMembershipResponse
 {
-    public static EnterpriseMembershipResponse FromEntity(EnterpriseMembership e) => new(e.Id, e.EnterpriseId, e.UserId, e.KindId, e.IsActive, e.JoinedAt);
+    public static EnterpriseMembershipResponse FromEntity(EnterpriseMembership e) => new(e.Id, e.EnterpriseId, e.UserId,
+        e.KindId, e.IsActive, e.JoinedAt, e.IsContractBlocked, e.ContractBlockedAt);
 }
 public sealed partial record EnterpriseDomainResponse
 {
-    public static EnterpriseDomainResponse FromEntity(EnterpriseDomain e) => new(e.Id, e.EnterpriseId, e.Host, e.NormalizedHost, e.IsPrimary, e.IsVerified, e.IsActive);
+    public static EnterpriseDomainResponse FromEntity(EnterpriseDomain e) => new(e.Id, e.EnterpriseId, e.Host,
+        e.NormalizedHost, e.IsPrimary, e.IsVerified, e.IsActive, e.IsContractBlocked);
 }
 public sealed partial record AccessRoleResponse
 {

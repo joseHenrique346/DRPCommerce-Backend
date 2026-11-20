@@ -22,6 +22,8 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Integrations.IntegrationWriteScope _integrationWrites;
     private readonly StoreCommerce.Application.Contracts.EnterpriseContractWriteScope _contractWrites;
     private readonly StoreCommerce.Application.Contracts.ProductReactivationScope _productReactivation;
+    private readonly StoreCommerce.Application.Contracts.OwnershipTransferWriteScope _ownershipTransfer;
+    private readonly SharedCommerce.Application.Options.SecurityOptions _securityOptions;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
@@ -30,7 +32,9 @@ public partial class StoreCommerceDbContext : DbContext
         StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites,
         StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites,
         StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites,
-        StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation)
+        StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation,
+        StoreCommerce.Application.Contracts.OwnershipTransferWriteScope ownershipTransfer,
+        Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions> securityOptions)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -44,6 +48,8 @@ public partial class StoreCommerceDbContext : DbContext
         _integrationWrites = integrationWrites;
         _contractWrites = contractWrites;
         _productReactivation = productReactivation;
+        _ownershipTransfer = ownershipTransfer;
+        _securityOptions = securityOptions.Value;
     }
 
     #region DbSets
@@ -219,12 +225,13 @@ public partial class StoreCommerceDbContext : DbContext
         // A criação administrativa também precisa manter o lock do comprador até a gravação do pedido.
         var needsTransaction = Database.CurrentTransaction is null &&
             (ChangeTracker.Entries<Order>().Any(Entry => Entry.State == EntityState.Added) ||
-                ProductContractTenants().Count > 0);
+                ProductContractTenants().Count > 0 || AccessContractTenants().Count > 0);
         await using var localTransaction = needsTransaction
             ? await Database.BeginTransactionAsync(cancellationToken)
             : null;
 
         GuardContractWrites();
+        await GuardAccessContractsAsync(cancellationToken);
         await GuardProductContractsAsync(cancellationToken);
         _appearanceWrites.Guard(this);
         await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
@@ -235,6 +242,7 @@ public partial class StoreCommerceDbContext : DbContext
         var affected = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         _generatedStoreActivities.Clear();
         _productContractSystemChanges.Clear();
+        _membershipContractChanges.Clear();
 
         if (localTransaction is not null)
             await localTransaction.CommitAsync(cancellationToken);

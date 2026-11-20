@@ -20,6 +20,11 @@ public sealed class RegisterDomainCommandHandler(IdentityHandlerContext context)
         using var operation = scope.Begin();
         await using var tx = await BeginOwnerOperationAsync(ct);
 
+        var contract = await data.Enterprises.GetContractStateAsync(actor.EnterpriseId, ct) ?? throw NotFound();
+
+        if (!StoreCommerce.Domain.Contracts.EnterpriseEntitlements.Resolve(contract.PlanId, contract.AddOnId).AllowsCustomDomain)
+            throw new SecurityFailure(409, "Domain.PlanRequired", "O contrato não permite domínio próprio.");
+
         if (await data.EnterpriseDomains.ExistsAsync(x => x.NormalizedHost == host, ct, ignoreQueryFilters: true))
             throw new SecurityFailure(409, "Domain.InUse", "Domínio já cadastrado.");
 

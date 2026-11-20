@@ -12,6 +12,7 @@ public class EnterpriseDomain : BaseEntity, ITenantEntity
     public bool IsPrimary { get; private set; }
     public bool IsVerified { get; private set; }
     public bool IsActive { get; private set; }
+    public bool IsContractBlocked { get; private set; }
     [System.Text.Json.Serialization.JsonIgnore] public string? VerificationTokenHash { get; private set; }
 
     #region Navigation Properties
@@ -70,6 +71,16 @@ public class EnterpriseDomain : BaseEntity, ITenantEntity
 
         IsPrimary = primary;
         IsActive = active;
+
+        if (active)
+            IsContractBlocked = false;
+    }
+
+    public void BlockForContract()
+    {
+        IsContractBlocked = true;
+        IsPrimary = false;
+        IsActive = false;
     }
     #endregion
 }

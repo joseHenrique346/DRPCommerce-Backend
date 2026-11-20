@@ -1,6 +1,8 @@
 using StoreCommerce.Domain.Contracts;
 using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
+using System.Text.Json;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -22,13 +24,18 @@ public sealed class EnterpriseContractChange : BaseEntity, ITenantEntity
     public EnterpriseContractChangeStatus Status { get; private set; }
     public DateTime RequestedAt { get; private set; }
     public DateTime? SupersededAt { get; private set; }
+    public string? RetainedMembershipIdsJson { get; private set; }
+
+    [NotMapped]
+    public IReadOnlyList<long>? RetainedMembershipIds => RetainedMembershipIdsJson is null
+        ? null : JsonSerializer.Deserialize<long[]>(RetainedMembershipIdsJson);
 
     private EnterpriseContractChange()
     {
     }
 
     public static EnterpriseContractChange Request(long enterpriseId, long userId, string key,
-        long planId, long? addOnId, long expectedRevision, DateTime now)
+        long planId, long? addOnId, long expectedRevision, DateTime now, IReadOnlyList<long>? retainedMembershipIds = null)
     {
         if (enterpriseId <= 0 || userId <= 0 || expectedRevision <= 0 ||
             string.IsNullOrWhiteSpace(key) || key.Trim().Length > 100 || now.Kind != DateTimeKind.Utc)
@@ -37,6 +44,10 @@ public sealed class EnterpriseContractChange : BaseEntity, ITenantEntity
         var rights = EnterpriseEntitlements.Resolve(planId, addOnId);
         var plan = EnterprisePlan.FromId(rights.PlanId);
         var addOn = rights.AddOnId.HasValue ? EnterpriseAddOn.FromId(rights.AddOnId.Value) : null;
+
+        if (retainedMembershipIds is not null && (retainedMembershipIds.Count > 10000 ||
+            retainedMembershipIds.Any(Id => Id <= 0) || retainedMembershipIds.Distinct().Count() != retainedMembershipIds.Count))
+            throw new ArgumentException("Seleção de equipe inválida.");
 
         return new EnterpriseContractChange
         {
@@ -50,7 +61,8 @@ public sealed class EnterpriseContractChange : BaseEntity, ITenantEntity
             PlanMonthlyPrice = plan.MonthlyPrice,
             AddOnMonthlyPrice = addOn?.MonthlyPrice ?? 0m,
             Status = EnterpriseContractChangeStatus.Requested,
-            RequestedAt = now
+            RequestedAt = now,
+            RetainedMembershipIdsJson = retainedMembershipIds is null ? null : JsonSerializer.Serialize(retainedMembershipIds.OrderBy(Id => Id))
         };
     }
 

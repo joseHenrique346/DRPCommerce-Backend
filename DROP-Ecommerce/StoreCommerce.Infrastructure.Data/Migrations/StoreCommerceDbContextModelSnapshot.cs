@@ -1819,6 +1819,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("requested_by_user_id");
 
+                    b.Property<string>("RetainedMembershipIdsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("retained_membership_ids_json");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer")
                         .HasColumnName("status");
@@ -1883,6 +1887,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsContractBlocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_contract_blocked");
 
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("boolean")
@@ -2016,6 +2026,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDefaultValue(1L)
                         .HasColumnName("access_version");
 
+                    b.Property<DateTime?>("ContractBlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("contract_blocked_at");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -2029,6 +2043,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsContractBlocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_contract_blocked");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone")

@@ -14,4 +14,5 @@ public sealed record EnterpriseContractChangeResponse(
     decimal TotalMonthlyPrice,
     DateTime RequestedAt,
     DateTime? SupersededAt,
-    bool GrantsAccess);
+    bool GrantsAccess,
+    IReadOnlyList<long>? RetainedMembershipIds);

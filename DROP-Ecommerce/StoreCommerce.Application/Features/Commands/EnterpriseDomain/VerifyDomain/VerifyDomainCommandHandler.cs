@@ -11,11 +11,16 @@ public sealed class VerifyDomainCommandHandler(IdentityHandlerContext context) :
 
         actor.RequirePrimaryOwner();
         var tenant = actor.EnterpriseId;
+        var contract = await data.Enterprises.GetContractStateAsync(tenant, ct) ?? throw NotFound();
         var reference = await data.EnterpriseDomains.FindAsync(
             x => x.Id == id && x.EnterpriseId == tenant,
             ct,
             ignoreQueryFilters: true,
             tracking: false) ?? throw NotFound();
+
+        if (!StoreCommerce.Application.Contracts.DomainHostPolicy.IsPlatformHost(reference.NormalizedHost, Options.StorefrontBaseDomain) &&
+            !StoreCommerce.Domain.Contracts.EnterpriseEntitlements.Resolve(contract.PlanId, contract.AddOnId).AllowsCustomDomain)
+            throw new SecurityFailure(409, "Domain.PlanRequired", "O contrato não permite verificar domínio próprio.");
 
         if (reference.IsVerified)
             return true;

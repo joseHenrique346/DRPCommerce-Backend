@@ -12,6 +12,7 @@ public class EnterpriseDomainConfiguration : IEntityTypeConfiguration<Enterprise
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder.Property(Domain => Domain.IsContractBlocked).HasDefaultValue(false);
         builder.Property(e => e.Host).IsRequired().HasMaxLength(253);
         builder.Property(e => e.NormalizedHost).IsRequired().HasMaxLength(253);
         builder.HasIndex(e => e.NormalizedHost).IsUnique();

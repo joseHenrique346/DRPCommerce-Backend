@@ -85,6 +85,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
                 ["Security:BackofficeUrl"] = "https://backoffice.example.invalid",
                 ["Security:InternalServiceKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
                 ["Security:ApiRequestsPerMinute"] = "10000",
+                ["Security:AuthRequestsPerMinute"] = "10000",
                 ["MercadoPago:Enabled"] = "false",
                 ["MercadoPago:AllowProduction"] = "false"
             });
@@ -275,12 +276,14 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         return new StoreActor(enterprise.Id, user.Id, membership.Id, token);
     }
 
-    public async Task ChangeContractAsync(long enterpriseId, long planId, long? addOnId)
+    public async Task ChangeContractAsync(long enterpriseId, long planId, long? addOnId,
+        IReadOnlyList<long>? retainedMembershipIds = null)
     {
         using var scope = Services.CreateScope();
         var services = scope.ServiceProvider;
         using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
-        using var grant = services.GetRequiredService<EnterpriseContractWriteScope>().Begin(enterpriseId);
+        using var grant = services.GetRequiredService<EnterpriseContractWriteScope>()
+            .Begin(enterpriseId, retainedMembershipIds);
         var db = services.GetRequiredService<StoreCommerceDbContext>();
         var enterprise = await db.Enterprises.IgnoreQueryFilters().SingleAsync(Enterprise => Enterprise.Id == enterpriseId);
         enterprise.ChangeContract(planId, addOnId);
@@ -293,10 +296,16 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         var services = scope.ServiceProvider;
         using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
         var db = services.GetRequiredService<StoreCommerceDbContext>();
-        var host = "shop-" + Guid.NewGuid().ToString("N") + ".shops.example.invalid";
-        var domain = EnterpriseDomain.Create(enterpriseId, host, true, true);
-        domain.Verify();
-        db.EnterpriseDomains.Add(domain);
+        var domain = await db.EnterpriseDomains.IgnoreQueryFilters().FirstOrDefaultAsync(Domain =>
+            Domain.EnterpriseId == enterpriseId && Domain.NormalizedHost.EndsWith(".shops.example.invalid"));
+
+        if (domain is null)
+        {
+            var host = "shop-" + Guid.NewGuid().ToString("N") + ".shops.example.invalid";
+            domain = EnterpriseDomain.Create(enterpriseId, host, true, true);
+            domain.Verify();
+            db.EnterpriseDomains.Add(domain);
+        }
         var customer = Customer.Create(enterpriseId, "Comprador de teste",
             CustomerEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"),
             CustomerPhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", "",
@@ -309,7 +318,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         await db.SaveChangesAsync();
         var token = services.GetRequiredService<JwtSessionService>().IssueCustomer(customer, family);
 
-        return (new Uri("https://" + host), token.Token);
+        return (new Uri("https://" + domain.Host), token.Token);
     }
 
     public async Task<string> FreshTokenAsync(StoreActor actor)
@@ -325,12 +334,26 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         return await IssueTokenAsync(services, db, user, membership);
     }
 
+    public async Task<(long Id, string Email, string Token)> CreateUserAsync(string? email = null)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var user = User.Create("Convidado", UserEmail.Create(email ?? Guid.NewGuid().ToString("N") + "@example.invalid"), true);
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        var token = await IssueTokenAsync(services, db, user, null);
+
+        return (user.Id, user.Email.Value, token);
+    }
+
     private static async Task<string> IssueTokenAsync(IServiceProvider services, StoreCommerceDbContext db,
-        User user, EnterpriseMembership membership)
+        User user, EnterpriseMembership? membership)
     {
         var family = Guid.NewGuid();
         db.UserRefreshTokens.Add(UserRefreshToken.Create(user,
-            Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), family, DateTime.UtcNow.AddDays(1), membership.Id));
+            Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), family, DateTime.UtcNow.AddDays(1), membership?.Id));
         await db.SaveChangesAsync();
         var access = await services.GetRequiredService<JwtSessionService>().IssueUserAsync(user, family, membership, default);
 

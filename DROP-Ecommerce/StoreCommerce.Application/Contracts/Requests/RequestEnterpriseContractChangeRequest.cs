@@ -5,4 +5,5 @@ public sealed record RequestEnterpriseContractChangeRequest(
     long PlanId,
     long? AddOnId,
     long ExpectedContractRevision,
-    int CatalogVersion);
+    int CatalogVersion,
+    IReadOnlyList<long>? RetainedMembershipIds = null);

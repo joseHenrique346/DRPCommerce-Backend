@@ -1,10 +1,12 @@
-# Planos e contratos por loja — Partes 1 e 2
+# Planos e contratos por loja — Partes 1 a 3
 
 A Parte 1 entrega o catálogo comercial, o contrato efetivo por loja, a revisão de direitos,
 a leitura do consumo local e a solicitação de mudança. Não cria cobranças, recorrência,
 checkout de assinatura nem concessão de plano pelo navegador.
 A Parte 2 aplica cotas ao catálogo Store, bloqueia excedentes por contrato,
 oferece reativação explícita e registra atividades comerciais da loja.
+A Parte 3 aplica vagas de equipe, escolha no downgrade, restauração de acessos bloqueados
+por contrato e proteção do uso de domínio próprio.
 
 A base foi portada de `feat/90-EstudoDeValorUsuarioSeparacaoContrato` para a branch de integração.
 Não houve merge completo da branch antiga: os fluxos atuais de pagamento foram preservados,
@@ -30,8 +32,8 @@ A resposta do catálogo ordena os planos por preço.
 Vitrine é a própria Loja. Gratuito e Inicial incluem Vitrine; DRPDrop não inclui catálogo
 comum. Domínio próprio pertence a Pro, DRPCommerce e DRPDrop. Gratuito usa o padrão;
 Inicial permite logo e escolha de tema; os superiores permitem todos os campos do tema.
-Esses direitos estão representados no catálogo; sua aplicação aos fluxos de equipe,
-domínio e aparência será feita nas Partes 3 e 4.
+Equipe e domínio são aplicados na Parte 3. Cotas de temas, personalização e mídia
+ficam para a Parte 4.
 
 | ID | Código | Recurso | Quantidade | Mensal | Planos elegíveis |
 | ---: | --- | --- | ---: | ---: | --- |
@@ -132,6 +134,7 @@ A leitura retorna:
 - `activeStoreProducts` e `inactiveStoreProducts`: estado atual de Product.IsActive;
 - `blockedStoreProducts`: produtos não excluídos bloqueados por contrato;
 - `publishedStoreProducts`: ativos não excluídos e não bloqueados;
+- `blockedAdditionalMembers`: vínculos bloqueados pelo contrato, separados dos desativados pelo dono;
 - `activeAdditionalMembers`: vínculos ativos e usuários ativos, incluindo sócios/gestores,
   excluindo o dono principal;
 - `pendingInvitations`: convites não aceitos, não revogados e ainda válidos;
@@ -243,6 +246,107 @@ O checksum/ETag acompanha a projeção atual, inclusive nas consultas por revis�
 Os manifests Store precisam ser revalidados (`must-revalidate`), pois a disponibilidade
 dos produtos pode mudar sem criar outra revisão visual.
 
+## Equipe e domínio — Parte 3
+
+A cota pertence à loja e conta todos os vínculos administrativos adicionais ativos,
+incluindo sócios/gestores, com User global ativo. O dono principal não consome vaga.
+Não se limita à tabela Employee. Bloqueio comercial preserva `IsActive` e possui flag
+e data próprias no vínculo; não desativa o User nem os vínculos em outras lojas.
+
+Convites ainda não aceitos/revogados e não expirados ocupam posições disponíveis.
+Convite e ativação são validados sob o mesmo lock transacional de Enterprise.
+Reenviar convite ao mesmo e-mail substitui o anterior, sem consumir duas posições.
+Revogar ou expirar devolve a posição. Aceitar converte o convite em acesso na mesma
+transação, sem dupla contagem, e revalida a capacidade efetiva do contrato.
+Convites anteriores à redução permanecem registrados, mas não podem ser aceitos
+enquanto não houver vaga. Não há promessa de que um convite antigo concederá acesso.
+
+### Escolha no downgrade
+
+Novo endpoint `POST /api/enterprises/current/contract/access-impact`, restrito ao dono,
+recebe oferta, revisão e versão do catálogo. Retorna limite de equipe, contagens,
+IDs elegíveis, necessidade de escolha, IDs que serão bloqueados e domínios afetados.
+Sem seleção, informa a necessidade; não escolhe pessoas automaticamente.
+A prévia não altera vínculos nem concede plano.
+
+Quando o alvo não comporta a equipe ativa, `POST .../contract/requests` exige
+`retainedMembershipIds`. O dono informa os vínculos que permanecerão dentro da cota:
+
+```json
+{
+  "idempotencyKey": "downgrade-choice-unique",
+  "planId": 4,
+  "expectedContractRevision": 2,
+  "catalogVersion": 1,
+  "retainedMembershipIds": [123]
+}
+```
+
+Para Gratuito com equipe ativa, enviar explicitamente `[]`; omitir a lista não expressa
+uma escolha. IDs precisam ser positivos, únicos, da própria loja e de vínculos ativos,
+não bloqueados, com usuário ativo, excluindo o dono. A lista não pode superar a cota alvo.
+A solicitação guarda a seleção e a inclui na comparação de idempotência; mesmo conjunto
+em outra ordem equivale à mesma seleção. Mudar o conjunto com a mesma chave retorna 409.
+
+O futuro fluxo financeiro precisa recuperar essa seleção persistida e passá-la ao
+escopo confiável de concessão. A aplicação revalida os vínculos e a capacidade na mesma
+transação do contrato, dos produtos e dos domínios. Redução sem escolha é recusada com
+`Team.SelectionRequired`; a solicitação continua sendo somente uma intenção.
+
+Recuperar capacidade por upgrade/adicional restaura automaticamente vínculos bloqueados
+exclusivamente pelo plano, em ordem de bloqueio, entrada e ID, dentro das posições
+livres após os convites válidos. Vínculos desativados pelo dono ou de usuários inativos
+não são restaurados. Desativar manualmente um bloqueado limpa seu motivo comercial,
+para impedir reabertura por upgrade. Ativação manual também revalida a cota.
+
+As sessões, refresh e escolhas de loja omitem/recusam bloqueados. O bloqueio incrementa
+`AccessVersion`; não é possível reaproveitar token antigo. A revisão do contrato continua
+invalidando os tokens selecionados da própria loja. Uma transferência de dono considera
+a troca como uma única vaga durante suas duas gravações; não cria capacidade extra.
+
+Dados legados acima do limite, ainda sem flags comerciais, não autorizam sessões de
+equipe acima da cota. O dono mantém acesso para ajustar os vínculos. A migration não
+escolhe quem permanece nem desativa usuários. A política de seleção em redução
+automática por vencimento, sem manifestação do dono, continua pendente de decisão;
+não foi implementada rotina de vencimento/cobrança nesta etapa.
+
+### Domínio próprio e fallback
+
+Gratuito e Inicial mantêm o subdomínio da plataforma. Sem direito a domínio próprio,
+cadastro, verificação e ativação de host externo são recusados com `Domain.PlanRequired`.
+A verificação recusa o plano antes de consultar DNS e revalida a escrita após o lock.
+
+Perder esse direito desativa os domínios externos e marca bloqueio comercial, preservando
+host, cadastro e verificação. O subdomínio verificado da plataforma volta a ser o principal;
+se o cadastro legado não tiver um, a aplicação cria um fallback exclusivo a partir da loja
+e do domínio-base configurado. A troca respeita o índice de domínio primário na mesma
+transação. A administração continua acessível pelo backoffice.
+
+Upgrade não ativa domínio externo automaticamente. O dono pode reativá-lo pelo endpoint
+existente `PUT /api/enterprise-domains/{id}/publication`, com direito vigente e verificação
+preservada. O domínio bloqueado continua visível na listagem administrativa.
+
+`IEnterpriseDomainAccess` centraliza a resolução por host: domínio ativo/verificado,
+loja ativa e direito vigente. É usado pelo StoreTenantResolver, validação da sessão de
+comprador e `GET /api/internal/tenants/resolve`, consumido pelo DROP com autenticação de
+serviço. A verificação do contrato impede uso de host externo mesmo com dados legados
+que ainda indiquem domínio ativo sem flag de bloqueio.
+
+### Respostas e histórico
+
+Listagens administrativas de vínculos incluem `isContractBlocked` e `contractBlockedAt`;
+domínios incluem `isContractBlocked`. Consumo de equipe usa os acessos efetivamente
+disponíveis; `remainingEmployeeSlots` desconta também convites pendentes.
+
+Bloqueio/restauração, gestão de vínculo, convite e domínio geram atividades da loja
+na mesma transação. Detalhes guardam tipo e IDs quando já disponíveis, sem e-mail de
+convidado, token de convite, senha, desafio DNS ou host no histórico comercial.
+Eventos de criação usam a correlação da operação quando o ID ainda não foi gerado.
+A consulta continua restrita à permissão própria `store.history.view`.
+
+Códigos principais: `Team.MemberLimit`, `Team.InvitationLimit`, `Team.SelectionRequired`,
+`Team.InvalidSelection`, `Identity.MembershipUnavailable` e `Domain.PlanRequired`.
+
 ## JWT e implantação
 
 Tokens administrativos com loja selecionada recebem `plan_id`, `contract_revision`
@@ -263,6 +367,9 @@ Migrations:
 3. `20261119235550_AddProductContractLimitsAndActivity`: bloqueio comercial de produtos,
    histórico e permissão de consulta. Reconcilia o catálogo existente pelos limites,
    preserva dados e registra os bloqueios iniciais com autor `system`.
+4. `20261120010718_AddTeamAndDomainContractLimits`: flags de bloqueio de vínculo/domínio,
+   data do bloqueio do vínculo e seleção de equipe persistida nas solicitações.
+   Não altera usuários globais nem seleciona automaticamente uma equipe legada.
 
 A migração direta não apaga lojas ou pedidos e não executa cobranças.
 Revisar SQL e backup antes de aplicar em um ambiente com dados.
@@ -299,12 +406,15 @@ excedente, total com arquivados, atomicidade de lote, disputa pela última vaga,
 reativação, adicional, edição/exclusão bloqueadas, estoque preservado, histórico e
 permissão própria, projeção de aparência, catálogo público, carrinho e checkout.
 Pedido criado antes do bloqueio é pago pelo gateway manual local e mantém snapshots;
-reservas anteriores ainda podem ser efetivadas. Na verificação local, 56 testes passaram.
+reservas anteriores ainda podem ser efetivadas. A base das Partes 1 e 2 possui 56 testes.
+A Parte 3 acrescenta cenários de vagas, convites concorrentes, expiração/aceitação,
+escolha e idempotência, restauração, isolamento de outras lojas, transferência de dono,
+fallback de domínio e validação pública/interna/de sessão.
 
 ## Próximas partes
 
-Produtos e histórico Store estão protegidos na Parte 2. Equipe/domínio ficam para
-a Parte 3; cotas de temas, personalização e mídia para a Parte 4; cobrança SaaS para
+Produtos e histórico Store estão protegidos na Parte 2; equipe e domínio, na Parte 3.
+Cotas de temas, personalização e mídia ficam para a Parte 4; cobrança SaaS para
 a Parte 5; fluxo completo e consumo DROP para a Parte 6. A interface ainda precisa
 consumir as prévias, explicar bloqueios e oferecer seleção/reativação e histórico.
 Não se deve anunciar os limites de todos os módulos como proteção já concluída.

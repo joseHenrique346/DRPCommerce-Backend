@@ -11,7 +11,9 @@ namespace StoreCommerce.Security.Resolvers;
 /// <summary>
 /// Resolve a loja e autentica chamadas internas antes de permitir acesso aos dados do Store.
 /// </summary>
-public sealed class StoreTenantResolver(IIdentityRepositories data, IOptions<SecurityOptions> settings) : IRequestTenantResolver
+public sealed class StoreTenantResolver(
+    IIdentityRepositories data, IOptions<SecurityOptions> settings,
+    StoreCommerce.Application.Contracts.IEnterpriseDomainAccess domains) : IRequestTenantResolver
 {
     /// <summary>
     /// Valida chamadas internas ou identifica a loja pelo domínio verificado, impedindo o uso de um tenant não confiável.
@@ -40,11 +42,11 @@ public sealed class StoreTenantResolver(IIdentityRepositories data, IOptions<Sec
             return;
 
         var host = HostName.Normalize(context.Request.Host.Host);
-        var domain = await data.EnterpriseDomains.FindValueAsync(x => x.NormalizedHost == host && x.IsVerified && x.IsActive && x.Enterprise.IsActive, x => new { x.EnterpriseId }, context.RequestAborted, ignoreQueryFilters: true);
+        var tenantId = await domains.ResolveAsync(host, null, context.RequestAborted);
 
-        if (domain is null)
+        if (tenantId is null)
             throw new SecurityFailure(404, "Enterprise.Unavailable", "Loja indisponível.");
 
-        context.Items[SecurityNames.ResolvedTenant] = domain.EnterpriseId;
+        context.Items[SecurityNames.ResolvedTenant] = tenantId.Value;
     }
 }

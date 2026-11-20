@@ -34,13 +34,13 @@ public sealed class AcceptInvitationCommandHandler(IdentityHandlerContext contex
             throw new SecurityFailure(409, "Access.MemberExists", "O vínculo com esta loja já existe.");
 
         var membership = EnterpriseMembership.Create(invitation.EnterpriseId, userId, invitation.InvitedKindId, true, Now);
+        invitation.Accept(Now);
         data.EnterpriseMemberships.Add(membership);
         await unitOfWork.CommitAsync(ct);
 
         foreach (var roleId in roleIds)
             data.MembershipAccessRoles.Add(MembershipAccessRole.Create(invitation.EnterpriseId, membership.Id, roleId));
 
-        invitation.Accept(Now);
         await unitOfWork.CommitAsync(ct);
         await tx.CommitAsync(ct);
 
