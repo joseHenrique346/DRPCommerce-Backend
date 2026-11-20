@@ -19,9 +19,26 @@ public sealed class MercadoPagoSignature(IOptions<MercadoPagoOptions> options, T
 {
     public string Verify(string paymentId, string requestId, string signature, IntegrationEnvironment environment = IntegrationEnvironment.Sandbox)
     {
-        if (paymentId.Length is < 1 or > 40 || paymentId.Any(Character => Character is < '0' or > '9') ||
+        if (paymentId.Length is < 1 or > 40 || paymentId.Any(Character => !char.IsAsciiDigit(Character)))
+            throw new SecurityFailure(401, "MercadoPago.InvalidSignature", "Identificador do pagamento inválido.");
+
+        return MercadoPagoWebhookSignature.Verify(paymentId, requestId, signature,
+            options.Value.SignatureSecret(environment), options.Value.SignatureToleranceSeconds, time.GetUtcNow());
+    }
+}
+
+/// <summary>
+/// Validação criptográfica compartilhada; cada fluxo fornece seu próprio segredo.
+/// Não consulta credenciais, conexões ou dados de negócio.
+/// </summary>
+public static class MercadoPagoWebhookSignature
+{
+    public static string Verify(string paymentId, string requestId, string signature,
+        string secret, int toleranceSeconds, DateTimeOffset now)
+    {
+        if (paymentId.Length is < 1 or > 200 || paymentId.Any(Character => !char.IsAsciiLetterOrDigit(Character) && Character is not ('-' or '_')) ||
             requestId.Length is < 1 or > 200 || requestId.Any(Character => !char.IsAsciiLetterOrDigit(Character) && Character is not ('-' or '_')) ||
-            signature.Length is < 1 or > 512 || string.IsNullOrWhiteSpace(options.Value.SignatureSecret(environment)))
+            signature.Length is < 1 or > 512 || string.IsNullOrWhiteSpace(secret))
             throw Invalid();
 
         var fields = signature.Split(',').Select(Field => Field.Trim().Split('=', 2)).ToList();
@@ -47,11 +64,11 @@ public sealed class MercadoPagoSignature(IOptions<MercadoPagoOptions> options, T
             throw Invalid();
         }
 
-        if (Math.Abs((time.GetUtcNow() - issued).TotalSeconds) > Math.Clamp(options.Value.SignatureToleranceSeconds, 60, 3600))
+        if (Math.Abs((now - issued).TotalSeconds) > Math.Clamp(toleranceSeconds, 60, 3600))
             throw Invalid();
 
         var manifest = $"id:{paymentId.ToLowerInvariant()};request-id:{requestId};ts:{timestamp};";
-        var expected = HMACSHA256.HashData(Encoding.UTF8.GetBytes(options.Value.SignatureSecret(environment)), Encoding.UTF8.GetBytes(manifest));
+        var expected = HMACSHA256.HashData(Encoding.UTF8.GetBytes(secret), Encoding.UTF8.GetBytes(manifest));
 
         if (!CryptographicOperations.FixedTimeEquals(expected, Convert.FromHexString(digest)))
             throw Invalid();

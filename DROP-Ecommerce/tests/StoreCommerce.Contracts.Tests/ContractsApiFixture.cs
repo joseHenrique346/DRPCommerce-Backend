@@ -39,6 +39,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
     private bool created;
     public List<long> LegacyEnterpriseIds { get; } = [];
     public bool SeedLegacyThemes { get; init; }
+    public Action<IServiceCollection>? ConfigureServices { get; init; }
 
     public IServiceProvider Services => app?.Services ?? throw new InvalidOperationException("Fixture não iniciada.");
 
@@ -105,6 +106,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
 
             builder.Services.AddControllers().AddApplicationPart(typeof(EnterpriseContractController).Assembly);
             builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
+            ConfigureServices?.Invoke(builder.Services);
 
             foreach (var service in builder.Services.Where(Service =>
                 Service.ServiceType == typeof(IHostedService) &&

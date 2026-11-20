@@ -35,7 +35,12 @@ public static class EnterpriseContractResponseMapper
         return new EnterpriseContractChangeResponse(
             change.Id,
             change.EnterpriseId,
-            change.Status == EnterpriseContractChangeStatus.Requested ? "requested" : "superseded",
+            change.Status switch
+            {
+                EnterpriseContractChangeStatus.Requested => "requested",
+                EnterpriseContractChangeStatus.Billing => "billing",
+                _ => "superseded"
+            },
             change.PlanId,
             change.AddOnId,
             change.ExpectedContractRevision,

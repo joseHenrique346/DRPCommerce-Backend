@@ -9,6 +9,8 @@ A Parte 3 aplica vagas de equipe, escolha no downgrade, restauração de acessos
 por contrato e proteção do uso de domínio próprio.
 A Parte 4 aplica catálogo de temas e personalização por plano, fallback público e logos
 armazenados no Store, compartilhados com o DROP por API autenticada.
+A Parte 5 acrescenta assinatura mensal automática, faturas, confirmação financeira,
+trocas de oferta e carência. A homologação externa dessa cobrança permanece pendente.
 
 A base foi portada de `feat/90-EstudoDeValorUsuarioSeparacaoContrato` para a branch de integração.
 Não houve merge completo da branch antiga: os fluxos atuais de pagamento foram preservados,
@@ -17,7 +19,7 @@ e a rota antiga de alteração direta do plano não foi incorporada.
 ## Catálogo e identificadores
 
 Versão inicial: `catalogVersion: 1`. Moeda: `BRL`.
-Valores abaixo são mensais; a oferta anual e a política de renovação ficam para a Parte 5.
+Valores abaixo são mensais. A Parte 5 implementa renovação automática mensal; oferta anual fica adiada.
 
 | ID | Código | Nome | Mensal | Produtos Store | Produtos DROP | Equipe adicional | Temas Store / DROP |
 | ---: | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -308,9 +310,9 @@ a troca como uma única vaga durante suas duas gravações; não cria capacidade
 
 Dados legados acima do limite, ainda sem flags comerciais, não autorizam sessões de
 equipe acima da cota. O dono mantém acesso para ajustar os vínculos. A migration não
-escolhe quem permanece nem desativa usuários. A política de seleção em redução
-automática por vencimento, sem manifestação do dono, continua pendente de decisão;
-não foi implementada rotina de vencimento/cobrança nesta etapa.
+escolhe quem permanece nem desativa usuários. Para redução automática por vencimento,
+a Parte 5 aplica sete dias de carência e retorno ao Gratuito, com bloqueio de toda a
+equipe adicional e preservação do dono.
 
 ### Domínio próprio e fallback
 
@@ -486,11 +488,144 @@ histórico longo, concorrência, migração legada, PNG/upload/exclusão, isolam
 e handlers DROP com PostgreSQL próprio e chamadas HTTP reais ao Store em TestServer.
 Na validação das Partes 1 a 4, 102 testes passaram e a solução compilou sem erros.
 
+## Parte 5 — assinatura mensal automática da plataforma
+
+A Parte 4 está no commit local `cb397f5`, sem push. A Parte 5 permanece sem commit.
+Em 20/11/2026 foram definidas renovação mensal automática, upgrade imediato,
+downgrade no próximo vencimento e sete dias de carência. E-mails ficam para depois;
+a consulta de cobrança fornece os avisos persistentes para o painel.
+
+### Ciclo e mudanças
+
+- A adesão usa Assinaturas sem plano associado (`POST /preapproval`, `status: pending`),
+  com autorização hospedada no Mercado Pago, sem receber dados de cartão no backend.
+  A recorrência é de um mês, pelo total do plano e do único adicional. Não há oferta anual.
+- `authorized`, link de retorno e dados do navegador não comprovam pagamento. A liberação
+  exige fatura recorrente associada à assinatura e pagamento consultado pela API, aprovado,
+  com recebedor, moeda e valor corretos, sem reembolso. Uma cobrança de verificação do
+  meio de pagamento, isoladamente, não concede plano.
+- O período vem da data de débito da fatura. A âncora mensal original é preservada,
+  inclusive em meses curtos: 31/jan → 28/fev → 31/mar. A confirmação tardia não cria um
+  novo período de trinta dias a partir do recebimento do webhook.
+- Aumento do total mensal é upgrade imediato: calcula no servidor a diferença entre os
+  totais, proporcional ao tempo restante do período pago, arredondada para centavos.
+  Usa Checkout Pro somente para essa diferença. Após aprovação, atualiza o valor das
+  próximas cobranças da assinatura e concede os direitos, mantendo o vencimento.
+- Trocas com total menor ou igual entram no próximo vencimento. O valor da próxima
+  recorrência é sincronizado antes; os direitos atuais permanecem até a data prevista.
+  A escolha de equipe é validada ao solicitar e ao aplicar. Pode ser atualizada enquanto
+  a mudança está pendente, caso os vínculos tenham mudado.
+- Downgrade ao Gratuito cancela as cobranças futuras e mantém o período já pago;
+  na data escolhida aplica o Gratuito, sem acrescentar carência a um cancelamento voluntário.
+  Uma autorização inicial ainda não paga pode ser cancelada pela escolha do Gratuito,
+  antes de contratar outra oferta.
+- Sem renovação paga, o prazo de carência é `paidUntil + 7 dias`, em UTC. Os direitos
+  permanecem durante essa janela. Tentativas rejeitadas, retries e indisponibilidade do
+  provedor não mudam a data. Ao terminar, aplica Gratuito com seleção vazia de equipe
+  adicional, preservando dono, dados, vendas e histórico e acionando as proteções das Partes 2–4.
+- Pagamento recuperado após a carência pode restaurar os direitos no período mensal
+  correspondente; não reinicia o ciclo. Upgrade abandonado expira sem bloquear nova
+  escolha. Captura tardia de um upgrade já abandonado, duplicidade, reembolso, chargeback
+  ou divergência financeira exige revisão; não gera estorno automático.
+- Durante a inadimplência, regularizar a mensalidade antes de trocar para outra oferta
+  paga. Isso evita alterar o preço de uma fatura vencida que o provedor já está tentando cobrar.
+
+Referências oficiais: [adesão hospedada com pagamento pendente](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/integration-configuration/subscription-no-associated-plan/pending-payments),
+[gerenciamento de assinatura](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/subscription-management),
+[faturas recorrentes](https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/authorized-payment-search/get).
+O proporcional de upgrade acima é uma regra da plataforma; não utiliza o pro rata de
+adesão do Mercado Pago como se fosse uma troca de plano.
+
+### Endpoints
+
+As rotas de gestão exigem usuário administrativo e dono principal atual da loja selecionada.
+A validação relê vínculo, usuário e revisão; não aceita tenant, preço ou condição de pago no body.
+
+| Método | Rota | Finalidade |
+| --- | --- | --- |
+| GET | `/api/enterprises/current/billing` | Situação, mensalidade, vencimento, carência, checkout e avisos para o painel |
+| GET | `/api/enterprises/current/billing/invoices?beforeId=...` | Até 50 faturas da loja, com valores e períodos congelados; paginação por ID |
+| POST | `/api/enterprises/current/billing/checkout` | Recebe `contractChangeId` de uma solicitação existente; inicia adesão ou mudança, de forma idempotente |
+| POST | `/api/enterprises/current/billing/reconcile` | Consulta o provedor e atualiza o andamento; não força débito nem aceita status declarado pelo cliente |
+| PUT | `/api/enterprises/current/billing/pending-team` | Recebe `expectedContractRevision` e `retainedMembershipIds` para corrigir a equipe de um downgrade pendente |
+| POST | `/api/platform-billing/mercado-pago/webhook` | Recebe notificações assinadas de `payment`, `subscription_preapproval` e `subscription_authorized_payment` |
+
+No gateway, as rotas Store continuam precedidas por `/api/store`. O fluxo do frontend é:
+catálogo → prévias de impacto → solicitação de contrato → checkout → autorização/pagamento
+hospedado → consulta do andamento. Depois da concessão, renovar o token da loja, pois a
+revisão do contrato invalida o token selecionado antigo. Não há endpoint público de concessão.
+O e-mail da conta do dono é usado como `payer_email`; a conta usada na autorização precisa
+ser compatível com esse e-mail conforme a validação do Mercado Pago.
+
+### Persistência e segurança
+
+A migration `20261120150023_AddPlatformSubscriptions` cria `assinatura_plataforma`,
+`fatura_plataforma` e `notificacao_cobranca_plataforma`. Nenhuma migration foi aplicada
+pela implementação aos bancos existentes do usuário; os testes usam bancos descartáveis.
+
+Há no máximo uma assinatura aberta por loja. Recebedor/ambiente, ofertas, preços,
+correlação e períodos ficam preservados. Tentativas de criação são gravadas **antes**
+dos POSTs externos. Se a resposta se perder, a recuperação busca por correlação e
+valida o objeto encontrado; busca vazia não autoriza um novo POST. A busca de preferências
+cobre os últimos 90 dias e ambiguidades precisam de revisão.
+
+O lock transacional da loja serializa reconciliação, pagamentos e concessão, inclusive
+em processos concorrentes. Os direitos, a revisão, os bloqueios de produtos/acessos/domínios
+e o histórico são salvos na mesma transação da efetivação local. O workflow financeiro
+possui escopo próprio, verificado antes do bypass de identidade; termos financeiros não
+podem ser alterados por CRUD genérico nem mesmo abrindo apenas o escopo de identidade.
+Contratos legados pagos sem assinatura são recusados no checkout e precisam de conciliação
+pela plataforma; a migration não os converte em cobranças reais.
+
+O webhook valida HMAC, timestamp, tópico e correspondência entre body e query, grava
+uma inbox durável e responde sem conceder plano. Assinaturas usam IDs alfanuméricos;
+o webhook de pagamentos dos lojistas conserva a validação numérica original e seu
+próprio segredo. O worker concilia assinaturas e notificações, mesmo sem entrega de um
+webhook. A rotina local de vencimento continua sendo executada quando as chamadas ao
+provedor estão desabilitadas ou falham. O worker deve estar ativo; sua cadência é de
+30 segundos e cada assinatura é consultada aproximadamente a cada minuto.
+
+### Configuração privada e teste externo
+
+`PlatformBilling` é independente de `MercadoPago`, das conexões OAuth dos lojistas e dos
+pedidos/transações de mercadorias. A integração e a produção continuam desabilitadas por padrão.
+
+| Chave em `PlatformBilling` | Finalidade |
+| --- | --- |
+| `Enabled` | Habilitação explícita; padrão `false` |
+| `AllowProduction` | Liberação operacional de produção; padrão `false` |
+| `Environment` | `Sandbox` ou `Production`; padrão `Sandbox` |
+| `AccountId` | ID esperado da conta recebedora da plataforma |
+| `AccessToken` | Credencial privada da conta da plataforma; nunca versionar |
+| `WebhookSecret` | Assinatura privada da aplicação dessa cobrança |
+| `PublicApiBaseUrl` | Base HTTPS pública da API, sem query string |
+| `ReturnUrl` | Retorno HTTPS do backoffice; não comprova pagamento |
+| `SignatureToleranceSeconds` | Tolerância da assinatura; padrão 600 segundos |
+
+O adapter exige conta brasileira e confere a identidade da credencial em `/users/me`.
+O perfil de sandbox usa vendedor de teste, sem inferir o ambiente pelo prefixo da chave
+ou por `live_mode` isoladamente. Cadastrar a URL própria do webhook com os três tópicos
+acima e o segredo correspondente. Não reutilizar a URL de notificações de vendas.
+
+A implementação foi validada com HTTP simulado e PostgreSQL local descartável.
+Ainda é necessário configurar credenciais/URLs, aplicar a migration no banco escolhido,
+implementar a interface e validar a adesão hospedada e a recorrência com o Mercado Pago.
+Não houve cobrança real, uso de credenciais reais, abertura de túnel ou teste externo
+nesta etapa. Casos de revisão financeira não possuem resolução automática nem endpoint
+administrativo de estorno; não marcar a homologação externa como concluída.
+E-mails da plataforma ficam adiados; eventuais comunicações emitidas pelo próprio
+Mercado Pago seguem o funcionamento do provedor.
+
+Validação local: 156 testes aprovados na suíte completa, incluindo a evolução das
+migrations e os fluxos de assinatura. Os cenários de cobrança usam HTTP simulado.
+O ajuste final de bloqueio de troca paga durante inadimplência foi verificado novamente
+nos testes de assinatura. A solução compila sem erros.
+
 ## Próximas partes
 
 Produtos e histórico Store estão protegidos na Parte 2; equipe e domínio, na Parte 3.
-Temas, personalização e logos estão protegidos no backend na Parte 4. Cobrança SaaS fica
-para a Parte 5; fluxo completo e consumo DROP para a Parte 6. A interface ainda precisa
+Temas, personalização e logos estão protegidos no backend na Parte 4. A Parte 5 acrescenta
+a cobrança SaaS automática; fluxo completo e consumo DROP continuam na Parte 6. A interface ainda precisa
 consumir as prévias/direitos, explicar bloqueios, oferecer seleção/reativação e histórico,
 e entregar o catálogo visual e os renderers reais.
 Não se deve anunciar os limites de todos os módulos como proteção já concluída.

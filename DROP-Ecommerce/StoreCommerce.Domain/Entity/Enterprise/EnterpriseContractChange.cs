@@ -74,4 +74,12 @@ public sealed class EnterpriseContractChange : BaseEntity, ITenantEntity
         Status = EnterpriseContractChangeStatus.Superseded;
         SupersededAt = now;
     }
+
+    public void BeginBilling()
+    {
+        if (Status != EnterpriseContractChangeStatus.Requested)
+            throw new InvalidOperationException("A solicitação não está disponível para cobrança.");
+
+        Status = EnterpriseContractChangeStatus.Billing;
+    }
 }

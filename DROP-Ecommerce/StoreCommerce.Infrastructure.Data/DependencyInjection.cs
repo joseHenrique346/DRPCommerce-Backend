@@ -105,6 +105,18 @@ public static class DependencyInjection
             Client.Timeout = TimeSpan.FromSeconds(30);
         });
         services.AddScoped<MercadoPagoApi>();
+        services.AddOptions<Billing.PlatformBillingOptions>();
+
+        if (configuration is not null)
+            services.Configure<Billing.PlatformBillingOptions>(configuration.GetSection("PlatformBilling"));
+
+        services.AddScoped<StoreCommerce.Application.Billing.IPlatformBillingProvider, Billing.MercadoPagoPlatformBillingProvider>();
+        services.AddScoped<Billing.PlatformBillingSignature>();
+        services.AddScoped<StoreCommerce.Application.Billing.PlatformBillingWriteScope>();
+        services.AddScoped<StoreCommerce.Application.Billing.IPlatformSubscriptionProvider, Billing.MercadoPagoSubscriptionProvider>();
+        services.AddScoped<Billing.PlatformBillingService>();
+        services.AddScoped<Billing.PlatformBillingNotifications>();
+        services.AddHostedService<Workers.PlatformBillingWorker>();
         services.AddScoped<MercadoPagoAccess>();
         services.AddScoped<MercadoPagoGateway>();
         services.AddScoped<IPaymentGateway>(Provider => Provider.GetRequiredService<MercadoPagoGateway>());

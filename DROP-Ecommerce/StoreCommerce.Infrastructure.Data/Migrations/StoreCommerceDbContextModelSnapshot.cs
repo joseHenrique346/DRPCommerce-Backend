@@ -3494,6 +3494,342 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PlatformBillingInvoice", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("applied_at");
+
+                    b.Property<DateTime>("CheckoutExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("checkout_expires_at");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsUpgrade")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_upgrade");
+
+                    b.Property<decimal>("MonthlyAmount")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("monthly_amount");
+
+                    b.Property<long>("OfferId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("offer_id");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("character varying(220)")
+                        .HasColumnName("origin");
+
+                    b.Property<string>("PaymentId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("payment_id");
+
+                    b.Property<DateTime?>("PaymentUpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_updated_at");
+
+                    b.Property<DateTime>("PeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_end");
+
+                    b.Property<DateTime>("PeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_start");
+
+                    b.Property<string>("PreferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("preference_id");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(41)
+                        .HasColumnType("character varying(41)")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("ReviewCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("review_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<long>("SubscriptionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("subscription_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fatura_plataforma");
+
+                    b.HasIndex("EnterpriseId")
+                        .HasDatabaseName("ix_fatura_plataforma_enterprise_id");
+
+                    b.HasIndex("OfferId")
+                        .HasDatabaseName("ix_fatura_plataforma_offer_id");
+
+                    b.HasIndex("PaymentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_fatura_plataforma_payment_id");
+
+                    b.HasIndex("Reference")
+                        .IsUnique()
+                        .HasDatabaseName("ix_fatura_plataforma_reference");
+
+                    b.HasIndex("SubscriptionId", "Origin")
+                        .IsUnique()
+                        .HasDatabaseName("ix_fatura_plataforma_subscription_id_origin");
+
+                    b.ToTable("fatura_plataforma", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PlatformBillingNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Delivery")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("delivery");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<DateTime>("NextCheckAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_check_at");
+
+                    b.Property<string>("ResourceId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("resource_id");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("topic");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notificacao_cobranca_plataforma");
+
+                    b.HasIndex("CompletedAt", "NextCheckAt")
+                        .HasDatabaseName("ix_notificacao_cobranca_plataforma_completed_at_next_check_at");
+
+                    b.HasIndex("AccountId", "Environment", "Topic", "Delivery")
+                        .IsUnique()
+                        .HasDatabaseName("ix_notificacao_cobranca_plataforma_account_id_environment_topi~");
+
+                    b.ToTable("notificacao_cobranca_plataforma", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PlatformSubscription", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("account_id");
+
+                    b.Property<long>("AppliedContractRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("applied_contract_revision");
+
+                    b.Property<DateTime?>("ChangeEffectiveAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("change_effective_at");
+
+                    b.Property<bool>("ChangeSynchronized")
+                        .HasColumnType("boolean")
+                        .HasColumnName("change_synchronized");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<bool>("IsUpgrade")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_upgrade");
+
+                    b.Property<DateTime>("NextCheckAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_check_at");
+
+                    b.Property<long>("OfferId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("offer_id");
+
+                    b.Property<DateTime?>("PaidUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_until");
+
+                    b.Property<long?>("PendingOfferId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("pending_offer_id");
+
+                    b.Property<DateTime?>("PeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_start");
+
+                    b.Property<DateTime?>("BillingAnchor")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("billing_anchor");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(41)
+                        .HasColumnType("character varying(41)")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("RemoteId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("remote_id");
+
+                    b.Property<string>("RemoteStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("remote_status");
+
+                    b.Property<string>("RetainedMembershipIdsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("retained_membership_ids_json");
+
+                    b.Property<string>("ReviewCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("review_code");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_assinatura_plataforma");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_assinatura_plataforma_enterprise_id")
+                        .HasFilter("closed_at IS NULL");
+
+                    b.HasIndex("OfferId")
+                        .HasDatabaseName("ix_assinatura_plataforma_offer_id");
+
+                    b.HasIndex("PendingOfferId")
+                        .HasDatabaseName("ix_assinatura_plataforma_pending_offer_id");
+
+                    b.HasIndex("Reference")
+                        .IsUnique()
+                        .HasDatabaseName("ix_assinatura_plataforma_reference");
+
+                    b.HasIndex("AccountId", "Environment", "RemoteId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_assinatura_plataforma_account_id_environment_remote_id");
+
+                    b.ToTable("assinatura_plataforma", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
                 {
                     b.Property<long>("Id")
@@ -7305,6 +7641,53 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_selecao_provedor_pagamento_empresa_enterprise_id");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PlatformBillingInvoice", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fatura_plataforma_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseContractChange", null)
+                        .WithMany()
+                        .HasForeignKey("OfferId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fatura_plataforma_solicitacao_contrato_empresa_offer_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.PlatformSubscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fatura_plataforma_assinatura_plataforma_subscription_id");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.PlatformSubscription", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_assinatura_plataforma_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseContractChange", null)
+                        .WithMany()
+                        .HasForeignKey("OfferId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_assinatura_plataforma_solicitacao_contrato_empresa_offer_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.EnterpriseContractChange", null)
+                        .WithMany()
+                        .HasForeignKey("PendingOfferId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_assinatura_plataforma_solicitacao_contrato_empresa_pending_~");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Product", b =>
