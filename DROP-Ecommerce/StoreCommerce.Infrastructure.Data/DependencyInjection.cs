@@ -32,11 +32,17 @@ public static class DependencyInjection
         services.AddScoped<ITenantProvider, TenantProvider>();
         services.AddSharedInfrastructure();
         services.AddScoped<IAppearanceContext, StoreAppearanceContext>();
+        services.AddScoped<IAppearanceEntitlements, StoreAppearanceEntitlements>();
+        services.AddScoped<IMediaAssetReader, StoreMediaAssetReader>();
+        services.AddScoped<StoreCommerce.Application.Media.MediaWriteScope>();
+        services.AddScoped<StoreCommerce.Application.Media.IMediaAssetStore, MediaAssetStore>();
         services.AddScoped<IAppearanceResources, StoreAppearanceResources>();
         services.AddScoped<IAppearanceRepository>(provider => new AppearanceRepository<StoreCommerceDbContext>(
             provider.GetRequiredService<StoreCommerceDbContext>(),
             provider.GetRequiredService<AppearanceWriteScope>(),
-            AppearanceChannel.Store));
+            AppearanceChannel.Store,
+            (tenant, ct) => provider.GetRequiredService<StoreCommerceDbContext>().Database
+                .ExecuteSqlInterpolatedAsync($"SELECT id FROM empresa WHERE id = {tenant} FOR UPDATE", ct)));
         services.AddScoped<UnitOfWork>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());
         services.AddScoped<IIdentityUnitOfWork>(provider => provider.GetRequiredService<UnitOfWork>());

@@ -33,5 +33,19 @@ public sealed class InternalEnterpriseController(StoreCommerceDbContext db) : Co
 
         return value is null ? NotFound() : Ok(Result<object>.Success(value));
     }
+
+    /// <summary>
+    /// Consulta direitos atuais de aparência para um módulo autenticado da própria loja.
+    /// </summary>
+    [HttpGet("enterprises/{id:long}/appearance-rights/{channel}")]
+    public async Task<IActionResult> AppearanceRights(long id, string channel, CancellationToken ct)
+    {
+        if (HttpContext.Items[SharedCommerce.Application.Security.SecurityNames.TrustedServiceTenant] is not long tenant || tenant != id)
+            return NotFound();
+
+        var rights = await db.ReadAppearanceCapabilitiesAsync(id, channel, ct);
+
+        return Ok(Result<SharedCommerce.Application.Contracts.Appearance.AppearanceCapabilities>.Success(rights));
+    }
 }
 

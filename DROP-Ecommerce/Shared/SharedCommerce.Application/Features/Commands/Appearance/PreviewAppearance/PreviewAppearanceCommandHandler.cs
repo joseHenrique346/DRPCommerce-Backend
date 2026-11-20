@@ -15,6 +15,8 @@ public sealed class PreviewAppearanceCommandHandler(
     IAppearanceResources resources,
     AppearanceSettingsValidator settingsValidator,
     AppearanceResourceValidator resourceValidator,
+    AppearanceCommercialPolicy policy,
+    IMediaAssetReader media,
     TimeProvider clock) : IRequestHandler<PreviewAppearanceCommand, AppearancePreviewResponse>
 {
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
@@ -30,6 +32,7 @@ public sealed class PreviewAppearanceCommandHandler(
         var (_, session, release) = await RequireSessionAsync(target, sessionId, version, ct);
         var settings = await ValidateAsync(context.EnterpriseId, target, release, session.SettingsJson, ct);
         var preview = Manifest(repository.Channel, null, release, settings, TargetCode(target), Now);
+        preview = await SharedCommerce.Application.Mappings.AppearanceAssetBindings.ResolveAsync(media, preview, context.EnterpriseId, ct);
         session.Preview(System.Text.Json.JsonSerializer.Serialize(preview), Now);
         await repository.SaveAsync(ct);
         await transaction.CommitAsync(ct);
@@ -61,6 +64,7 @@ public sealed class PreviewAppearanceCommandHandler(
     {
         EnsureReleaseAvailable(release);
         var settings = settingsValidator.Validate(release.SchemaJson, settingsJson);
+        await policy.EnsureAsync(tenant, release, settings, ct);
         await resourceValidator.ValidateAsync(tenant, target, release.SchemaJson, settings, ct);
 
         return settings;

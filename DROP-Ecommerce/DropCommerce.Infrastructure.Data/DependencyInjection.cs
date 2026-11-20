@@ -32,6 +32,9 @@ public static class DependencyInjection
         services.AddSingleton<StoreIntegrationScope>();
         services.AddSharedInfrastructure();
         services.AddScoped<IAppearanceContext, DropAppearanceContext>();
+        services.AddScoped<IAppearanceEntitlements, DropAppearanceEntitlements>();
+        services.AddScoped<IStoreAppearanceReader, StoreAppearanceReader>();
+        services.AddScoped<IMediaAssetReader, DropMediaAssetReader>();
         services.AddScoped<IAppearanceResources, DropAppearanceResources>();
         services.AddScoped<IDropAppearanceEventRepository, DropAppearanceEventRepository>();
         services.AddScoped<IAppearanceRepository>(provider => new AppearanceRepository<DropCommerceDbContext>(

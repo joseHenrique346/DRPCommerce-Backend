@@ -1,6 +1,7 @@
 using MediatR;
 using SharedCommerce.Application.Contracts.Appearance;
 using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Application.Validation;
 using static SharedCommerce.Application.Mappings.AppearanceResponseMapper;
 
 namespace SharedCommerce.Application.Features.Commands;
@@ -8,7 +9,8 @@ namespace SharedCommerce.Application.Features.Commands;
 public sealed class GetAppearanceStatusQueryHandler(
     IAppearanceRepository repository,
     IAppearanceContext context,
-    IAppearanceResources resources) : IRequestHandler<GetAppearanceStatusQuery, AppearanceStatusResponse>
+    IAppearanceResources resources,
+    AppearanceCommercialPolicy policy) : IRequestHandler<GetAppearanceStatusQuery, AppearanceStatusResponse>
 {
     public async Task<AppearanceStatusResponse> Handle(GetAppearanceStatusQuery request, CancellationToken ct)
     {
@@ -19,6 +21,7 @@ public sealed class GetAppearanceStatusQueryHandler(
         var appearance = await repository.GetAsync(context.EnterpriseId, target, ct);
 
         return new AppearanceStatusResponse(TargetKey(target), appearance?.PublishedRevisionId, appearance?.Version ?? 0,
-            appearance?.MigrationBlocked ?? false, appearance?.MigrationFailureCode);
+            appearance?.MigrationBlocked ?? false, appearance?.MigrationFailureCode,
+            await policy.GetAsync(context.EnterpriseId, ct));
     }
 }

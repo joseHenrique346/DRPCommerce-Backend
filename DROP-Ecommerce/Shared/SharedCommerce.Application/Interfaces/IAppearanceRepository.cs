@@ -17,6 +17,8 @@ public interface IAppearanceRepository
     Task<AppearanceEditSession?> GetSessionAsync(long enterpriseId, long id, CancellationToken ct);
     Task<AppearanceRevision?> GetRevisionAsync(long enterpriseId, long id, CancellationToken ct);
     Task<IReadOnlyList<AppearanceRevision>> GetRevisionsAsync(long enterpriseId, long appearanceId, CancellationToken ct, long? beforeNumber = null);
+    Task<AppearanceRevision?> GetLatestEligibleRevisionAsync(long enterpriseId, long appearanceId,
+        long maximumNumber, int themeLimit, CancellationToken ct);
     Task<long> NextRevisionNumberAsync(long enterpriseId, long appearanceId, CancellationToken ct);
     void Add(AppearanceEntity appearance);
     void Add(AppearanceEditSession session);

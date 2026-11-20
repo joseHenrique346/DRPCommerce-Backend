@@ -17,6 +17,8 @@ public sealed class PublishAppearanceCommandHandler(
     IAppearanceResources resources,
     AppearanceSettingsValidator settingsValidator,
     AppearanceResourceValidator resourceValidator,
+    AppearanceCommercialPolicy policy,
+    IMediaAssetReader media,
     TimeProvider clock,
     IMediator mediator) : IRequestHandler<PublishAppearanceCommand, AppearanceManifest>
 {
@@ -42,7 +44,8 @@ public sealed class PublishAppearanceCommandHandler(
         await repository.SaveAsync(ct);
         await transaction.CommitAsync(ct);
 
-        return Manifest(repository.Channel, revision, release, revision.SettingsJson, TargetCode(target), revision.PublishedAt);
+        return await SharedCommerce.Application.Mappings.AppearanceAssetBindings.ResolveAsync(media,
+            Manifest(repository.Channel, revision, release, revision.SettingsJson, TargetCode(target), revision.PublishedAt), context.EnterpriseId, ct);
     }
 
     private async Task<(AppearanceEntity, AppearanceEditSession, ThemeRelease)> RequireSessionAsync(
@@ -84,6 +87,7 @@ public sealed class PublishAppearanceCommandHandler(
     {
         EnsureReleaseAvailable(release);
         var settings = settingsValidator.Validate(release.SchemaJson, settingsJson);
+        await policy.EnsureAsync(tenant, release, settings, ct);
         await resourceValidator.ValidateAsync(tenant, target, release.SchemaJson, settings, ct);
 
         return settings;

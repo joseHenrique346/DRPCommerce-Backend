@@ -1,6 +1,7 @@
 using MediatR;
 using SharedCommerce.Application.Contracts.Appearance;
 using SharedCommerce.Application.Interfaces;
+using SharedCommerce.Application.Validation;
 using SharedCommerce.Domain.Entity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Domain.StaticEntity;
@@ -13,6 +14,7 @@ public sealed class BeginAppearanceEditCommandHandler(
     IAppearanceRepository repository,
     IAppearanceContext context,
     IAppearanceResources resources,
+    AppearanceCommercialPolicy policy,
     TimeProvider clock,
     IMediator mediator) : IRequestHandler<BeginAppearanceEditCommand, AppearanceEditResponse>
 {
@@ -40,6 +42,7 @@ public sealed class BeginAppearanceEditCommandHandler(
         var settings = !payload.UseDefaults && current?.ThemeReleaseId == release.Id
             ? current.SettingsJson
             : release.DefaultsJson;
+        settings = await policy.InitialSettingsAsync(tenant, release, settings, ct);
         var session = AppearanceEditSession.Begin(
             tenant, appearance.Id, release.Id, context.UserId, appearance.PublishedRevisionId, settings, Now);
         repository.Add(session);

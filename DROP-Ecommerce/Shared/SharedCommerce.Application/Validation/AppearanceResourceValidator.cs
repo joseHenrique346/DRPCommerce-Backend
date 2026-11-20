@@ -9,8 +9,7 @@ public sealed class AppearanceResourceValidator(IAppearanceResources resources, 
 {
     public async Task ValidateAsync(long enterpriseId, InputAppearanceTarget target, string schemaJson, string settingsJson, CancellationToken ct)
     {
-        var references = new HashSet<(string Kind, long Id)>();
-        Collect(AppearanceSettingsValidator.Parse(schemaJson), AppearanceSettingsValidator.Parse(settingsJson), references);
+        var references = References(schemaJson, settingsJson);
 
         foreach (var (kind, id) in references)
         {
@@ -21,6 +20,14 @@ public sealed class AppearanceResourceValidator(IAppearanceResources resources, 
             if (!exists)
                 throw new AppearanceFailure(400, "Appearance.ResourceUnavailable", "Uma referência não existe, pertence a outra loja ou ainda não tem integração disponível.");
         }
+    }
+
+    public static IReadOnlySet<(string Kind, long Id)> References(string schemaJson, string settingsJson)
+    {
+        var references = new HashSet<(string Kind, long Id)>();
+        Collect(AppearanceSettingsValidator.Parse(schemaJson), AppearanceSettingsValidator.Parse(settingsJson), references);
+
+        return references;
     }
 
     private static void Collect(JsonElement schema, JsonElement value, HashSet<(string Kind, long Id)> references)

@@ -12,4 +12,5 @@ public sealed record InputThemeDefinition(
     JsonElement Defaults,
     string? ReplacementVersion = null,
     DateTime? MigrationDeadline = null,
-    JsonElement Migration = default);
+    JsonElement Migration = default,
+    int? CatalogPosition = null);

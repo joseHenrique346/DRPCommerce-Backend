@@ -32,9 +32,20 @@ public sealed class RegisterAppearanceThemesCommandHandler(
             throw new AppearanceFailure(400, "Appearance.DuplicateTheme", "Não repita a mesma chave e versão no catálogo.");
 
         await using var transaction = await repository.BeginTransactionAsync(-1, ct);
+        var releases = await repository.GetReleasesAsync(ct);
+        var positions = releases.GroupBy(Release => Release.Key)
+            .ToDictionary(Group => Group.Key, Group => Group.First().CatalogPosition, StringComparer.Ordinal);
 
         foreach (var definition in definitions.OrderBy(Definition => Version.Parse(Definition.Version)))
         {
+            var position = positions.TryGetValue(definition.Key, out var registeredPosition)
+                ? registeredPosition : definition.CatalogPosition ?? (positions.Values.DefaultIfEmpty(0).Max() + 1);
+
+            if (definition.CatalogPosition.HasValue && definition.CatalogPosition != position ||
+                positions.Any(Position => Position.Key != definition.Key && Position.Value == position))
+                throw new AppearanceFailure(409, "Appearance.CatalogPositionConflict", "A posição do tema é estável e não pode pertencer a outra chave.");
+
+            positions[definition.Key] = position;
             var schema = AppearanceSettingsValidator.Canonicalize(definition.Schema);
             var defaults = AppearanceSettingsValidator.Canonicalize(definition.Defaults);
             var checksum = AppearanceSettingsValidator.Checksum(JsonSerializer.Serialize(new
@@ -55,9 +66,12 @@ public sealed class RegisterAppearanceThemesCommandHandler(
             if (current is null)
             {
                 repository.Add(ThemeRelease.Create(repository.Channel, definition.Key, definition.Version,
-                    definition.Name, definition.RendererContract, schema, defaults, checksum));
+                    definition.Name, definition.RendererContract, schema, defaults, checksum, position));
             }
         }
+
+        if (!positions.Values.Contains(1))
+            throw new AppearanceFailure(400, "Appearance.DefaultThemeRequired", "Cadastre o modelo padrão na posição comercial 1.");
 
         await repository.SaveAsync(ct);
 

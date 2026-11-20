@@ -26,6 +26,6 @@ public sealed class StorefrontDropAppearanceController(IMediator mediator) : App
         var target = await Mediator.Send(new ResolveAppearanceEventQuery(slug), ct);
         var manifest = await Mediator.Send(new GetPublishedAppearanceQuery(target, revisionId), ct);
 
-        return ManifestResult(manifest, revisionId.HasValue);
+        return ManifestResult(manifest, immutable: false);
     }
 }

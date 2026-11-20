@@ -65,6 +65,12 @@ Não existem pacotes JSON de temas embarcados nem importação automática ao in
 
 Cada módulo recebe o catálogo em `POST /api/internal/appearance-themes`, com um `InputThemeCatalog` contendo a lista `definitions`. Cada `InputThemeDefinition` informa `channel`, `key`, `version`, `name`, `rendererContract`, `schema` e `defaults`; `replacementVersion`, `migrationDeadline` e `migration` são opcionais para depreciação. O Store aceita apenas `channel: "store"`, e o Drop apenas `channel: "drop"`.
 
+`catalogPosition` é a posição comercial estável do modelo, compartilhada por todas as suas
+versões no canal. A posição 1 é o padrão e precisa existir no catálogo. Sem posição explícita,
+uma chave nova recebe a próxima posição; uma versão nova reutiliza a posição da chave.
+Não é permitido mover uma chave existente ou atribuir sua posição a outra chave.
+O catálogo pode conter modelos além da capacidade de um plano; isso não os libera para esse plano.
+
 A publicação exige `X-Service-Key`, validado contra `Security:InternalServiceKey`, seguindo a autenticação de serviço do projeto. A chamada deve partir do servidor ou da automação de publicação do frontend da plataforma. Essa chave permanece no ambiente confiável da plataforma e não deve ser enviada ao navegador do lojista. Um token de dono de loja não autoriza cadastrar temas globais.
 
 O endpoint aceita até 50 definições por chamada, com limite total de 1 MiB, e responde 204 quando conclui. `RegisterAppearanceThemesCommandHandler` valida as entradas e registra todas as definições em uma transação. O reenvio do mesmo conteúdo é idempotente; alterar uma combinação channel/key/version já registrada causa `Appearance.PackageChanged`. Nome, schema, defaults e contrato do renderer participam do checksum. Informações de depreciação podem evoluir sem alterar esse conteúdo.
@@ -81,6 +87,57 @@ Exemplos de campos que podem ser definidos pelo frontend:
 - IDs de produtos em destaque; no Store, categoria opcional.
 
 Preço, estoque, elegibilidade, datas de campanha e posição na fila continuam pertencendo aos domínios comerciais. Produtos/categorias são referências, sem cópia desses dados no manifesto visual. No Drop, uma configuração de evento aceita apenas produtos ativos da loja que pertençam ao evento. O padrão de drops pode referenciar produtos da própria loja.
+
+## Direitos comerciais de aparência — Parte 4
+
+O servidor consulta os direitos atuais por loja e canal. Store aplica 1/3/10/20 modelos
+para Gratuito/Inicial/Pro/DRPCommerce; DRPDrop não inclui Store. No canal DROP, DRPCommerce
+e DRPDrop incluem dez modelos. Os demais não incluem aparência DROP. Versões de uma mesma
+chave não consomem outro modelo. O catálogo administrativo retorna apenas os modelos
+permitidos, com `catalogPosition`; pode listar várias versões da mesma chave.
+
+`GetStatus` inclui `capabilities`: loja, canal, revisão do contrato, disponibilidade do
+módulo, limite de modelos e permissões de logo/personalização completa. O contrato é
+revalidado ao escolher/iniciar edição, salvar, gerar prévia, publicar, restaurar e gravar
+no banco. Cancelar uma sessão ou consultar suas configurações/revisões anteriores continua
+possível. Uma sessão aberta antes de um downgrade não preserva o direito de publicar.
+
+Metadados comerciais do JSON Schema, mantidos pela plataforma:
+
+- `x-plan: "business"`: campo comercial necessário, disponível também no Gratuito;
+- `x-plan: "logo"`: referência `x-resource: "asset"` de logo, disponível a partir do Inicial;
+- `x-plan: "full"` ou ausência de anotação: personalização completa dos planos superiores.
+
+As anotações são validadas no registro e podem ser aplicadas a campos comerciais de objetos.
+`logo` exige uma referência de ativo. Referências de ativo não herdam liberação de um objeto
+`business`. Por compatibilidade, `brand.name` é comercial e `brand.logoAssetId` é logo mesmo
+sem a nova anotação. Gratuito usa o modelo padrão/defaults e preserva os campos comerciais;
+Inicial pode escolher seus três modelos e trocar o logo, mantendo os demais campos nos
+defaults. Os superiores podem alterar todos os campos declarados pelo schema fechado.
+
+Uma publicação fora dos direitos atuais deixa de ser exposta. A leitura usa a última revisão
+permitida daquela aparência, até o número da revisão efetiva, e depois o modelo padrão,
+se necessário. A busca não se limita à primeira página do histórico. A configuração pública
+também projeta os campos permitidos: cor/fonte/logo antigos não contornam a redução de plano.
+Os documentos salvos e os ponteiros de publicação são preservados, sem reescrever o histórico.
+Recuperar os direitos pode tornar a publicação preservada elegível novamente; uma publicação
+nova feita pelo dono passa a ser a selecionada normalmente.
+
+Uma URL pública por revisão fora do plano retorna 404. Em modelo ainda permitido, a revisão
+usa a projeção atual dos campos e um checksum/ETag correspondente. O histórico completo
+continua consultável pelo dono, enquanto rollback revalida os direitos da revisão escolhida.
+
+No Store, aparência e mudança de contrato compartilham o lock de Enterprise, antes do lock
+visual. A gravação revalida também o dono atual. No DROP, `IStoreAppearanceReader` consulta
+o Store por API autenticada de serviço, incluindo na persistência e na leitura pública.
+Falha na consulta não libera direitos presumidos. Não há transação distribuída entre os
+dois bancos; a leitura pública sempre revalida o contrato atual, inclusive após uma gravação
+que tenha concorrido com alteração no Store. Sincronização durável do fluxo DROP continua
+pertencendo à Parte 6.
+
+Erros adicionais: `Appearance.ThemeNotAllowed`, `Appearance.CustomizationNotAllowed`,
+`Appearance.CatalogPositionConflict`, `Appearance.InvalidCommercialMetadata`,
+`Appearance.DefaultThemeRequired` e `Appearance.ContractUnavailable`.
 
 ## Autorização e tenant
 
@@ -174,7 +231,10 @@ Ao criar/atualizar um evento para Ativo, Esgotado ou Encerrado a partir de um es
 
 A revisão fica em DropEvent.EffectiveAppearanceRevisionId e tem FK composta por tenant. Eventos novos que já entram ativos também são cobertos. Migrações automáticas de temas não trocam a revisão efetiva de campanhas já fixadas; manter renderers antigos enquanto houver referências publicadas/efetivas.
 
-Eventos que já estavam ativos antes desta implantação não possuem revisão fixada. Da mesma forma, ativar um evento sem aparência publicada não inventa um visual. Sua consulta de aparência retorna 404 até uma publicação explícita nesse evento. Portanto, configure/publice o padrão antes de ativar novas campanhas.
+Eventos legados ou ativados sem publicação podem continuar sem revisão fixada. A leitura
+pública pode usar os defaults do modelo padrão cadastrado e permitido, sem criar uma revisão
+ou fixar um novo ponteiro no evento. Sem modelo padrão disponível, retorna 404. Portanto,
+cadastre o contrato do modelo padrão e entregue seu renderer antes de apresentar o evento.
 
 ## Depreciação e migração
 
@@ -200,7 +260,7 @@ Não remover releases antigas do frontend apenas porque o padrão migrou: campan
 ## Cache e falhas
 
 - Manifestos atuais: ETag e `public, max-age=0, must-revalidate` para visitantes anônimos. If-None-Match compatível retorna 304.
-- Rotas por revisão: cache imutável de um dia. A resolução de domínio/alvo continua sendo exigida em novas requisições.
+- Rotas por revisão: também `must-revalidate` em Store e DROP. Plano e disponibilidade de recursos podem mudar sem outra revisão visual; não são URLs imutáveis de conteúdo público.
 - Administração e requisições autenticadas: no-store.
 - Qualquer cache adicional precisa preservar Host/tenant, alvo e revisão. Não compartilhar estado privado de fila/reserva/pedido.
 
@@ -220,8 +280,69 @@ Build sem instalar/alterar hooks locais:
 dotnet build DROP-Ecommerce/DROP-Ecommerce.sln -p:InstallGitHooks=false
 ```
 
+## Logos e mídia — Parte 4
+
+O Store mantém os logos em PostgreSQL (`ativo_midia`, binário `bytea`), por loja, com ID,
+GUID público aleatório, hash e dimensões. Não grava arquivos no repositório e não depende
+de bucket externo para o piloto. O DROP usa o leitor remoto do Store. `IMediaAssetReader`
+possui adapters ativos nos dois módulos; URLs arbitrárias não substituem uma referência de ativo.
+
+| Método | Rota Store | Acesso / resultado |
+| --- | --- | --- |
+| POST | /api/media-assets | Dono, multipart/form-data com campo `file`; cria ou reutiliza logo idêntico |
+| GET | /api/media-assets | Dono; últimos 100 ativos, sem binários, com URL e indicador de retenção DROP |
+| GET | /api/media-assets/{id}/content | Dono da loja; consulta privada do binário |
+| DELETE | /api/media-assets/{id} | Dono; remove upload sem referências preservadas |
+| GET | /api/storefront/media/{publicId} | Host verificado da loja, GUID público e direito de logo vigente |
+| GET | /api/internal/media-assets/{id} | Serviço autenticado da loja; referência do logo |
+| POST | /api/internal/media-assets/{id}/retain-for-drop | Serviço autenticado, módulo DROP vigente; retém o ativo e retorna a referência |
+| GET | /api/internal/enterprises/{id}/appearance-rights/{channel} | Serviço autenticado da mesma loja; direitos atuais do canal |
+
+Uploads aceitam PNG estático sem entrelaçamento, até 1 MiB, até 2048 pixels por lado e
+1.048.576 pixels no total. A validação confere assinatura, chunks/CRC, dimensões, fluxo zlib
+e tamanho das linhas, com descompressão limitada; remove metadados opcionais. SVG, animação,
+arquivo truncado, payload adicional e PNG corrompido são recusados. A estrutura segue a
+[especificação PNG do W3C](https://www.w3.org/TR/png/). A detecção usa os bytes, sem confiar
+na extensão ou no Content-Type informado pelo navegador.
+
+O limite técnico atual é 25 MiB de logos ativos por loja. O hash do conteúdo normalizado
+evita duplicar upload idêntico dentro da loja. Não é um adicional comercial de armazenamento.
+A resposta informa `id`, `publicId`, dimensões, bytes, data, `url` e `isRetainedByDrop`.
+Enviar esse `id` em `brand.logoAssetId`; os manifests/previews retornam também a URL em
+`assetBindings.primaryLogo`. URLs são relativas à API Store: o frontend que usa o Gateway
+precisa compor o prefixo `/api/store`, conforme a configuração existente.
+
+O endereço público por GUID destina-se à exibição do logo, inclusive antes da publicação
+para prévia, por quem conhece essa URL. Não é armazenamento privado de documentos.
+Seu acesso revalida host/tenant e direito de logo, serve somente `image/png`, com `nosniff`
+e cache que exige revalidação. Ao perder o direito, a aparência pública remove o logo e a
+URL deixa de ser servida; o dono mantém consulta privada ao ativo preservado.
+
+Não é possível excluir logo usado por uma edição aberta ou qualquer revisão Store
+preservada. Upload sem uso é excluído logicamente e seu binário é limpo, liberando a cota.
+No DROP, a validação/prévia/publicação retém o ativo no Store antes do uso, de forma
+idempotente. Essa retenção impede que o Store apague um logo referenciado apenas no banco
+DROP. É conservadora: uma tentativa de prévia/publicação que falhe depois da retenção
+também mantém o ativo retido. Não há liberação automática de retenção nesta etapa.
+
+As escritas exigem escopo próprio de mídia, mesmo em operações de identidade. Conteúdo
+publicado não é substituído no mesmo ID. Eventos de upload, exclusão e retenção registram
+atividade sem copiar o binário. Erros principais: `Media.PlanRequired`, `Media.InvalidPng`,
+`Media.UnsupportedPng`, `Media.TooLarge`, `Media.DimensionsExceeded`, `Media.StorageLimit`
+e `Media.InUse`.
+
+Migrations da Parte 4: Store `20261120025127_AddAppearanceEntitlementsAndMedia` e
+`20261120030208_RetainLogosReferencedByDrop`; DROP `20261120025225_AddAppearanceThemeEntitlements`.
+Releases legadas recebem uma posição por chave/canal, na ordem da primeira versão cadastrada,
+sem alterar versões, schemas, defaults ou checksums. Atualize Store/migrations e suas rotas
+internas antes do DROP que passa a consultá-las. Foram exercitadas somente em bancos
+descartáveis de teste, sem migração dos bancos existentes.
+
 ## Fora desta entrega
 
-Upload, processamento e escolha de armazenamento de mídia continuam em avaliação. IMediaAssetReader existe como contrato e sua implementação atual é desabilitada: logoAssetId pode ser null; tentar publicar um ativo sem integração válida retorna Appearance.ResourceUnavailable. Não existe endpoint de upload nem fallback para uma URL arbitrária.
+Os limites operam sobre os modelos realmente cadastrados pela plataforma. Os testes usam
+contratos de exemplo; não instalam vinte renderers visuais no frontend nem publicam temas
+automaticamente em bancos existentes. Renderer, editor e catálogo visual reais precisam
+ser entregues pelo frontend usando os contratos versionados.
 
 O módulo de aparência não implementa frontend, editor Vue, SSR ou operação comercial. O Store já possui [estoque por SKU](../Store/Application/ProductsAndInventory.md) e [checkout/pedidos](../Store/Application/OrdersAndCheckout.md); o ciclo completo de fila/venda do Drop e os provedores externos continuam pendentes. A aparência apenas apresenta esses dados e estados.

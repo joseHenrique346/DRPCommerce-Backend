@@ -15,6 +15,7 @@ public sealed class MigrateAppearanceCommandHandler(
     IAppearanceResources resources,
     AppearanceSettingsValidator settingsValidator,
     AppearanceResourceValidator resourceValidator,
+    AppearanceCommercialPolicy policy,
     AppearanceMigration migration,
     TimeProvider clock) : IRequestHandler<MigrateAppearanceCommand>
 {
@@ -92,6 +93,7 @@ public sealed class MigrateAppearanceCommandHandler(
     {
         EnsureReleaseAvailable(release);
         var settings = settingsValidator.Validate(release.SchemaJson, settingsJson);
+        settings = await policy.InitialSettingsAsync(tenant, release, settings, ct);
         await resourceValidator.ValidateAsync(tenant, target, release.SchemaJson, settings, ct);
 
         return settings;

@@ -5,4 +5,5 @@ public sealed record AppearanceStatusResponse(
     long? PublishedRevisionId,
     long Version,
     bool MigrationBlocked,
-    string? MigrationFailureCode);
+    string? MigrationFailureCode,
+    AppearanceCapabilities Capabilities);

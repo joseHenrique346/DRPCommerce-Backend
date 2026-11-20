@@ -14,6 +14,7 @@ public sealed class SaveAppearanceCommandHandler(
     IAppearanceContext context,
     IAppearanceResources resources,
     AppearanceSettingsValidator settingsValidator,
+    AppearanceCommercialPolicy policy,
     TimeProvider clock) : IRequestHandler<SaveAppearanceCommand, AppearanceEditResponse>
 {
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
@@ -33,6 +34,7 @@ public sealed class SaveAppearanceCommandHandler(
             throw new AppearanceFailure(400, "Appearance.InvalidSettings", "Envie um objeto de configurações completo.");
 
         var settings = settingsValidator.Validate(release.SchemaJson, payload.Settings.GetRawText());
+        await policy.EnsureAsync(context.EnterpriseId, release, settings, ct);
         session.Save(settings, Now);
         await repository.SaveAsync(ct);
         await transaction.CommitAsync(ct);

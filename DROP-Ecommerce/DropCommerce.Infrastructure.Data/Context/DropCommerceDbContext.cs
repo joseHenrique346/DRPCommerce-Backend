@@ -18,6 +18,7 @@ public partial class DropCommerceDbContext : DbContext
     private readonly IDropOperationScope _operationScope;
     private readonly IStoreCustomerReader _storeCustomers;
     private readonly IStoreProductReader _storeProducts;
+    private readonly IStoreAppearanceReader _storeAppearance;
 
     public DropCommerceDbContext(
         DbContextOptions<DropCommerceDbContext> options,
@@ -26,7 +27,8 @@ public partial class DropCommerceDbContext : DbContext
         IDropOperationScope operationScope,
         IStoreCustomerReader storeCustomers,
         IStoreProductReader storeProducts,
-        AppearanceWriteScope appearanceWrites)
+        AppearanceWriteScope appearanceWrites,
+        IStoreAppearanceReader storeAppearance)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -35,6 +37,7 @@ public partial class DropCommerceDbContext : DbContext
         _operationScope = operationScope;
         _storeCustomers = storeCustomers;
         _storeProducts = storeProducts;
+        _storeAppearance = storeAppearance;
     }
 
     #region DbSets
@@ -141,6 +144,7 @@ public partial class DropCommerceDbContext : DbContext
         CancellationToken cancellationToken = default)
     {
         _appearanceWrites.Guard(this);
+        await AppearanceContractGuard.GuardAsync(this, _storeAppearance.RightsAsync, cancellationToken);
         await GuardWritesAsync(cancellationToken);
 
         return await SaveWithAppearanceActivationAsync(acceptAllChangesOnSuccess, cancellationToken);

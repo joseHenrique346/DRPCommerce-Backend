@@ -38,6 +38,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
     private string connectionString = string.Empty;
     private bool created;
     public List<long> LegacyEnterpriseIds { get; } = [];
+    public bool SeedLegacyThemes { get; init; }
 
     public IServiceProvider Services => app?.Services ?? throw new InvalidOperationException("Fixture não iniciada.");
 
@@ -174,6 +175,21 @@ public sealed class ContractsApiFixture : IAsyncLifetime
                 FROM category CROSS JOIN generate_series(1, 54) n
                 """, connection);
             command.Parameters.AddWithValue("tenant", LegacyEnterpriseIds[0]);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        if (SeedLegacyThemes)
+        {
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+            await using var command = new NpgsqlCommand("""
+                INSERT INTO versao_tema
+                    (appearance_channel_id, key, version, name, renderer_contract, schema_json, defaults_json, checksum, migration_json)
+                VALUES
+                    (1, 'legacy-z', '1.0.0', 'Legado Z', 1, '{"type":"object","properties":{},"additionalProperties":false}'::jsonb, '{}'::jsonb, 'legacy-one', '{}'::jsonb),
+                    (1, 'legacy-z', '2.0.0', 'Legado Z', 1, '{"type":"object","properties":{},"additionalProperties":false}'::jsonb, '{}'::jsonb, 'legacy-two', '{}'::jsonb),
+                    (1, 'legacy-a', '1.0.0', 'Legado A', 1, '{"type":"object","properties":{},"additionalProperties":false}'::jsonb, '{}'::jsonb, 'legacy-three', '{}'::jsonb);
+                """, connection);
             await command.ExecuteNonQueryAsync();
         }
 

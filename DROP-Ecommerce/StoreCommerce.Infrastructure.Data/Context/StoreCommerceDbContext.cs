@@ -24,6 +24,7 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Contracts.ProductReactivationScope _productReactivation;
     private readonly StoreCommerce.Application.Contracts.OwnershipTransferWriteScope _ownershipTransfer;
     private readonly SharedCommerce.Application.Options.SecurityOptions _securityOptions;
+    private readonly StoreCommerce.Application.Media.MediaWriteScope _mediaWrites;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
@@ -34,7 +35,8 @@ public partial class StoreCommerceDbContext : DbContext
         StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites,
         StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation,
         StoreCommerce.Application.Contracts.OwnershipTransferWriteScope ownershipTransfer,
-        Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions> securityOptions)
+        Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions> securityOptions,
+        StoreCommerce.Application.Media.MediaWriteScope mediaWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -50,6 +52,7 @@ public partial class StoreCommerceDbContext : DbContext
         _productReactivation = productReactivation;
         _ownershipTransfer = ownershipTransfer;
         _securityOptions = securityOptions.Value;
+        _mediaWrites = mediaWrites;
     }
 
     #region DbSets
@@ -225,15 +228,22 @@ public partial class StoreCommerceDbContext : DbContext
         // A criação administrativa também precisa manter o lock do comprador até a gravação do pedido.
         var needsTransaction = Database.CurrentTransaction is null &&
             (ChangeTracker.Entries<Order>().Any(Entry => Entry.State == EntityState.Added) ||
-                ProductContractTenants().Count > 0 || AccessContractTenants().Count > 0);
+                ProductContractTenants().Count > 0 || AccessContractTenants().Count > 0 ||
+                ChangeTracker.Entries<MediaAsset>().Any(Entry => Entry.State is EntityState.Added or EntityState.Modified) ||
+                ChangeTracker.Entries().Any(Entry => Entry.State is EntityState.Added or EntityState.Modified &&
+                    Entry.Entity is SharedCommerce.Domain.Entity.Appearance or SharedCommerce.Domain.Entity.AppearanceEditSession or
+                        SharedCommerce.Domain.Entity.AppearanceRevision));
         await using var localTransaction = needsTransaction
             ? await Database.BeginTransactionAsync(cancellationToken)
             : null;
 
         GuardContractWrites();
+        await GuardMediaWritesAsync(cancellationToken);
         await GuardAccessContractsAsync(cancellationToken);
         await GuardProductContractsAsync(cancellationToken);
         _appearanceWrites.Guard(this);
+        await SharedCommerce.Infrastructure.Data.Context.AppearanceContractGuard.GuardAsync(this,
+            ReadAppearanceWriteCapabilitiesAsync, cancellationToken);
         await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
 

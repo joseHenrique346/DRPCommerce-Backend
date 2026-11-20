@@ -12,6 +12,11 @@ public sealed class ThemeDefinitionValidator(AppearanceSettingsValidator setting
         if (definition.Channel != channel)
             throw new AppearanceFailure(400, "Appearance.InvalidPackageChannel", "A definição pertence a outro módulo.");
 
+        if (definition.CatalogPosition is < 1 or > 10000)
+            throw new AppearanceFailure(400, "Appearance.InvalidCatalogPosition", "A posição comercial do tema deve estar entre 1 e 10000.");
+
+        ValidateCommercialAnnotations(definition.Schema);
+
         if (string.IsNullOrWhiteSpace(definition.Key) ||
             !Regex.IsMatch(definition.Key, "^[a-z][a-z0-9-]{1,79}$", RegexOptions.CultureInvariant) ||
             !IsVersion(definition.Version) || definition.RendererContract != 1 ||
@@ -50,5 +55,30 @@ public sealed class ThemeDefinitionValidator(AppearanceSettingsValidator setting
         return !string.IsNullOrWhiteSpace(version) &&
             Regex.IsMatch(version, @"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$", RegexOptions.CultureInvariant) &&
             Version.TryParse(version, out _);
+    }
+
+    private static void ValidateCommercialAnnotations(JsonElement schema)
+    {
+        if (schema.ValueKind != JsonValueKind.Object)
+            return;
+
+        if (schema.TryGetProperty("x-plan", out var level))
+        {
+            if (level.ValueKind != JsonValueKind.String || level.GetString() is not ("business" or "logo" or "full"))
+                throw new AppearanceFailure(400, "Appearance.InvalidCommercialMetadata", "Use x-plan business, logo ou full.");
+
+            if (level.GetString() == "logo" && (!schema.TryGetProperty("x-resource", out var kind) ||
+                kind.ValueKind != JsonValueKind.String || kind.GetString() != "asset"))
+                throw new AppearanceFailure(400, "Appearance.InvalidCommercialMetadata", "x-plan logo precisa identificar uma referência de ativo.");
+        }
+
+        if (schema.TryGetProperty("properties", out var properties) && properties.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in properties.EnumerateObject())
+                ValidateCommercialAnnotations(property.Value);
+        }
+
+        if (schema.TryGetProperty("items", out var items))
+            ValidateCommercialAnnotations(items);
     }
 }

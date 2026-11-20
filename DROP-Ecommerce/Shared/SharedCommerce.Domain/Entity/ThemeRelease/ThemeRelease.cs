@@ -12,6 +12,7 @@ public sealed class ThemeRelease : BaseEntity
     public string Version { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
     public int RendererContract { get; private set; }
+    public int CatalogPosition { get; private set; }
     public string SchemaJson { get; private set; } = "{}";
     public string DefaultsJson { get; private set; } = "{}";
     public string Checksum { get; private set; } = string.Empty;
@@ -31,7 +32,8 @@ public sealed class ThemeRelease : BaseEntity
     #endregion
 
     #region Functions
-    public static ThemeRelease Create(AppearanceChannel channel, string key, string version, string name, int rendererContract, string schemaJson, string defaultsJson, string checksum)
+    public static ThemeRelease Create(AppearanceChannel channel, string key, string version, string name, int rendererContract,
+        string schemaJson, string defaultsJson, string checksum, int catalogPosition = 1)
     {
         BaseValidate.ValidatePositive(channel.Id, nameof(AppearanceChannelId));
         BaseValidate.ValidateNotNullOrEmpty(key, nameof(Key));
@@ -41,6 +43,8 @@ public sealed class ThemeRelease : BaseEntity
         BaseValidate.ValidateNotNullOrEmpty(name, nameof(Name));
         BaseValidate.ValidateMaxLength(name, 200, nameof(Name));
         BaseValidate.ValidatePositive(rendererContract, nameof(RendererContract));
+        if (catalogPosition is < 1 or > 10000)
+            throw new AppearanceFailure(400, "Appearance.InvalidCatalogPosition", "Posição comercial de tema inválida.");
         BaseValidate.ValidateNotNullOrEmpty(schemaJson, nameof(SchemaJson));
         BaseValidate.ValidateNotNullOrEmpty(defaultsJson, nameof(DefaultsJson));
         BaseValidate.ValidateNotNullOrEmpty(checksum, nameof(Checksum));
@@ -53,6 +57,7 @@ public sealed class ThemeRelease : BaseEntity
             Version = version,
             Name = name,
             RendererContract = rendererContract,
+            CatalogPosition = catalogPosition,
             SchemaJson = schemaJson,
             DefaultsJson = defaultsJson,
             Checksum = checksum

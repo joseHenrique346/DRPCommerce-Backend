@@ -18,6 +18,7 @@ public sealed class ThemeReleaseConfiguration : IEntityTypeConfiguration<ThemeRe
         builder.Property(ThemeRelease => ThemeRelease.Version).HasMaxLength(40);
         builder.Property(ThemeRelease => ThemeRelease.Name).HasMaxLength(200);
         builder.Property(ThemeRelease => ThemeRelease.Checksum).HasMaxLength(80);
+        builder.Property(ThemeRelease => ThemeRelease.CatalogPosition).HasDefaultValue(1);
 
         builder.Property(ThemeRelease => ThemeRelease.SchemaJson).HasColumnType("jsonb");
         builder.Property(ThemeRelease => ThemeRelease.DefaultsJson).HasColumnType("jsonb");

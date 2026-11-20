@@ -296,6 +296,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("appearance_channel_id");
 
+                    b.Property<int>("CatalogPosition")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("catalog_position");
+
                     b.Property<string>("Checksum")
                         .IsRequired()
                         .HasMaxLength(80)
@@ -2210,6 +2216,79 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_nota_fiscal_order_id");
 
                     b.ToTable("nota_fiscal", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.MediaAsset", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ByteLength")
+                        .HasColumnType("integer")
+                        .HasColumnName("byte_length");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_hash");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsRetainedByDrop")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_retained_by_drop");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("public_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ativo_midia");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ativo_midia_public_id");
+
+                    b.HasIndex("EnterpriseId", "ContentHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ativo_midia_enterprise_id_content_hash")
+                        .HasFilter("is_deleted = FALSE");
+
+                    b.ToTable("ativo_midia", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.MembershipAccessRole", b =>
@@ -6931,6 +7010,16 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("InvoiceType");
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.MediaAsset", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ativo_midia_empresa_enterprise_id");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.MembershipAccessRole", b =>

@@ -1,4 +1,4 @@
-# Planos e contratos por loja — Partes 1 a 3
+# Planos e contratos por loja — Partes 1 a 4
 
 A Parte 1 entrega o catálogo comercial, o contrato efetivo por loja, a revisão de direitos,
 a leitura do consumo local e a solicitação de mudança. Não cria cobranças, recorrência,
@@ -7,6 +7,8 @@ A Parte 2 aplica cotas ao catálogo Store, bloqueia excedentes por contrato,
 oferece reativação explícita e registra atividades comerciais da loja.
 A Parte 3 aplica vagas de equipe, escolha no downgrade, restauração de acessos bloqueados
 por contrato e proteção do uso de domínio próprio.
+A Parte 4 aplica catálogo de temas e personalização por plano, fallback público e logos
+armazenados no Store, compartilhados com o DROP por API autenticada.
 
 A base foi portada de `feat/90-EstudoDeValorUsuarioSeparacaoContrato` para a branch de integração.
 Não houve merge completo da branch antiga: os fluxos atuais de pagamento foram preservados,
@@ -32,8 +34,8 @@ A resposta do catálogo ordena os planos por preço.
 Vitrine é a própria Loja. Gratuito e Inicial incluem Vitrine; DRPDrop não inclui catálogo
 comum. Domínio próprio pertence a Pro, DRPCommerce e DRPDrop. Gratuito usa o padrão;
 Inicial permite logo e escolha de tema; os superiores permitem todos os campos do tema.
-Equipe e domínio são aplicados na Parte 3. Cotas de temas, personalização e mídia
-ficam para a Parte 4.
+Equipe e domínio são aplicados na Parte 3. Cotas de temas, personalização e logos
+são aplicados na Parte 4, conforme os modelos efetivamente cadastrados pela plataforma.
 
 | ID | Código | Recurso | Quantidade | Mensal | Planos elegíveis |
 | ---: | --- | --- | ---: | ---: | --- |
@@ -347,6 +349,71 @@ A consulta continua restrita à permissão própria `store.history.view`.
 Códigos principais: `Team.MemberLimit`, `Team.InvitationLimit`, `Team.SelectionRequired`,
 `Team.InvalidSelection`, `Identity.MembershipUnavailable` e `Domain.PlanRequired`.
 
+## Temas, personalização e logos — Parte 4
+
+O catálogo visual usa `catalogPosition` estável por chave/canal. Versões da mesma chave
+mantêm a posição; o modelo padrão ocupa a posição 1. Gratuito/Inicial/Pro/DRPCommerce
+podem usar as posições Store 1/3/10/20, respectivamente. DRPCommerce e DRPDrop têm dez
+modelos no canal DROP. Os limites contam modelos, sem multiplicar pelas versões.
+
+A plataforma cadastra os contratos e seus renderers; um banco sem catálogo continua sem
+temas utilizáveis. Esta etapa não inventa modelos visuais nem instala renderers no frontend.
+O endpoint interno aceita a posição explícita ou atribui a próxima a uma chave nova;
+reordenar uma chave ou reutilizar a posição de outro modelo é recusado.
+
+No schema, `x-plan: business` indica dados comerciais necessários também ao Gratuito;
+`x-plan: logo` identifica uma referência de ativo para Inicial e superiores; os demais
+campos são personalização completa. `brand.name` e `brand.logoAssetId` mantêm compatibilidade.
+Gratuito usa defaults e dados comerciais; Inicial escolhe entre seus modelos e troca o
+logo, preservando os demais defaults; superiores editam todos os campos permitidos pelo schema.
+
+Escolha, início de edição, gravação, prévia, publicação, rollback e persistência revalidam
+o contrato atual. Uma edição aberta antes de um downgrade não conserva o direito antigo.
+No Store, contrato e aparência compartilham o lock da loja e a gravação revalida o dono.
+O DROP consulta o Store por API interna e nega acesso quando não consegue confirmar direitos.
+
+No downgrade, o público usa a última revisão elegível daquele alvo/origem, até o número
+da revisão efetiva; na ausência dela, os defaults do modelo padrão permitido. A busca
+não se limita às últimas 100 revisões. Campos fora do plano são projetados para defaults
+na leitura. Configurações e ponteiros salvos continuam preservados no painel; ao recuperar
+direitos, a publicação preservada pode se tornar elegível novamente.
+
+URLs por revisão fora do plano retornam 404; modelos ainda permitidos têm campos e
+ETag recalculados conforme os direitos atuais. Store e DROP exigem revalidação de cache,
+inclusive por revisão. A fixação visual de evento DROP é preservada, sujeita aos direitos
+comerciais atuais. Esta etapa não altera prazos de reservas nem conclui o fluxo comercial DROP.
+
+Logos são ativos por loja no PostgreSQL do Store, com binário imutável, hash, dimensões e
+GUID público. Upload aceita PNG estático sem entrelaçamento, até 1 MiB, com dimensões e
+descompressão limitadas; valida estrutura/CRC e remove metadados opcionais. Não aceita URL
+arbitrária. Há limite técnico de 25 MiB de uploads ativos por loja e deduplicação do conteúdo.
+Uploads sem uso podem ser removidos; referências de edição/revisões preservadas impedem
+exclusão. O DROP retém o ativo antes de validá-lo para uso, evitando exclusão no Store
+quando a referência existe só no outro banco. A retenção é conservadora e não tem liberação
+automática nesta etapa, inclusive quando uma tentativa falha depois de reservar o ativo.
+
+Rotas Store adicionadas:
+
+| Método | Rota | Acesso / finalidade |
+| --- | --- | --- |
+| POST | /api/media-assets | Dono com direito a logo; multipart com campo file |
+| GET | /api/media-assets | Dono; últimos 100 metadados da própria loja |
+| GET | /api/media-assets/{id}/content | Dono; consulta privada do logo |
+| DELETE | /api/media-assets/{id} | Dono; exclui upload sem uso preservado |
+| GET | /api/storefront/media/{publicId} | Host da loja, GUID público e direito vigente |
+| GET | /api/internal/media-assets/{id} | Referência para serviço autenticado |
+| POST | /api/internal/media-assets/{id}/retain-for-drop | Retenção idempotente para o DROP |
+| GET | /api/internal/enterprises/{id}/appearance-rights/{channel} | Direitos atuais para serviço autenticado da mesma loja |
+
+As rotas existentes de aparência continuam valendo. `GetStatus` acrescenta `capabilities`;
+o catálogo acrescenta `catalogPosition`; manifests e prévias incluem a URL do logo em
+`assetBindings.primaryLogo`. URLs de mídia são relativas à API Store: compor `/api/store`
+quando o frontend utiliza o Gateway. A URL por GUID destina-se à exibição pública do logo;
+documentos privados não pertencem a esse armazenamento.
+
+Detalhes, exemplos e limites estão em [Aparência](Appearance.md). O frontend ainda precisa
+entregar os renderers/catálogo visual e consumir direitos, campos permitidos, upload e fallback.
+
 ## JWT e implantação
 
 Tokens administrativos com loja selecionada recebem `plan_id`, `contract_revision`
@@ -370,6 +437,10 @@ Migrations:
 4. `20261120010718_AddTeamAndDomainContractLimits`: flags de bloqueio de vínculo/domínio,
    data do bloqueio do vínculo e seleção de equipe persistida nas solicitações.
    Não altera usuários globais nem seleciona automaticamente uma equipe legada.
+5. Store `20261120025127_AddAppearanceEntitlementsAndMedia`: posição estável de temas e
+   tabela de logos. Preserva conteúdo/versões legadas e atribui posição pela primeira versão cadastrada.
+6. Store `20261120030208_RetainLogosReferencedByDrop`: retenção de logos consultados para uso no DROP.
+7. DROP `20261120025225_AddAppearanceThemeEntitlements`: posição de temas com a mesma preservação do legado.
 
 A migração direta não apaga lojas ou pedidos e não executa cobranças.
 Revisar SQL e backup antes de aplicar em um ambiente com dados.
@@ -410,11 +481,16 @@ reservas anteriores ainda podem ser efetivadas. A base das Partes 1 e 2 possui 5
 A Parte 3 acrescenta cenários de vagas, convites concorrentes, expiração/aceitação,
 escolha e idempotência, restauração, isolamento de outras lojas, transferência de dono,
 fallback de domínio e validação pública/interna/de sessão.
+A Parte 4 acrescenta testes de modelos e versões, campos por plano, downgrade/ETag,
+histórico longo, concorrência, migração legada, PNG/upload/exclusão, isolamento de mídia
+e handlers DROP com PostgreSQL próprio e chamadas HTTP reais ao Store em TestServer.
+Na validação das Partes 1 a 4, 102 testes passaram e a solução compilou sem erros.
 
 ## Próximas partes
 
 Produtos e histórico Store estão protegidos na Parte 2; equipe e domínio, na Parte 3.
-Cotas de temas, personalização e mídia ficam para a Parte 4; cobrança SaaS para
-a Parte 5; fluxo completo e consumo DROP para a Parte 6. A interface ainda precisa
-consumir as prévias, explicar bloqueios e oferecer seleção/reativação e histórico.
+Temas, personalização e logos estão protegidos no backend na Parte 4. Cobrança SaaS fica
+para a Parte 5; fluxo completo e consumo DROP para a Parte 6. A interface ainda precisa
+consumir as prévias/direitos, explicar bloqueios, oferecer seleção/reativação e histórico,
+e entregar o catálogo visual e os renderers reais.
 Não se deve anunciar os limites de todos os módulos como proteção já concluída.

@@ -30,6 +30,8 @@ public partial class StoreCommerceDbContext
         builder.Entity<AppearanceEntity>().HasQueryFilter(Appearance => Appearance.EnterpriseId == _tenantProvider.GetEnterpriseId());
         builder.Entity<AppearanceEditSession>().HasQueryFilter(AppearanceEditSession => AppearanceEditSession.EnterpriseId == _tenantProvider.GetEnterpriseId());
         builder.Entity<AppearanceRevision>().HasQueryFilter(AppearanceRevision => AppearanceRevision.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        builder.Entity<StoreCommerce.Domain.Entity.MediaAsset>().HasQueryFilter(MediaAsset =>
+            MediaAsset.EnterpriseId == _tenantProvider.GetEnterpriseId() && !MediaAsset.IsDeleted);
 
         builder.Entity<AppearanceEntity>().HasOne<StoreCommerce.Domain.Entity.Enterprise>().WithMany()
             .HasForeignKey(Appearance => Appearance.EnterpriseId).OnDelete(DeleteBehavior.Restrict);

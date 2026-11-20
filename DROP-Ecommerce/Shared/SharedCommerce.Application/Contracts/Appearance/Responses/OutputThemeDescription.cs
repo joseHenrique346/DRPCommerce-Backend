@@ -11,4 +11,5 @@ public sealed record OutputThemeDescription(
     bool IsDeprecated,
     DateTime? MigrationDeadline,
     JsonElement Schema,
-    JsonElement Defaults);
+    JsonElement Defaults,
+    int CatalogPosition);

@@ -10,7 +10,8 @@ using AppearanceEntity = SharedCommerce.Domain.Entity.Appearance;
 
 namespace SharedCommerce.Infrastructure.Data.Repositories;
 
-public sealed class AppearanceRepository<TContext>(TContext db, AppearanceWriteScope scope, AppearanceChannel channel)
+public sealed class AppearanceRepository<TContext>(TContext db, AppearanceWriteScope scope, AppearanceChannel channel,
+    Func<long, CancellationToken, Task>? contractLock = null)
     : IAppearanceRepository where TContext : DbContext
 {
     public AppearanceChannel Channel => channel;
@@ -23,6 +24,10 @@ public sealed class AppearanceRepository<TContext>(TContext db, AppearanceWriteS
         try
         {
             transaction = await db.Database.BeginTransactionAsync(ct);
+
+            if (enterpriseId > 0 && contractLock is not null)
+                await contractLock(enterpriseId, ct);
+
             await LockTenantAsync(db, enterpriseId, ct);
 
             return new AppearanceTransaction(db, transaction, lease);
@@ -102,6 +107,16 @@ public sealed class AppearanceRepository<TContext>(TContext db, AppearanceWriteS
             .MaxAsync(AppearanceRevision => (long?)AppearanceRevision.Number, ct);
 
         return (number ?? 0) + 1;
+    }
+
+    public Task<AppearanceRevision?> GetLatestEligibleRevisionAsync(long enterpriseId, long appearanceId,
+        long maximumNumber, int themeLimit, CancellationToken ct)
+    {
+        return db.Set<AppearanceRevision>().IgnoreQueryFilters().Where(Revision =>
+                Revision.EnterpriseId == enterpriseId && Revision.AppearanceId == appearanceId && Revision.Number <= maximumNumber &&
+                db.Set<ThemeRelease>().Any(Release => Release.Id == Revision.ThemeReleaseId &&
+                    Release.AppearanceChannelId == channel.Id && Release.CatalogPosition > 0 && Release.CatalogPosition <= themeLimit))
+            .OrderByDescending(Revision => Revision.Number).FirstOrDefaultAsync(ct);
     }
 
     public void Add(AppearanceEntity appearance)
