@@ -37,7 +37,9 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
             new { Id = 17L, Code = PermissionCodes.SuppliersManage, Name = "Gerenciar fornecedores", Description = "Consultar e gerenciar fornecedores", Module = "Suppliers", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) },
             new { Id = 18L, Code = PermissionCodes.InventoryManage, Name = "Gerenciar estoque", Description = "Consultar e ajustar estoque", Module = "Inventory", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) },
             new { Id = 19L, Code = PermissionCodes.OrdersCancel, Name = "Cancelar pedidos", Description = "Cancelar pedidos", Module = "Orders", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) },
-            new { Id = 20L, Code = PermissionCodes.OrdersRefund, Name = "Reembolsar pedidos", Description = "Registrar reembolsos de pedidos", Module = "Orders", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) }, new { Id = 21L, Code = PermissionCodes.SettingsManage, Name = "Gerenciar configurações da loja", Description = "Consultar e alterar configurações da loja", Module = "Settings", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) }
+            new { Id = 20L, Code = PermissionCodes.OrdersRefund, Name = "Reembolsar pedidos", Description = "Registrar reembolsos de pedidos", Module = "Orders", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) },
+            new { Id = 21L, Code = PermissionCodes.SettingsManage, Name = "Gerenciar configurações da loja", Description = "Consultar e alterar configurações da loja", Module = "Settings", IsActive = true, CreatedAt = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc) },
+            new { Id = 22L, Code = PermissionCodes.StoreHistoryView, Name = "Consultar histórico da loja", Description = "Consultar atividades e mudanças comerciais da própria loja", Module = "StoreHistory", IsActive = true, CreatedAt = new DateTime(2026, 11, 19, 0, 0, 0, DateTimeKind.Utc) }
         );
     }
 }

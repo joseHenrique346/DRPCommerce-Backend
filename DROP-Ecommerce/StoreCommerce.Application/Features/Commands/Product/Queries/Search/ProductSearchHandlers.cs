@@ -41,7 +41,7 @@ public sealed class GetProductBySlugQueryHandler(IProductRepository products, Ca
 
         var product = await products.GetWithVariantsBySlugAsync(request.Slug.Trim().ToLowerInvariant(), ct);
 
-        if (product is null || !product.IsActive || !visible.Content!.Any(Category => Category.Id == product.CategoryId))
+        if (product is null || !product.IsActive || product.IsContractBlocked || !visible.Content!.Any(Category => Category.Id == product.CategoryId))
             throw new SecurityFailure(404, "Product.NotFound", "Produto não encontrado.");
 
         var policy = await settings.GetCurrentAsync(ct);

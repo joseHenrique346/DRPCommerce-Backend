@@ -70,7 +70,7 @@ public class CartItem : BaseEntity, ITenantEntity
     /// </summary>
     public static CartItemAvailability Evaluate(Product product, ProductVariant variant, int quantity, bool allowBackorder, bool categoryVisible)
     {
-        if (product.IsDeleted || !product.IsActive || !categoryVisible || variant.IsDeleted || !variant.IsActive ||
+        if (product.IsDeleted || !product.IsActive || product.IsContractBlocked || !categoryVisible || variant.IsDeleted || !variant.IsActive ||
             (product.HasVariants && variant.IsDefault))
             return CartItemAvailability.Unavailable;
 

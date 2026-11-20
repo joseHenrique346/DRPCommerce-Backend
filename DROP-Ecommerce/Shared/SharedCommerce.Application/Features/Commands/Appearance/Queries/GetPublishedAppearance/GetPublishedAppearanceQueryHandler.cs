@@ -27,7 +27,13 @@ public sealed class GetPublishedAppearanceQueryHandler(
         var revision = published.Revision;
         var release = await repository.GetReleaseAsync(revision.ThemeReleaseId, ct);
 
-        return Manifest(repository.Channel, revision, release, revision.SettingsJson, published.Source, revision.PublishedAt);
+        var settings = await resources.FilterPublishedSettingsAsync(tenant, release.SchemaJson, revision.SettingsJson, ct);
+        var manifest = Manifest(repository.Channel, revision, release, settings, published.Source, revision.PublishedAt);
+
+        if (settings != revision.SettingsJson)
+            manifest = manifest with { Checksum = ConfigurationChecksum(release, settings) };
+
+        return manifest;
     }
 
     private static AppearanceFailure NotFound()

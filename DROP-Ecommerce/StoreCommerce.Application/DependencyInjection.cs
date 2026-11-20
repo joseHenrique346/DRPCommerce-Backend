@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<CategoryCatalogReader>();
         services.AddScoped<CatalogWriteContext>();
         services.AddScoped<ProductCatalogWriter>();
+        services.AddScoped<ProductContractService>();
         services.AddScoped<ProductVariantWriter>();
         services.AddScoped<ProductSearchReader>();
         services.AddScoped<InventoryService>();

@@ -87,7 +87,8 @@ public sealed class CheckoutService(
 
             if (unavailable.Count > 0)
                 throw new SecurityFailure(409, "Checkout.ItemsUnavailable",
-                    $"Itens indisponíveis: {string.Join(", ", unavailable.Select(item => item.Product.Name))}. Atualize o carrinho.");
+                    $"Itens indisponíveis: {string.Join(", ", unavailable.Select(Item =>
+                        Item.Product.IsContractBlocked ? "Produto indisponível" : Item.Product.Name))}. Atualize o carrinho.");
 
             var quantity = selected.Sum(item => item.Quantity);
 

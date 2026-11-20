@@ -10,4 +10,6 @@ public sealed record EnterpriseContractUsage(
     long ActiveAdditionalMembers,
     long PendingInvitations,
     long? DropProducts,
-    bool DropUsageAvailable);
+    bool DropUsageAvailable,
+    long BlockedStoreProducts,
+    long PublishedStoreProducts);

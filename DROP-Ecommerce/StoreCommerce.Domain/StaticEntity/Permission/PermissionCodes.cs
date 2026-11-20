@@ -23,4 +23,5 @@ public static class PermissionCodes
     public const string OrdersCancel = "orders.cancel";
     public const string OrdersRefund = "orders.refund";
     public const string SettingsManage = "settings.manage";
+    public const string StoreHistoryView = "store.history.view";
 }

@@ -85,6 +85,26 @@ public class ProductController : MappedCrudController<Product, ProductResponse, 
         return HandleResult(await _mediator.Send(new EnableProductVariantsCommand(id), ct));
     }
 
+    /// <summary>
+    /// Simula reativação por antiguidade ou seleção, sem reservar capacidade.
+    /// </summary>
+    [HttpPost("contract-reactivation/preview")]
+    public async Task<IActionResult> PreviewReactivationAsync(
+        StoreCommerce.Application.Contracts.ProductReactivationRequest request, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(new PreviewProductReactivationQuery(request), ct));
+    }
+
+    /// <summary>
+    /// Confirma reativação dentro da capacidade, sem criar ou desarquivar produtos.
+    /// </summary>
+    [HttpPost("contract-reactivation")]
+    public async Task<IActionResult> ReactivateAsync(
+        StoreCommerce.Application.Contracts.ProductReactivationRequest request, CancellationToken ct)
+    {
+        return this.ToActionResult(await _mediator.Send(new ReactivateProductsCommand(request), ct));
+    }
+
     protected override CreateListProductCommand WrapCreateInRange(CreateProductCommand command)
     {
         return new CreateListProductCommand(new List<CreateProductCommand> { command });

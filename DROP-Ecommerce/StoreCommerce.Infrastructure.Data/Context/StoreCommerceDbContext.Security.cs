@@ -35,6 +35,7 @@ public partial class StoreCommerceDbContext
             return;
 
         var changes = ChangeTracker.Entries()
+            .Where(Entry => Entry.Entity is not StoreActivity)
             .Where(Entry => !SharedCommerce.Infrastructure.Data.Context.AppearanceWriteScope.IsAppearanceEntity(Entry.Entity))
             .Where(Entry => Entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted && !Entry.Metadata.IsOwned())
             .ToList();

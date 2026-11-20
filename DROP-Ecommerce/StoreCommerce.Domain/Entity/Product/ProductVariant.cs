@@ -171,7 +171,12 @@ public class ProductVariant : BaseEntity, ITenantEntity, ISoftDeletable
 
     public void SoftDelete()
     {
-        if (StockQuantity != 0 || ReservedQuantity != 0)
+        SoftDelete(preserveAvailableStock: false);
+    }
+
+    public void SoftDelete(bool preserveAvailableStock)
+    {
+        if (ReservedQuantity != 0 || StockQuantity != 0 && !(preserveAvailableStock && Product.IsContractBlocked))
             throw new ArgumentException("Zere o estoque e libere as reservas antes de excluir o SKU.");
 
         IsDeleted = true;

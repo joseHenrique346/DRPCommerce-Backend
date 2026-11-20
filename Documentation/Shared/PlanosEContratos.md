@@ -1,8 +1,10 @@
-# Planos e contratos por loja — Parte 1
+# Planos e contratos por loja — Partes 1 e 2
 
 A Parte 1 entrega o catálogo comercial, o contrato efetivo por loja, a revisão de direitos,
 a leitura do consumo local e a solicitação de mudança. Não cria cobranças, recorrência,
 checkout de assinatura nem concessão de plano pelo navegador.
+A Parte 2 aplica cotas ao catálogo Store, bloqueia excedentes por contrato,
+oferece reativação explícita e registra atividades comerciais da loja.
 
 A base foi portada de `feat/90-EstudoDeValorUsuarioSeparacaoContrato` para a branch de integração.
 Não houve merge completo da branch antiga: os fluxos atuais de pagamento foram preservados,
@@ -71,7 +73,8 @@ O catálogo é somente leitura na aplicação; alterações pertencem às migrat
 Rotas abaixo são do serviço Store. No Gateway atual, acrescentar `/api/store`:
 por exemplo, `/api/store/api/enterprise-plans`.
 
-Os sucessos usam DTO direto, sem envelope `Result<T>`.
+As rotas de catálogo e contrato usam DTO direto, sem envelope `Result<T>`.
+As rotas de produto e histórico usam o envelope habitual, com os dados em `content`.
 Erros de aplicação usam ProblemDetails, com os campos adicionais `code` e `traceId` na raiz JSON.
 
 | Método | Rota | Acesso | Resultado |
@@ -127,6 +130,8 @@ A leitura retorna:
 
 - `totalStoreProducts`: principais não excluídos, incluindo inativos/arquivados;
 - `activeStoreProducts` e `inactiveStoreProducts`: estado atual de Product.IsActive;
+- `blockedStoreProducts`: produtos não excluídos bloqueados por contrato;
+- `publishedStoreProducts`: ativos não excluídos e não bloqueados;
 - `activeAdditionalMembers`: vínculos ativos e usuários ativos, incluindo sócios/gestores,
   excluindo o dono principal;
 - `pendingInvitations`: convites não aceitos, não revogados e ainda válidos;
@@ -138,9 +143,105 @@ O consumo não exige excluir todos os arquivados.
 
 O DROP mantém outro banco. Nesta etapa, `dropProducts: null` e
 `dropUsageAvailable: false` indicam ausência de integração; não significam consumo zero.
-A leitura não reserva vagas e não substitui a validação transacional de escrita da Parte 2.
+A leitura não reserva vagas e não substitui a validação transacional de escrita.
 Uma mudança concorrente pode tornar a consulta informativa desatualizada; a confirmação
-revalida a revisão, e a aplicação de cotas de escrita permanece para as próximas partes.
+revalida a revisão. A Parte 2 aplica a cota de produtos sob lock da própria loja.
+
+## Produtos, downgrade e reativação — Parte 2
+
+A criação conta todos os principais não excluídos, inclusive arquivados, inativos e
+bloqueados. SKUs/variações não ocupam outra vaga. O lote inteiro é recusado se ultrapassar
+a cota; requisições simultâneas disputam a capacidade sob lock transacional de Enterprise.
+Arquivar abre uma posição pública, mas não libera capacidade para criar outro cadastro.
+
+Quando um fluxo confiável aplica plano/adicional, a mesma transação conserva publicados
+os principais ativos mais antigos que couberem, ordenados por `CreatedAt` e depois `Id`.
+O excedente recebe `IsContractBlocked`, `ContractBlockReason` e `ContractBlockedAt`.
+Isso não altera `IsActive`, saldos, pedidos, reservas existentes ou a data de criação.
+Perder o módulo Store bloqueia também os arquivados, com motivo `store_module`;
+reduzir apenas a cota usa `product_limit`.
+
+Upgrade ou retorno do adicional não republica produtos ativos bloqueados.
+O usuário confirma reativação por antiguidade ou seleção explícita, dentro das posições
+públicas disponíveis. Não é criação e não desarquiva produtos. Ao recuperar o módulo,
+arquivados bloqueados por `store_module` voltam a ser editáveis, permanecendo arquivados.
+Excedentes de cadastro continuam no painel e impedem novas criações até caber no total.
+
+Produto bloqueado admite consulta administrativa, exclusão lógica e reativação própria.
+Edição, arquivamento, metadados dos SKUs, ajuste manual de estoque e novas reservas são
+recusados. O bloqueio também vale na persistência, incluindo tentativas de remover a flag
+fora do escopo de reativação. A antiguidade não pode ser alterada por atualização.
+
+A exclusão de produto bloqueado pode preservar saldo disponível, conforme decisão do
+usuário. É recusada se houver quantidade reservada ou uma reserva ainda ativa vinculada.
+Produto e SKUs são excluídos logicamente, com saldo, movimentos e histórico preservados.
+Para produtos sem bloqueio, continua a exigência anterior de zerar saldo e reservas.
+
+Catálogo público, busca, slug e referências de produtos em aparência publicada omitem
+produtos bloqueados. O carrinho antigo mantém o item removível, com nome genérico e sem
+slug, SKU, imagens, opções ou preço; indica indisponibilidade e impede sua compra.
+Checkout e criação de itens/reservas revalidam a disponibilidade antes de gravar.
+Pedidos já criados continuam usando seus snapshots e podem receber pagamento, baixa
+ou liberação das reservas existentes. Não são reprecificados nem excluídos.
+
+### Endpoints da Parte 2
+
+| Método | Rota | Acesso | Uso |
+| --- | --- | --- | --- |
+| POST | /api/enterprises/current/contract/product-impact | Dono principal | Prévia do efeito de uma oferta, sem alterar o contrato |
+| POST | /api/products/contract-reactivation/preview | products.edit | Prévia por antiguidade ou seleção, sem reservar posições |
+| POST | /api/products/contract-reactivation | products.edit | Confirma a reativação dentro da capacidade atual |
+| GET | /api/store-activity | store.history.view | Histórico paginado da própria loja |
+
+Prévia do contrato recebe `planId`, `addOnId` opcional, `expectedContractRevision` e
+`catalogVersion`. Retorna totais, limite, publicados antes/depois, quantidade a bloquear,
+excedente total e amostra dos primeiros 100 afetados, com indicador de truncamento.
+Não concede plano nem executa cobrança.
+
+Exemplo de reativação:
+
+```json
+{
+  "expectedContractRevision": 4,
+  "mode": "selected",
+  "productIds": [101, 102]
+}
+```
+
+Para antiguidade, usar `mode: "oldest"` e omitir `productIds`.
+Seleção manual aceita até 5.000 IDs únicos positivos. Produto de outra loja, excluído,
+arquivado ou já reativado retorna 404; uma seleção maior que a capacidade retorna 409,
+sem reativar parcialmente. Revisão antiga retorna 409. Token administrativo invalidado
+por mudança de contrato precisa ser renovado antes da chamada.
+
+Principais códigos: `ProductContract.CreationLimit`, `ProductContract.PublicationLimit`,
+`ProductContract.Blocked`, `ProductContract.Unavailable`, `Contract.RevisionChanged`
+e `Inventory.StockInUse`.
+
+### Histórico comercial
+
+`atividade_loja` registra criação, edição, publicação, arquivamento, bloqueio, reativação,
+exclusão e restauração de produtos; alterações de SKUs; e mudanças efetivas do contrato.
+Cada evento traz horário UTC, motivo, correlação, autor quando disponível e snapshots
+de nome/SKU. Detalhes registram os campos alterados ou a mudança de contrato, sem CPF,
+IP, credenciais ou dados de pagamento do comprador. Alterações técnicas de saldo
+continuam no livro de movimentos de estoque.
+
+O servidor acrescenta os eventos na mesma transação da alteração; a aplicação recusa
+inserção direta, edição e exclusão desses registros. A exclusão lógica do produto
+preserva o histórico. A referência de autor aceita nulo se o usuário for removido;
+o tipo original de autor e os snapshots permanecem. Não há expiração automática.
+A permissão própria `store.history.view` pode ser atribuída sem conceder edição de produtos.
+
+Filtros: `productId`, `eventType`, `fromUtc`, `toUtc`, `page` (padrão 1) e `pageSize`
+(padrão 30, máximo 100). Datas precisam ser UTC com `Z`. Ordenação por ID decrescente.
+A resposta mantém isolamento pela loja autenticada e não recebe tenant como autoridade.
+
+A aparência pública filtra referências na leitura, sem reescrever rascunhos ou revisões.
+IDs indisponíveis saem de listas; referências escalares ficam `null`.
+O checksum/ETag acompanha a projeção atual, inclusive nas consultas por revisão.
+Os manifests Store precisam ser revalidados (`must-revalidate`), pois a disponibilidade
+dos produtos pode mudar sem criar outra revisão visual.
 
 ## JWT e implantação
 
@@ -159,6 +260,9 @@ Migrations:
    na branch antiga. Cria catálogo legado e PlanId quando ainda não foram aplicados.
 2. `20261119203614_EnterpriseCommercialContracts`: evolui os três planos,
    acrescenta Inicial/DRPDrop, adicionais, elegibilidade, revisão e solicitações.
+3. `20261119235550_AddProductContractLimitsAndActivity`: bloqueio comercial de produtos,
+   histórico e permissão de consulta. Reconcilia o catálogo existente pelos limites,
+   preserva dados e registra os bloqueios iniciais com autor `system`.
 
 A migração direta não apaga lojas ou pedidos e não executa cobranças.
 Revisar SQL e backup antes de aplicar em um ambiente com dados.
@@ -190,11 +294,17 @@ da API/EF; o projeto de testes também permite roll-forward.
 
 Cobertura: catálogo e preços, elegibilidade, snapshots, revisão, autenticação,
 permissões, isolamento, concorrência de solicitações, concessão proibida por identidade
-e preservação de outras lojas do mesmo usuário.
+e preservação de outras lojas do mesmo usuário. A Parte 2 cobre migração de catálogo
+excedente, total com arquivados, atomicidade de lote, disputa pela última vaga, downgrade,
+reativação, adicional, edição/exclusão bloqueadas, estoque preservado, histórico e
+permissão própria, projeção de aparência, catálogo público, carrinho e checkout.
+Pedido criado antes do bloqueio é pago pelo gateway manual local e mantém snapshots;
+reservas anteriores ainda podem ser efetivadas. Na verificação local, 56 testes passaram.
 
 ## Próximas partes
 
-Esta entrega não aplica bloqueios comerciais aos CRUDs existentes.
-Produtos e histórico serão tratados na Parte 2; equipe/domínio na Parte 3; aparência
-e mídia na Parte 4; cobrança SaaS na Parte 5; fluxo completo e consumo DROP na Parte 6.
-Assim, não se deve anunciar os limites como proteção já concluída em todas as operações.
+Produtos e histórico Store estão protegidos na Parte 2. Equipe/domínio ficam para
+a Parte 3; cotas de temas, personalização e mídia para a Parte 4; cobrança SaaS para
+a Parte 5; fluxo completo e consumo DROP para a Parte 6. A interface ainda precisa
+consumir as prévias, explicar bloqueios e oferecer seleção/reativação e histórico.
+Não se deve anunciar os limites de todos os módulos como proteção já concluída.

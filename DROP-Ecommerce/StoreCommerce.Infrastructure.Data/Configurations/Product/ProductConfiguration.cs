@@ -30,6 +30,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(e => e.Length).HasPrecision(18, 2);
 
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
+        builder.Property(Product => Product.IsContractBlocked).HasDefaultValue(false);
+        builder.Property(Product => Product.ContractBlockReason).HasMaxLength(60);
+        builder.HasIndex(Product => new { Product.EnterpriseId, Product.IsContractBlocked, Product.CreatedAt, Product.Id });
 
         builder.HasOne(e => e.Enterprise)
             .WithMany(e => e.ListProduct)

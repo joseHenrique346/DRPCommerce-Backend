@@ -55,4 +55,14 @@ public sealed class EnterpriseContractController(IMediator mediator) : Controlle
     {
         return this.ToIdentityActionResult(await mediator.Send(new GetEnterpriseContractChangeQuery(id), ct));
     }
+
+    /// <summary>
+    /// Calcula o impacto de uma oferta sobre os produtos, sem conceder o plano.
+    /// </summary>
+    [HttpPost("product-impact")]
+    [Authorize(Policy = SecurityNames.PrimaryOwner)]
+    public async Task<IActionResult> PreviewProductImpact(ProductContractImpactRequest request, CancellationToken ct)
+    {
+        return this.ToIdentityActionResult(await mediator.Send(new PreviewProductContractImpactQuery(request), ct));
+    }
 }

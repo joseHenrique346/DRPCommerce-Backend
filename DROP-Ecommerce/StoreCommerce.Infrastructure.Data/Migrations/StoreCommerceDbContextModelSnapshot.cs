@@ -3382,6 +3382,16 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                             IsActive = true,
                             Module = "Settings",
                             Name = "Gerenciar configurações da loja"
+                        },
+                        new
+                        {
+                            Id = 22L,
+                            Code = "store.history.view",
+                            CreatedAt = new DateTime(2026, 11, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Consultar atividades e mudanças comerciais da própria loja",
+                            IsActive = true,
+                            Module = "StoreHistory",
+                            Name = "Consultar histórico da loja"
                         });
                 });
 
@@ -3409,6 +3419,15 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<long>("CategoryId")
                         .HasColumnType("bigint")
                         .HasColumnName("category_id");
+
+                    b.Property<string>("ContractBlockReason")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("contract_block_reason");
+
+                    b.Property<DateTime?>("ContractBlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("contract_blocked_at");
 
                     b.Property<decimal>("CostPrice")
                         .HasPrecision(18, 2)
@@ -3451,6 +3470,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsContractBlocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_contract_blocked");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -3532,6 +3557,9 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_produto_enterprise_id_slug")
                         .HasFilter("is_deleted = FALSE");
+
+                    b.HasIndex("EnterpriseId", "IsContractBlocked", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_produto_enterprise_id_is_contract_blocked_created_at_id");
 
                     b.ToTable("produto", (string)null);
                 });
@@ -4353,6 +4381,110 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_reserva_quantidade", "quantity > 0");
                         });
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreActivity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("actor_type");
+
+                    b.Property<long?>("ActorUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("correlation_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("DetailsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("details_json");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<long?>("ProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("product_name");
+
+                    b.Property<long?>("ProductVariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_variant_id");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("reason_code");
+
+                    b.Property<string>("SKU")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sku");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_atividade_loja");
+
+                    b.HasIndex("ActorUserId")
+                        .HasDatabaseName("ix_atividade_loja_actor_user_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_atividade_loja_product_id");
+
+                    b.HasIndex("ProductVariantId")
+                        .HasDatabaseName("ix_atividade_loja_product_variant_id");
+
+                    b.HasIndex("EnterpriseId", "Id")
+                        .HasDatabaseName("ix_atividade_loja_enterprise_id_id");
+
+                    b.HasIndex("EnterpriseId", "EventType", "OccurredAt")
+                        .HasDatabaseName("ix_atividade_loja_enterprise_id_event_type_occurred_at");
+
+                    b.HasIndex("EnterpriseId", "ProductId", "Id")
+                        .HasDatabaseName("ix_atividade_loja_enterprise_id_product_id_id");
+
+                    b.ToTable("atividade_loja", (string)null);
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreSettings", b =>
@@ -7281,6 +7413,38 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("ProductVariant");
 
                     b.Navigation("StockReservation");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreActivity", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_atividade_loja_usuario_actor_user_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_atividade_loja_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_atividade_loja_produto_product_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.ProductVariant", "ProductVariant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_atividade_loja_variante_produto_product_variant_id");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductVariant");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.StoreSettings", b =>

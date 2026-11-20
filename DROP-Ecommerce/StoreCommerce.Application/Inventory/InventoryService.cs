@@ -126,7 +126,7 @@ public sealed class InventoryService(
 
             EnsureTracked(variant);
 
-            if (!variant.IsActive || !variant.Product.IsActive || !visibleIds.Contains(variant.Product.CategoryId))
+            if (!variant.IsActive || !variant.Product.IsActive || variant.Product.IsContractBlocked || !visibleIds.Contains(variant.Product.CategoryId))
                 throw new SecurityFailure(409, "Inventory.SkuUnavailable", "Um dos SKUs ou sua categoria está indisponível.");
 
             if (!policy.AllowBackorder && variant.AvailableQuantity < item.Quantity)

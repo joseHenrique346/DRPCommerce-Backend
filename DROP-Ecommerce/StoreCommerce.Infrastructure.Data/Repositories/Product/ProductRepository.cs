@@ -45,7 +45,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public Task<Product?> GetWithVariantsBySlugAsync(string slug, CancellationToken cancellationToken)
     {
-        return WithVariants().AsNoTracking().SingleOrDefaultAsync(Product => Product.Slug == slug, cancellationToken);
+        return WithVariants().AsNoTracking().SingleOrDefaultAsync(Product => Product.Slug == slug &&
+            Product.IsActive && !Product.IsContractBlocked && Product.Enterprise.IsActive &&
+            Context.EnterprisePlans.Any(Plan => Plan.Id == Product.Enterprise.PlanId && Plan.AllowsVitrine), cancellationToken);
     }
 
     public async Task<(List<Product> Items, int TotalCount)> SearchAsync(ProductSearchCriteria criteria, CancellationToken cancellationToken)
@@ -69,7 +71,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
         }
 
         if (criteria.Storefront)
-            query = query.Where(Product => Product.IsActive);
+            query = query.Where(Product => Product.IsActive && !Product.IsContractBlocked && Product.Enterprise.IsActive &&
+                Context.EnterprisePlans.Any(Plan => Plan.Id == Product.Enterprise.PlanId && Plan.AllowsVitrine));
         else if (criteria.IsActive.HasValue)
             query = query.Where(Product => Product.IsActive == criteria.IsActive);
 

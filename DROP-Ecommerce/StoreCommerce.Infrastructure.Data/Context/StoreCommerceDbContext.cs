@@ -21,6 +21,7 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Carts.CustomerAddressWriteScope _customerAddressWrites;
     private readonly StoreCommerce.Application.Integrations.IntegrationWriteScope _integrationWrites;
     private readonly StoreCommerce.Application.Contracts.EnterpriseContractWriteScope _contractWrites;
+    private readonly StoreCommerce.Application.Contracts.ProductReactivationScope _productReactivation;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
@@ -28,7 +29,8 @@ public partial class StoreCommerceDbContext : DbContext
         StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow,
         StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites,
         StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites,
-        StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites)
+        StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites,
+        StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -41,6 +43,7 @@ public partial class StoreCommerceDbContext : DbContext
         _customerAddressWrites = customerAddressWrites;
         _integrationWrites = integrationWrites;
         _contractWrites = contractWrites;
+        _productReactivation = productReactivation;
     }
 
     #region DbSets
@@ -70,6 +73,7 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<EnterpriseAddOn> EnterpriseAddOns => Set<EnterpriseAddOn>();
     public DbSet<EnterprisePlanAddOn> EnterprisePlanAddOns => Set<EnterprisePlanAddOn>();
     public DbSet<EnterpriseContractChange> EnterpriseContractChanges => Set<EnterpriseContractChange>();
+    public DbSet<StoreActivity> StoreActivities => Set<StoreActivity>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<EmployeePosition> EmployeePositions => Set<EmployeePosition>();
@@ -154,6 +158,8 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<EnterpriseMembership>(modelBuilder);
         modelBuilder.Entity<EnterpriseContractChange>().HasQueryFilter(EnterpriseContractChange =>
             EnterpriseContractChange.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<StoreActivity>().HasQueryFilter(StoreActivity =>
+            StoreActivity.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantFilter<EnterpriseDomain>(modelBuilder);
         ApplyTenantFilter<AccessRole>(modelBuilder);
         modelBuilder.Entity<AccessRolePermission>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
@@ -211,13 +217,15 @@ public partial class StoreCommerceDbContext : DbContext
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         // A criação administrativa também precisa manter o lock do comprador até a gravação do pedido.
-        var needsTransaction = Database.CurrentTransaction is null && ChangeTracker.Entries<Order>()
-            .Any(Entry => Entry.State == EntityState.Added);
+        var needsTransaction = Database.CurrentTransaction is null &&
+            (ChangeTracker.Entries<Order>().Any(Entry => Entry.State == EntityState.Added) ||
+                ProductContractTenants().Count > 0);
         await using var localTransaction = needsTransaction
             ? await Database.BeginTransactionAsync(cancellationToken)
             : null;
 
         GuardContractWrites();
+        await GuardProductContractsAsync(cancellationToken);
         _appearanceWrites.Guard(this);
         await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
@@ -225,6 +233,8 @@ public partial class StoreCommerceDbContext : DbContext
         UpdateChangedDates();
 
         var affected = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        _generatedStoreActivities.Clear();
+        _productContractSystemChanges.Clear();
 
         if (localTransaction is not null)
             await localTransaction.CommitAsync(cancellationToken);

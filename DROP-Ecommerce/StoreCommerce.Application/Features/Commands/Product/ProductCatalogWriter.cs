@@ -42,6 +42,8 @@ public sealed class ProductCatalogWriter(CatalogWriteContext context)
         {
             var product = products[command.id];
 
+            CatalogWriteContext.EnsureEditable(product);
+
             if (product.CategoryId != command.categoryId || product.SupplierId != command.supplierId)
                 await context.ValidateCategoryAsync(command.categoryId, command.supplierId, ct);
 
@@ -100,12 +102,16 @@ public sealed class ProductCatalogWriter(CatalogWriteContext context)
         if (products.Count != ids.Count)
             throw new SecurityFailure(404, "Product.NotFound", "Produto não encontrado na loja atual.");
 
-        CatalogWriteContext.EnsureEmptyStock(products.SelectMany(Product => Product.ListProductVariant));
+        CatalogWriteContext.EnsureEmptyStock(products.Where(Product => !Product.IsContractBlocked)
+            .SelectMany(Product => Product.ListProductVariant));
+
+        if (products.SelectMany(Product => Product.ListProductVariant).Any(Variant => Variant.ReservedQuantity != 0))
+            throw new SecurityFailure(409, "Inventory.StockInUse", "Libere as reservas ativas antes de excluir o produto.");
 
         foreach (var product in products)
         {
             foreach (var variant in product.ListProductVariant)
-                variant.SoftDelete();
+                variant.SoftDelete(preserveAvailableStock: product.IsContractBlocked);
 
             product.SoftDelete();
         }

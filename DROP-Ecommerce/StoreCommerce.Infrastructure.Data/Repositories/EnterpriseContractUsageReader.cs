@@ -26,7 +26,11 @@ public sealed class EnterpriseContractUsageReader(StoreCommerceDbContext context
                     Invitation.EnterpriseId == enterpriseId && Invitation.AcceptedAt == null &&
                     Invitation.RevokedAt == null && Invitation.ExpiresAt > now),
                 null,
-                false))
+                false,
+                context.Products.IgnoreQueryFilters().LongCount(Product =>
+                    Product.EnterpriseId == enterpriseId && !Product.IsDeleted && Product.IsContractBlocked),
+                context.Products.IgnoreQueryFilters().LongCount(Product =>
+                    Product.EnterpriseId == enterpriseId && !Product.IsDeleted && Product.IsActive && !Product.IsContractBlocked)))
             .SingleAsync(cancellationToken);
     }
 }

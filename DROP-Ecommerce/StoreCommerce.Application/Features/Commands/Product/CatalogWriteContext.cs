@@ -33,8 +33,19 @@ public sealed class CatalogWriteContext(
 
     public async Task<Product> GetProductAsync(long id, CancellationToken ct)
     {
-        return (await Products.GetWithVariantsAsync([id], ct)).SingleOrDefault()
+        var product = (await Products.GetWithVariantsAsync([id], ct)).SingleOrDefault()
             ?? throw new SecurityFailure(404, "Product.NotFound", "Produto não encontrado na loja atual.");
+
+        EnsureEditable(product);
+
+        return product;
+    }
+
+    public static void EnsureEditable(Product product)
+    {
+        if (product.IsContractBlocked)
+            throw new SecurityFailure(409, "ProductContract.Blocked",
+                "Produto bloqueado pelo contrato. Consulte, exclua ou utilize a reativação autorizada.");
     }
 
     public async Task ValidateCategoryAsync(long categoryId, long? supplierId, CancellationToken ct)

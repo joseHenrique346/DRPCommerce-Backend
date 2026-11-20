@@ -151,6 +151,31 @@ public sealed class ContractsApiFixture : IAsyncLifetime
             }
         }
 
+        await migrator.MigrateAsync("20261119203614_EnterpriseCommercialContracts");
+
+        await using (var connection = new NpgsqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = new NpgsqlCommand("""
+                WITH category AS (
+                    INSERT INTO categoria
+                        (enterprise_id, name, slug, description, image_url, display_order, is_active, created_at)
+                    VALUES (@tenant, 'Legado', 'legacy', '', '', 0, TRUE, now())
+                    RETURNING id
+                )
+                INSERT INTO produto
+                    (enterprise_id, category_id, name, slug, description, sku, bar_code,
+                        price, cost_price, weight, height, width, length, brand, image_urls,
+                        is_active, is_digital, has_variants, created_at)
+                SELECT @tenant, category.id, 'Legado ' || n, 'legacy-' || n, '', 'LEGACY-' || n, '',
+                    10, 1, 1, 1, 1, 1, '', '', n <= 52, FALSE, FALSE,
+                    '2026-01-01T00:00:00Z'::timestamptz
+                FROM category CROSS JOIN generate_series(1, 54) n
+                """, connection);
+            command.Parameters.AddWithValue("tenant", LegacyEnterpriseIds[0]);
+            await command.ExecuteNonQueryAsync();
+        }
+
         await migrator.MigrateAsync();
     }
 
@@ -260,6 +285,31 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         var enterprise = await db.Enterprises.IgnoreQueryFilters().SingleAsync(Enterprise => Enterprise.Id == enterpriseId);
         enterprise.ChangeContract(planId, addOnId);
         await db.SaveChangesAsync();
+    }
+
+    public async Task<(Uri Address, string Token)> CreateCustomerAsync(long enterpriseId)
+    {
+        using var scope = Services.CreateScope();
+        var services = scope.ServiceProvider;
+        using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
+        var db = services.GetRequiredService<StoreCommerceDbContext>();
+        var host = "shop-" + Guid.NewGuid().ToString("N") + ".shops.example.invalid";
+        var domain = EnterpriseDomain.Create(enterpriseId, host, true, true);
+        domain.Verify();
+        db.EnterpriseDomains.Add(domain);
+        var customer = Customer.Create(enterpriseId, "Comprador de teste",
+            CustomerEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"),
+            CustomerPhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", "",
+            new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc), true, true);
+        db.Customers.Add(customer);
+        await db.SaveChangesAsync();
+        var family = Guid.NewGuid();
+        db.CustomerRefreshTokens.Add(CustomerRefreshToken.Create(customer,
+            Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), family, DateTime.UtcNow.AddDays(1)));
+        await db.SaveChangesAsync();
+        var token = services.GetRequiredService<JwtSessionService>().IssueCustomer(customer, family);
+
+        return (new Uri("https://" + host), token.Token);
     }
 
     public async Task<string> FreshTokenAsync(StoreActor actor)

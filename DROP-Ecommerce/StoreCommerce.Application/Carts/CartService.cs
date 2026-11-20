@@ -41,7 +41,7 @@ public sealed class CartService(
         var context = await ReadContextAsync(ct);
         var product = (await products.GetWithVariantsAsync([productId], ct)).SingleOrDefault();
 
-        if (product is null || !product.IsActive || !context.VisibleCategories.Contains(product.CategoryId))
+        if (product is null || !product.IsActive || product.IsContractBlocked || !context.VisibleCategories.Contains(product.CategoryId))
             throw new SecurityFailure(404, "Product.NotFound", "Produto não encontrado.");
 
         var variant = productVariantId.HasValue
@@ -189,11 +189,15 @@ public sealed class CartService(
             .Select(item =>
             {
                 var availability = item.GetAvailability(settings.AllowBackorder, context.VisibleCategories);
+                var hidden = item.Product.IsContractBlocked;
 
                 return new CartItemResponse(
-                    item.Id, item.ProductId, item.ProductVariantId, item.Product.Name, item.Product.Slug,
-                    item.ProductVariant.Name, item.ProductVariant.AttributesJson, item.ProductVariant.SKU, item.Product.ImageUrls,
-                    item.UnitPrice, item.Quantity, item.LineTotal, item.ProductVariant.AvailableQuantity, !item.Product.IsDigital,
+                    item.Id, item.ProductId, item.ProductVariantId, hidden ? "Produto indisponível" : item.Product.Name,
+                    hidden ? string.Empty : item.Product.Slug,
+                    hidden ? string.Empty : item.ProductVariant.Name, hidden ? "{}" : item.ProductVariant.AttributesJson,
+                    hidden ? string.Empty : item.ProductVariant.SKU, hidden ? string.Empty : item.Product.ImageUrls,
+                    hidden ? 0m : item.UnitPrice, item.Quantity, hidden ? 0m : item.LineTotal,
+                    hidden ? 0 : item.ProductVariant.AvailableQuantity, !item.Product.IsDigital,
                     availability, item.IsSelected, item.IsAwaitingStock,
                     RequiresDecision: availability != CartItemAvailability.Available && !item.IsAwaitingStock,
                     BackInStock: availability == CartItemAvailability.Available && item.IsAwaitingStock);

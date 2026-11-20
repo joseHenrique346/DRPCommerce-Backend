@@ -25,6 +25,6 @@ public sealed class StorefrontAppearanceController(IMediator mediator) : Appeara
     {
         var manifest = await Mediator.Send(new GetPublishedAppearanceQuery(StoreAppearanceTargets.Default, revisionId), ct);
 
-        return ManifestResult(manifest, revisionId.HasValue);
+        return ManifestResult(manifest, immutable: false);
     }
 }

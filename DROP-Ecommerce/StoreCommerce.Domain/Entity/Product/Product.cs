@@ -37,6 +37,9 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
     public bool IsActive { get; private set; }
     public bool IsDigital { get; private set; }
     public bool HasVariants { get; private set; }
+    public bool IsContractBlocked { get; private set; }
+    public string? ContractBlockReason { get; private set; }
+    public DateTime? ContractBlockedAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
 
@@ -116,6 +119,27 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
     public void SetActive(bool active)
     {
         IsActive = active;
+    }
+
+    public void BlockForContract(string reason, DateTime now)
+    {
+        if (reason is not (Contracts.ProductContractPolicy.ProductLimit or Contracts.ProductContractPolicy.StoreModule) ||
+            now.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Bloqueio comercial inválido.");
+
+        if (IsContractBlocked && ContractBlockReason == reason)
+            return;
+
+        IsContractBlocked = true;
+        ContractBlockReason = reason;
+        ContractBlockedAt = now;
+    }
+
+    public void UnblockForContract()
+    {
+        IsContractBlocked = false;
+        ContractBlockReason = null;
+        ContractBlockedAt = null;
     }
 
     public void EnableVariants()
