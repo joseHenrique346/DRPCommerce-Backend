@@ -26,6 +26,9 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly SharedCommerce.Application.Options.SecurityOptions _securityOptions;
     private readonly StoreCommerce.Application.Media.MediaWriteScope _mediaWrites;
     private readonly StoreCommerce.Application.Billing.PlatformBillingWriteScope _billingWrites;
+    private readonly StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope _dropAcknowledgments;
+    private readonly StoreCommerce.Application.Contracts.DropStockTransferScope _dropStockTransfers;
+    private readonly StoreCommerce.Application.Payments.DropSalePaymentWriteScope _dropSalePayments;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
@@ -38,7 +41,10 @@ public partial class StoreCommerceDbContext : DbContext
         StoreCommerce.Application.Contracts.OwnershipTransferWriteScope ownershipTransfer,
         Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions> securityOptions,
         StoreCommerce.Application.Media.MediaWriteScope mediaWrites,
-        StoreCommerce.Application.Billing.PlatformBillingWriteScope billingWrites)
+        StoreCommerce.Application.Billing.PlatformBillingWriteScope billingWrites,
+        StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope dropAcknowledgments,
+        StoreCommerce.Application.Contracts.DropStockTransferScope dropStockTransfers,
+        StoreCommerce.Application.Payments.DropSalePaymentWriteScope dropSalePayments)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -56,6 +62,9 @@ public partial class StoreCommerceDbContext : DbContext
         _securityOptions = securityOptions.Value;
         _mediaWrites = mediaWrites;
         _billingWrites = billingWrites;
+        _dropAcknowledgments = dropAcknowledgments;
+        _dropStockTransfers = dropStockTransfers;
+        _dropSalePayments = dropSalePayments;
     }
 
     #region DbSets
@@ -194,6 +203,9 @@ public partial class StoreCommerceDbContext : DbContext
         modelBuilder.Entity<PaymentExternalPayment>().HasQueryFilter(PaymentExternalPayment => PaymentExternalPayment.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PlatformSubscription>().HasQueryFilter(PlatformSubscription => PlatformSubscription.EnterpriseId == _tenantProvider.GetEnterpriseId());
         modelBuilder.Entity<PlatformBillingInvoice>().HasQueryFilter(PlatformBillingInvoice => PlatformBillingInvoice.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropContractPublication>().HasQueryFilter(DropContractPublication => DropContractPublication.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropStockTransfer>().HasQueryFilter(DropStockTransfer => DropStockTransfer.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropSalePaymentIntent>().HasQueryFilter(DropSalePaymentIntent => DropSalePaymentIntent.EnterpriseId == _tenantProvider.GetEnterpriseId());
 
         // Dependents of filtered aggregates must use the same visibility rules.
         modelBuilder.Entity<OrderItem>().HasQueryFilter(e =>
@@ -243,6 +255,9 @@ public partial class StoreCommerceDbContext : DbContext
             : null;
 
         GuardContractWrites();
+        GuardDropContractPublications();
+        GuardDropSalePayments();
+        await GuardDropStockAsync(cancellationToken);
         GuardPlatformBillingWrites();
         await GuardMediaWritesAsync(cancellationToken);
         await GuardAccessContractsAsync(cancellationToken);
@@ -252,6 +267,7 @@ public partial class StoreCommerceDbContext : DbContext
             ReadAppearanceWriteCapabilitiesAsync, cancellationToken);
         await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
+        await CaptureDropContractPublicationsAsync(cancellationToken);
 
         UpdateChangedDates();
 

@@ -87,7 +87,7 @@ public sealed record MercadoPagoNotificationKey(long EnterpriseId, long Id);
 public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, IntegrationWriteScope scope,
     MercadoPagoSignature signature, MercadoPagoGateway gateway, IPaymentAttemptStore attempts,
     OrderLifecycleService lifecycle, IOptions<MercadoPagoOptions> options, TimeProvider time,
-    ILogger<MercadoPagoNotifications> logger)
+    ILogger<MercadoPagoNotifications> logger, StoreCommerce.Infrastructure.Data.Payments.DropSalePaymentService dropPayments)
 {
     public async Task ReceiveAsync(long connectionId, string paymentId, string requestId, string signatureHeader, CancellationToken ct)
     {
@@ -202,7 +202,17 @@ public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, Int
                 Attempt.ExternalAccountId == connection.ExternalAccountId && Attempt.ExternalReference == payment.ExternalReference, ct);
 
         if (attempt is null)
+        {
+            var drop = await context.Set<DropSalePaymentIntent>().IgnoreQueryFilters().AsNoTracking()
+                .SingleOrDefaultAsync(Intent => Intent.EnterpriseId == connection.EnterpriseId &&
+                    Intent.ProviderConnectionId == connection.Id && Intent.ExternalReference == payment.ExternalReference &&
+                    Intent.ExternalAccountId == connection.ExternalAccountId && Intent.Environment == connection.Environment, ct);
+
+            if (drop is not null)
+                await dropPayments.ReconcileAsync(drop.EnterpriseId, drop.OperationId, ct);
+
             return;
+        }
 
         await context.Set<ProviderNotification>().IgnoreQueryFilters()
             .Where(Notification => Notification.EnterpriseId == connection.EnterpriseId && Notification.ProviderConnectionId == connection.Id &&

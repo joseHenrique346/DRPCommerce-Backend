@@ -24,5 +24,8 @@ public class DropProductConfiguration : IEntityTypeConfiguration<DropProduct>
 
         builder.HasIndex(e => e.DropEventId);
         builder.HasIndex(e => e.ProductId);
+        builder.HasOne(Product => Product.CatalogProduct).WithMany().HasForeignKey(Product => Product.CatalogProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(Product => new { Product.DropEventId, Product.CatalogProductId });
     }
 }

@@ -105,6 +105,244 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.ToTable("log_auditoria", (string)null);
                 });
 
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropCatalogProduct", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)")
+                        .HasColumnName("description");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<bool>("IsContractBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_contract_blocked");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsReturned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_returned");
+
+                    b.Property<bool>("IsReturning")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_returning");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("SourceExportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_export_id");
+
+                    b.Property<string>("SourceVariantIdsJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source_variant_ids_json");
+
+                    b.Property<long?>("StoreProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("store_product_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalogo_produto");
+
+                    b.HasIndex("EnterpriseId", "StoreProductId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_catalogo_produto_enterprise_id_store_product_id");
+
+                    b.ToTable("catalogo_produto", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropCatalogVariant", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_product_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("OptionsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("options_json");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("price");
+
+                    b.Property<int>("QuantityOnHand")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity_on_hand");
+
+                    b.Property<int>("QuantityReserved")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity_reserved");
+
+                    b.Property<string>("SKU")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sku");
+
+                    b.Property<long?>("SourceVariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("source_variant_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalogo_variante");
+
+                    b.HasIndex("CatalogProductId", "SKU")
+                        .IsUnique()
+                        .HasDatabaseName("ix_catalogo_variante_catalog_product_id_sku");
+
+                    b.ToTable("catalogo_variante", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropCommercialActivity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("action");
+
+                    b.Property<long?>("CatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_product_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<long?>("ParticipationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("participation_id");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_atividade_comercial");
+
+                    b.HasIndex("EnterpriseId", "Id")
+                        .HasDatabaseName("ix_atividade_comercial_enterprise_id_id");
+
+                    b.ToTable("atividade_comercial", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropContractState", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllowsDrop")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allows_drop");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("applied_at");
+
+                    b.Property<int>("CatalogVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("catalog_version");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("ProductLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_limit");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_contrato_comercial");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_contrato_comercial_enterprise_id");
+
+                    b.ToTable("contrato_comercial", (string)null);
+                });
+
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropCoupon", b =>
                 {
                     b.Property<long>("Id")
@@ -280,7 +518,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
-                    b.Property<long>("ProductId")
+                    b.Property<long?>("ProductId")
                         .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
@@ -440,6 +678,16 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("BuyerEmailSnapshot")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("buyer_email_snapshot");
+
+                    b.Property<string>("BuyerNameSnapshot")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("buyer_name_snapshot");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -477,6 +725,15 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("drop_reservation_id");
 
+                    b.Property<string>("FinancialReviewCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("financial_review_code");
+
+                    b.Property<bool>("FulfillmentAcknowledged")
+                        .HasColumnType("boolean")
+                        .HasColumnName("fulfillment_acknowledged");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -487,6 +744,33 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("notes");
+
+                    b.Property<string>("PaymentCheckoutUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("payment_checkout_url");
+
+                    b.Property<bool>("PaymentIntentAccepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("payment_intent_accepted");
+
+                    b.Property<Guid?>("PaymentOperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_operation_id");
+
+                    b.Property<string>("PaymentResolution")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("payment_resolution");
+
+                    b.Property<long>("PaymentRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payment_revision");
+
+                    b.Property<string>("ProviderPaymentId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("provider_payment_id");
 
                     b.Property<string>("ShippingAddressLine")
                         .IsRequired()
@@ -555,7 +839,13 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_pedido_drop_order_status_id");
 
                     b.HasIndex("DropReservationId")
-                        .HasDatabaseName("ix_pedido_drop_reservation_id");
+                        .IsUnique()
+                        .HasDatabaseName("ix_pedido_drop_reservation_id")
+                        .HasFilter("payment_operation_id IS NOT NULL");
+
+                    b.HasIndex("PaymentOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pedido_payment_operation_id");
 
                     b.ToTable("pedido", (string)null);
                 });
@@ -568,6 +858,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CatalogVariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_variant_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -583,9 +877,13 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("item_name");
+
+                    b.Property<string>("OptionsSnapshotJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("options_snapshot_json");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer")
@@ -614,6 +912,9 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_item_pedido");
 
+                    b.HasIndex("CatalogVariantId")
+                        .HasDatabaseName("ix_item_pedido_catalog_variant_id");
+
                     b.HasIndex("DropOrderId")
                         .HasDatabaseName("ix_item_pedido_drop_order_id");
 
@@ -632,6 +933,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("CatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_product_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -648,6 +953,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<bool>("IsContractBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_contract_blocked");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -663,7 +972,7 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
-                    b.Property<long>("ProductId")
+                    b.Property<long?>("ProductId")
                         .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
@@ -688,11 +997,17 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_produto");
 
+                    b.HasIndex("CatalogProductId")
+                        .HasDatabaseName("ix_produto_catalog_product_id");
+
                     b.HasIndex("DropEventId")
                         .HasDatabaseName("ix_produto_drop_event_id");
 
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_produto_product_id");
+
+                    b.HasIndex("DropEventId", "CatalogProductId")
+                        .HasDatabaseName("ix_produto_drop_event_id_catalog_product_id");
 
                     b.ToTable("produto", (string)null);
                 });
@@ -814,6 +1129,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -826,6 +1146,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("lock_token");
 
+                    b.Property<string>("PurchaseIdentityHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("purchase_identity_hash");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("quantity");
@@ -833,6 +1158,10 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Property<long>("QueueEntryId")
                         .HasColumnType("bigint")
                         .HasColumnName("queue_entry_id");
+
+                    b.Property<long?>("QueueSessionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("queue_session_id");
 
                     b.Property<DateTime>("ReservedAt")
                         .HasColumnType("timestamp with time zone")
@@ -870,7 +1199,179 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.HasIndex("QueueEntryId")
                         .HasDatabaseName("ix_reserva_queue_entry_id");
 
+                    b.HasIndex("QueueSessionId", "CustomerId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_reserva_queue_session_id_customer_id_idempotency_key");
+
                     b.ToTable("reserva", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropReservationLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("item_name");
+
+                    b.Property<string>("OptionsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("options_json");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<long>("ReservationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reservation_id");
+
+                    b.Property<string>("SKU")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sku");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("VariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("variant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_linha_reserva_compra");
+
+                    b.HasIndex("VariantId")
+                        .HasDatabaseName("ix_linha_reserva_compra_variant_id");
+
+                    b.HasIndex("ReservationId", "VariantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_linha_reserva_compra_reservation_id_variant_id");
+
+                    b.ToTable("linha_reserva_compra", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropStockImportReceipt", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("Accepted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("accepted");
+
+                    b.Property<long?>("CatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_product_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<string>("RejectionCode")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("rejection_code");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_recebimento_estoque_store");
+
+                    b.HasIndex("CatalogProductId")
+                        .HasDatabaseName("ix_recebimento_estoque_store_catalog_product_id");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_recebimento_estoque_store_operation_id");
+
+                    b.ToTable("recebimento_estoque_store", (string)null);
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropStockReturnIntent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("catalog_product_id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("snapshot_json");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_devolucao_estoque_store");
+
+                    b.HasIndex("CatalogProductId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_devolucao_estoque_store_catalog_product_id")
+                        .HasFilter("completed_at IS NULL");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_devolucao_estoque_store_operation_id");
+
+                    b.ToTable("devolucao_estoque_store", (string)null);
                 });
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropTransaction", b =>
@@ -1112,6 +1613,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("position");
 
+                    b.Property<string>("PurchaseIdentityHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("purchase_identity_hash");
+
                     b.Property<long>("QueueEntryStatusId")
                         .HasColumnType("bigint")
                         .HasColumnName("queue_entry_status_id");
@@ -1143,6 +1649,9 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
                     b.HasIndex("QueueEntryStatusId")
                         .HasDatabaseName("ix_entrada_fila_queue_entry_status_id");
+
+                    b.HasIndex("DropEventId", "PurchaseIdentityHash")
+                        .HasDatabaseName("ix_entrada_fila_drop_event_id_purchase_identity_hash");
 
                     b.ToTable("entrada_fila", (string)null);
                 });
@@ -2609,6 +3118,18 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Navigation("DropEvent");
                 });
 
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropCatalogVariant", b =>
+                {
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogProduct", "CatalogProduct")
+                        .WithMany("Variants")
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_catalogo_variante_catalogo_produto_catalog_product_id");
+
+                    b.Navigation("CatalogProduct");
+                });
+
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropCoupon", b =>
                 {
                     b.HasOne("DropCommerce.Domain.StaticEntity.DropCouponType", "DropCouponType")
@@ -2737,6 +3258,12 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropOrderItem", b =>
                 {
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogVariant", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogVariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_item_pedido_catalogo_variante_catalog_variant_id");
+
                     b.HasOne("DropCommerce.Domain.Entity.DropOrder", "DropOrder")
                         .WithMany("ListDropOrderItem")
                         .HasForeignKey("DropOrderId")
@@ -2758,12 +3285,20 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropProduct", b =>
                 {
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogProduct", "CatalogProduct")
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_produto_catalogo_produto_catalog_product_id");
+
                     b.HasOne("DropCommerce.Domain.Entity.DropEvent", "DropEvent")
                         .WithMany("ListDropProduct")
                         .HasForeignKey("DropEventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_produto_evento_drop_event_id");
+
+                    b.Navigation("CatalogProduct");
 
                     b.Navigation("DropEvent");
                 });
@@ -2819,6 +3354,12 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_reserva_entrada_fila_queue_entry_id");
 
+                    b.HasOne("DropCommerce.Domain.Entity.QueueSession", null)
+                        .WithMany()
+                        .HasForeignKey("QueueSessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_reserva_sessao_fila_queue_session_id");
+
                     b.Navigation("DropEvent");
 
                     b.Navigation("DropProduct");
@@ -2826,6 +3367,48 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Navigation("DropReservationStatus");
 
                     b.Navigation("QueueEntry");
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropReservationLine", b =>
+                {
+                    b.HasOne("DropCommerce.Domain.Entity.DropReservation", "Reservation")
+                        .WithMany("Lines")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_linha_reserva_compra_reserva_reservation_id");
+
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_linha_reserva_compra_catalogo_variante_variant_id");
+
+                    b.Navigation("Reservation");
+
+                    b.Navigation("Variant");
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropStockImportReceipt", b =>
+                {
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogProduct", "CatalogProduct")
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_recebimento_estoque_store_catalogo_produto_catalog_product_~");
+
+                    b.Navigation("CatalogProduct");
+                });
+
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropStockReturnIntent", b =>
+                {
+                    b.HasOne("DropCommerce.Domain.Entity.DropCatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_devolucao_estoque_store_catalogo_produto_catalog_product_id");
                 });
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropTransaction", b =>
@@ -3096,6 +3679,11 @@ namespace DropCommerce.Infrastructure.Data.Migrations
                     b.Navigation("AppearanceChannel");
                 });
 
+            modelBuilder.Entity("DropCommerce.Domain.Entity.DropCatalogProduct", b =>
+                {
+                    b.Navigation("Variants");
+                });
+
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropCoupon", b =>
                 {
                     b.Navigation("ListDropOrder");
@@ -3142,6 +3730,8 @@ namespace DropCommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("DropCommerce.Domain.Entity.DropReservation", b =>
                 {
+                    b.Navigation("Lines");
+
                     b.Navigation("ListDropOrder");
                 });
 

@@ -1536,6 +1536,268 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.ToTable("documento", (string)null);
                 });
 
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.DropContractPublication", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("acknowledged_at");
+
+                    b.Property<long>("AcknowledgedRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("acknowledged_revision");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_publicacao_contrato_drop");
+
+                    b.HasIndex("EnterpriseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_publicacao_contrato_drop_enterprise_id");
+
+                    b.ToTable("publicacao_contrato_drop", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.DropSalePaymentIntent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AcknowledgedRevision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("acknowledged_revision");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("customer_id");
+
+                    b.Property<long>("DropOrderId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("drop_order_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<int>("Environment")
+                        .HasColumnType("integer")
+                        .HasColumnName("environment");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("ExternalAccountId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("external_account_id");
+
+                    b.Property<string>("ExternalReference")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("external_reference");
+
+                    b.Property<bool>("FulfillmentClosed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("fulfillment_closed");
+
+                    b.Property<bool>("FulfillmentReviewRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("fulfillment_review_required");
+
+                    b.Property<DateTime>("NextCheckAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_check_at");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<string>("PaymentId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("payment_id");
+
+                    b.Property<string>("PreferenceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("preference_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
+                    b.Property<long?>("ProviderConnectionId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("provider_connection_id");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint")
+                        .HasColumnName("revision");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_pagamento_venda_drop");
+
+                    b.HasIndex("ExternalReference")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagamento_venda_drop_external_reference");
+
+                    b.HasIndex("EnterpriseId", "DropOrderId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagamento_venda_drop_enterprise_id_drop_order_id");
+
+                    b.HasIndex("EnterpriseId", "OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagamento_venda_drop_enterprise_id_operation_id");
+
+                    b.ToTable("pagamento_venda_drop", (string)null);
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.DropStockTransfer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long?>("DropCatalogProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("drop_catalog_product_id");
+
+                    b.Property<long>("EnterpriseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("enterprise_id");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<DateTime?>("ImportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("imported_at");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid?>("ReturnOperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_operation_id");
+
+                    b.Property<DateTime?>("ReturnedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("returned_at");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("snapshot_json");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_transferencia_estoque_drop");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencia_estoque_drop_operation_id");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("ix_transferencia_estoque_drop_product_id");
+
+                    b.HasIndex("EnterpriseId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencia_estoque_drop_enterprise_id_idempotency_key");
+
+                    b.HasIndex("EnterpriseId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transferencia_estoque_drop_enterprise_id_product_id")
+                        .HasFilter("returned_at IS NULL");
+
+                    b.ToTable("transferencia_estoque_drop", (string)null);
+                });
+
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Employee", b =>
                 {
                     b.Property<long>("Id")
@@ -3714,6 +3976,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("applied_contract_revision");
 
+                    b.Property<DateTime?>("BillingAnchor")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("billing_anchor");
+
                     b.Property<DateTime?>("ChangeEffectiveAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("change_effective_at");
@@ -3766,10 +4032,6 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("PeriodStart")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("period_start");
-
-                    b.Property<DateTime?>("BillingAnchor")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("billing_anchor");
 
                     b.Property<string>("Reference")
                         .IsRequired()
@@ -3921,6 +4183,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<bool>("IsDigital")
                         .HasColumnType("boolean")
                         .HasColumnName("is_digital");
+
+                    b.Property<bool>("IsTransferredToDrop")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_transferred_to_drop");
 
                     b.Property<decimal>("Length")
                         .HasPrecision(18, 2)
@@ -7041,6 +7307,35 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Navigation("DocumentType");
 
                     b.Navigation("Enterprise");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.DropContractPublication", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", "Enterprise")
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_publicacao_contrato_drop_empresa_enterprise_id");
+
+                    b.Navigation("Enterprise");
+                });
+
+            modelBuilder.Entity("StoreCommerce.Domain.Entity.DropStockTransfer", b =>
+                {
+                    b.HasOne("StoreCommerce.Domain.Entity.Enterprise", null)
+                        .WithMany()
+                        .HasForeignKey("EnterpriseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencia_estoque_drop_empresa_enterprise_id");
+
+                    b.HasOne("StoreCommerce.Domain.Entity.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transferencia_estoque_drop_produto_product_id");
                 });
 
             modelBuilder.Entity("StoreCommerce.Domain.Entity.Employee", b =>

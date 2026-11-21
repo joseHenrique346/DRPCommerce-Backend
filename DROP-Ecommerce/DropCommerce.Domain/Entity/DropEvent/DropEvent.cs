@@ -8,7 +8,7 @@ public class DropEvent : BaseEntity, ISoftDeletable
     #region Properties
 
     public long EnterpriseId { get; private set; }
-    public long ProductId { get; private set; }
+    public long? ProductId { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string Name { get; private set; }
@@ -50,9 +50,11 @@ public class DropEvent : BaseEntity, ISoftDeletable
 
     #region Constructors
 
-    protected DropEvent() { }
+    protected DropEvent()
+    {
+    }
 
-    private DropEvent(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    private DropEvent(long enterpriseId, long? productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         EnterpriseId = enterpriseId;
         ProductId = productId;
@@ -79,10 +81,10 @@ public class DropEvent : BaseEntity, ISoftDeletable
 
     #region Functions
 
-    public static DropEvent Create(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    public static DropEvent Create(long enterpriseId, long? productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         BaseValidate.ValidateId(enterpriseId, nameof(enterpriseId));
-        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateIdNullable(productId, nameof(productId));
         BaseValidate.ValidateString(name, nameof(name));
         BaseValidate.ValidateString(slug, nameof(slug));
         BaseValidate.ValidateString(description, nameof(description));
@@ -104,10 +106,10 @@ public class DropEvent : BaseEntity, ISoftDeletable
         return new DropEvent(enterpriseId, productId, name, slug, description, coverImageUrl, bannerImageUrl, dropEventStatusId, totalUnitsAvailable, unitsReserved, unitsSold, price, requiresRegistration, isPublic, registrationStartsAt, registrationEndsAt, queueOpensAt, dropStartsAt, dropEndsAt);
     }
 
-    public void Update(long enterpriseId, long productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
+    public void Update(long enterpriseId, long? productId, string name, string slug, string description, string coverImageUrl, string bannerImageUrl, long dropEventStatusId, int totalUnitsAvailable, int unitsReserved, int unitsSold, decimal price, bool requiresRegistration, bool isPublic, DateTime registrationStartsAt, DateTime registrationEndsAt, DateTime queueOpensAt, DateTime dropStartsAt, DateTime dropEndsAt)
     {
         BaseValidate.ValidateId(enterpriseId, nameof(enterpriseId));
-        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateIdNullable(productId, nameof(productId));
         BaseValidate.ValidateString(name, nameof(name));
         BaseValidate.ValidateString(slug, nameof(slug));
         BaseValidate.ValidateString(description, nameof(description));

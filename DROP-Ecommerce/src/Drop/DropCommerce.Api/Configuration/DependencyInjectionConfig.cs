@@ -69,6 +69,7 @@ public static class DependencyInjectionConfig
 
         services.AddDropInfrastructure(connectionString, storeApiBaseUrl);
         services.AddDropApplication();
+        services.Configure<DropCommerce.Application.Contracts.DropQueueOptions>(configuration.GetSection("DropQueue"));
         services.AddDropSecurity(configuration);
 
         return services;

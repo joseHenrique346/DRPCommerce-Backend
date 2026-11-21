@@ -621,11 +621,31 @@ migrations e os fluxos de assinatura. Os cenários de cobrança usam HTTP simula
 O ajuste final de bloqueio de troca paga durante inadimplência foi verificado novamente
 nos testes de assinatura. A solução compila sem erros.
 
-## Próximas partes
+## Parte 6: consumo e fluxo comercial DROP
+
+A Parte 5 está no commit local `1a85fc1`, sem push. A Parte 6 implementa catálogo próprio
+DROP, cotas por principal/evento, bloqueio e reativação, projeção durável do contrato,
+transferência exclusiva de estoque, fila/admissão, reservas por variação e ponte de
+pagamento da loja. A referência Store de um principal/evento agora é opcional.
+
+O usuário confirmou franquia por CPF reiniciada por evento, soma de unidades entre variações,
+quinze minutos contados da admissão e aprovação tardia encaminhada para revisão. Transferir
+estoque exige resolver integralmente reservas, pedidos e pagamentos pendentes/incertos.
+Os snapshots e saldos históricos são preservados; não há estorno automático.
+
+Validação final da Parte 6 em 21/11/2026: 171 testes aprovados na suíte completa e build
+sem erros. A revisão financeira persistida no Store impede que um ack antigo de encerramento
+libere a exclusão da conta. Migrations foram exercitadas somente em bancos descartáveis.
+
+Detalhamento de rotas, configuração privada, migrations e limites operacionais em
+[Fluxo comercial DROP](../Drop/Application/FluxoComercial.md).
+
+## Próximos passos
 
 Produtos e histórico Store estão protegidos na Parte 2; equipe e domínio, na Parte 3.
 Temas, personalização e logos estão protegidos no backend na Parte 4. A Parte 5 acrescenta
-a cobrança SaaS automática; fluxo completo e consumo DROP continuam na Parte 6. A interface ainda precisa
+a cobrança SaaS automática; a Parte 6 acrescenta o fluxo comercial e o consumo DROP. A interface ainda precisa
 consumir as prévias/direitos, explicar bloqueios, oferecer seleção/reativação e histórico,
 e entregar o catálogo visual e os renderers reais.
-Não se deve anunciar os limites de todos os módulos como proteção já concluída.
+Homologação externa de pagamentos, frete/Melhor Envio, resolução de revisão financeira,
+proteção distribuída contra abuso e teste de carga ainda precisam ser executados.

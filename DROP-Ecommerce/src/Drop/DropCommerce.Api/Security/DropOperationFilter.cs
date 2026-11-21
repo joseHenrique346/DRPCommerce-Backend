@@ -30,6 +30,9 @@ public sealed class DropOperationFilter : IAsyncAuthorizationFilter
                 "StorefrontDropNotification")
             return Task.CompletedTask;
 
+        if (descriptor.ControllerName == "StorefrontDropPurchase")
+            return Task.CompletedTask;
+
         var user = context.HttpContext.User;
 
         if (user.Identity?.IsAuthenticated != true || user.FindFirst(SecurityNames.Actor)?.Value != "user" || user.FindFirst(SecurityNames.Membership) is null)
@@ -50,8 +53,8 @@ public sealed class DropOperationFilter : IAsyncAuthorizationFilter
 
         var permission = descriptor.ControllerName switch
         {
-            "DropEvent" or "DropProduct" or "DropCoupon" => read ? "drop.events.view" : "drop.events.manage",
-            "DropOrder" or "DropOrderItem" or "DropTransaction" => read ? "orders.view" : "orders.manage",
+            "DropEvent" or "DropProduct" or "DropCoupon" or "DropCatalog" => read ? "drop.events.view" : "drop.events.manage",
+            "DropOrder" or "DropOrderItem" or "DropTransaction" or "DropPurchase" => read ? "orders.view" : "orders.manage",
             "DropRegistration" or "QueueEntry" or "QueueSession" or "WaitlistEntry" or "DropReservation" or "DropNotification" => "drop.events.manage",
             _ => null
         };

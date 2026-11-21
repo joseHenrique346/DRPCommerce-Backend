@@ -50,6 +50,13 @@ public static class DependencyInjection
         services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
         services.AddScoped<IIdentityRepositories, IdentityRepositories>();
         services.AddScoped<StoreCommerce.Application.Contracts.EnterpriseContractWriteScope>();
+        services.AddScoped<StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope>();
+        services.AddScoped<StoreCommerce.Application.Contracts.DropStockTransferScope>();
+        services.AddScoped<Contracts.DropStockTransferService>();
+        services.AddScoped<DropSalePaymentWriteScope>();
+        services.AddScoped<IDropSaleGateway, MercadoPagoDropSaleGateway>();
+        services.AddScoped<Payments.DropSalePaymentService>();
+        services.AddHostedService<Workers.DropSalePaymentReconciliationWorker>();
         services.AddScoped<StoreCommerce.Application.Contracts.OwnershipTransferWriteScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.ProductReactivationScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.IEnterpriseContractUsageReader, EnterpriseContractUsageReader>();

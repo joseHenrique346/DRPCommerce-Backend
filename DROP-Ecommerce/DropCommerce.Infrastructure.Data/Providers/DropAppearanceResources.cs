@@ -24,8 +24,16 @@ public sealed class DropAppearanceResources(
 
         if (target.DropEventId.HasValue)
         {
+            if (publicAccess)
+                await db.RefreshCommercialRightsAsync(enterpriseId, ct);
+
             var available = await Events(enterpriseId).AnyAsync(DropEvent =>
-                DropEvent.Id == target.DropEventId && (!publicAccess || DropEvent.IsPublic), ct);
+                DropEvent.Id == target.DropEventId && (!publicAccess || DropEvent.IsPublic && DropEvent.DropEndsAt > DateTime.UtcNow &&
+                    DropEvent.DropEventStatusId != 1 && DropEvent.DropEventStatusId != 7 && DropEvent.DropEventStatusId != 8 &&
+                    DropEvent.ListDropProduct.Any(Product => Product.IsActive && !Product.IsDeleted && !Product.IsContractBlocked &&
+                        Product.CatalogProduct != null && !Product.CatalogProduct.IsDeleted && !Product.CatalogProduct.IsContractBlocked &&
+                        !Product.CatalogProduct.IsReturning && !Product.CatalogProduct.IsReturned &&
+                        (Product.CatalogProduct.StoreProductId == null || Product.CatalogProduct.SourceExportId != null))), ct);
 
             if (!available)
                 throw NotFound();
@@ -34,6 +42,18 @@ public sealed class DropAppearanceResources(
 
     public async Task<bool> ExistsAsync(long enterpriseId, InputAppearanceTarget target, string kind, long id, CancellationToken ct)
     {
+        if (kind == "drop_product")
+        {
+            var rights = await db.RefreshCommercialRightsAsync(enterpriseId, ct);
+
+            return rights.AllowsDrop && await db.Set<DropCatalogProduct>().IgnoreQueryFilters().AnyAsync(Product =>
+                Product.Id == id && Product.EnterpriseId == enterpriseId && !Product.IsDeleted && !Product.IsContractBlocked &&
+                !Product.IsReturning && !Product.IsReturned && (!Product.StoreProductId.HasValue || Product.SourceExportId.HasValue) &&
+                (!target.DropEventId.HasValue || db.DropProducts.IgnoreQueryFilters().Any(Participation =>
+                    Participation.CatalogProductId == Product.Id && Participation.DropEventId == target.DropEventId &&
+                    Participation.IsActive && !Participation.IsDeleted && !Participation.IsContractBlocked)), ct);
+        }
+
         using var operation = integration.Begin(enterpriseId);
 
         if (kind != "product" || await products.GetByIdAsync(id, enterpriseId, ct) is not { IsActive: true })

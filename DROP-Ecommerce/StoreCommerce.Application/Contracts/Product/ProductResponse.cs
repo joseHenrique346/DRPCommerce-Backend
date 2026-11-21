@@ -6,7 +6,7 @@ public sealed record ProductResponse(long Id, long EnterpriseId, long CategoryId
     string Slug, string Description, string SKU, string BarCode, decimal Price, decimal CostPrice,
     decimal Weight, decimal Height, decimal Width, decimal Length, string Brand, string ImageUrls,
     bool IsActive, bool IsDigital, bool HasVariants, DateTime CreatedAt, DateTime? UpdatedAt, List<ProductVariantResponse> Variants,
-    bool IsContractBlocked, string? ContractBlockReason, DateTime? ContractBlockedAt)
+    bool IsContractBlocked, string? ContractBlockReason, DateTime? ContractBlockedAt, bool IsTransferredToDrop = false)
 {
     public static ProductResponse FromEntity(ProductEntity product)
     {
@@ -16,6 +16,6 @@ public sealed record ProductResponse(long Id, long EnterpriseId, long CategoryId
             product.IsActive, product.IsDigital, product.HasVariants, product.CreatedAt, product.UpdatedAt,
             product.ListProductVariant.Where(Variant => !Variant.IsDeleted).OrderBy(Variant => Variant.Id)
                 .Select(ProductVariantResponse.FromEntity).ToList(),
-            product.IsContractBlocked, product.ContractBlockReason, product.ContractBlockedAt);
+            product.IsContractBlocked, product.ContractBlockReason, product.ContractBlockedAt, product.IsTransferredToDrop);
     }
 }

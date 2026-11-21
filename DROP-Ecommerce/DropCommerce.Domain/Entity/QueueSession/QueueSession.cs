@@ -15,6 +15,11 @@ public class QueueSession : BaseEntity
     public DateTime ExpiresAt { get; private set; }
     public DateTime LastHeartbeatAt { get; private set; }
 
+    public void Expire()
+    {
+        QueueSessionStatusId = QueueSessionStatus.Expired.Id;
+    }
+
     #region Navigation Properties
 
     public QueueEntry QueueEntry { get; private set; }

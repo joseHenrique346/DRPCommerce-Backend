@@ -8,6 +8,14 @@ public class DropOrderConfiguration : IEntityTypeConfiguration<DropOrder>
 {
     public void Configure(EntityTypeBuilder<DropOrder> builder)
     {
+        builder.Property(Order => Order.PaymentCheckoutUrl).HasMaxLength(2000);
+        builder.Property(Order => Order.ProviderPaymentId).HasMaxLength(200);
+        builder.Property(Order => Order.FinancialReviewCode).HasMaxLength(100);
+        builder.Property(Order => Order.PaymentResolution).HasMaxLength(40);
+        builder.Property(Order => Order.BuyerNameSnapshot).HasMaxLength(200);
+        builder.Property(Order => Order.BuyerEmailSnapshot).HasMaxLength(255);
+        builder.HasIndex(Order => Order.PaymentOperationId).IsUnique();
+        builder.HasIndex(Order => Order.DropReservationId).IsUnique().HasFilter("payment_operation_id IS NOT NULL");
         builder.ToTable("pedido");
 
         builder.HasKey(e => e.Id);

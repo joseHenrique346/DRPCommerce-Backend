@@ -53,7 +53,8 @@ public sealed record PaymentRequest(
     DateTime ExpiresAt,
     string IdempotencyKey,
     PaymentProviderContext Context,
-    string ExternalReference);
+    string ExternalReference,
+    string? ReturnFlow = null);
 
 public sealed record PaymentProviderContext(string Provider, IntegrationEnvironment Environment,
     string ExternalAccountId, long? ProviderConnectionId);

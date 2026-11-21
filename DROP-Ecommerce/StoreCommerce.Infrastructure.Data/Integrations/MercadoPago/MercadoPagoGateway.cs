@@ -52,12 +52,12 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
             throw new PaymentNotSubmittedException();
         }
         var returnUrl = Settings.PaymentReturnUrl + (Settings.PaymentReturnUrl.Contains('?') ? "&" : "?") +
-            "orderId=" + request.OrderId.ToString(CultureInfo.InvariantCulture);
+            (request.ReturnFlow == "drop" ? "dropOrderId=" : "orderId=") + request.OrderId.ToString(CultureInfo.InvariantCulture);
         var body = new
         {
             items = new[]
             {
-                new { id = request.OrderId.ToString(CultureInfo.InvariantCulture), title = $"Pedido {request.OrderId}",
+                new { id = request.OrderId.ToString(CultureInfo.InvariantCulture), title = request.ReturnFlow == "drop" ? $"Pedido DROP {request.OrderId}" : $"Pedido {request.OrderId}",
                     quantity = 1, currency_id = request.CurrencyCode, unit_price = request.Amount }
             },
             payer = new { name = request.CustomerName, email = request.CustomerEmail },

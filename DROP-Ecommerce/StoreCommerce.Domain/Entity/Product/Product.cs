@@ -38,6 +38,15 @@ public class Product : BaseEntity, ITenantEntity, ISoftDeletable
     public bool IsDigital { get; private set; }
     public bool HasVariants { get; private set; }
     public bool IsContractBlocked { get; private set; }
+    public bool IsTransferredToDrop { get; private set; }
+
+    public void TransferStockControl(bool toDrop)
+    {
+        if (IsActive || IsDeleted)
+            throw new InvalidOperationException("Arquive o produto antes de transferir seu estoque.");
+
+        IsTransferredToDrop = toDrop;
+    }
     public string? ContractBlockReason { get; private set; }
     public DateTime? ContractBlockedAt { get; private set; }
     public bool IsDeleted { get; private set; }

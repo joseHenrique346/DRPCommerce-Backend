@@ -19,6 +19,42 @@ public class QueueEntry : BaseEntity
     public DateTime? CalledAt { get; private set; }
     public DateTime? ExpiredAt { get; private set; }
     public DateTime? CheckedOutAt { get; private set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? PurchaseIdentityHash { get; private set; }
+
+    public void BindPurchaseIdentity(string hash)
+    {
+        if (PurchaseIdentityHash is not null && PurchaseIdentityHash != hash)
+            throw new InvalidOperationException("A identidade de compra não pode ser trocada neste evento.");
+
+        PurchaseIdentityHash = hash;
+    }
+
+    public void Admit(DateTime now)
+    {
+        QueueEntryStatusId = QueueEntryStatus.Called.Id;
+        CalledAt = now;
+    }
+
+    public void Requeue(int position, DateTime now)
+    {
+        Position = position;
+        EnteredAt = now;
+        CalledAt = null;
+        QueueEntryStatusId = QueueEntryStatus.Waiting.Id;
+    }
+
+    public void Expire(DateTime now)
+    {
+        QueueEntryStatusId = QueueEntryStatus.Expired.Id;
+        ExpiredAt = now;
+    }
+
+    public void Complete(DateTime now)
+    {
+        QueueEntryStatusId = QueueEntryStatus.Completed.Id;
+        CheckedOutAt = now;
+    }
 
     #region Navigation Properties
 

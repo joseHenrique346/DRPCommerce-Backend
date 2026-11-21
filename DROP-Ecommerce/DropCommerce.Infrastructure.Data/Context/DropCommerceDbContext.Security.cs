@@ -88,9 +88,13 @@ public partial class DropCommerceDbContext
 
     private async Task GuardWritesAsync(CancellationToken ct)
     {
+        if (_commercialWrites.Purpose is "transfer" or "sales" or "expiration")
+            return;
+
         var changes = ChangeTracker.Entries<BaseEntity>()
             .Where(EntityEntry =>
                 EntityEntry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Where(Entry => !_commercialGenerated.Contains(Entry.Entity))
             .ToList();
 
         if (changes.Count == 0)
@@ -118,7 +122,9 @@ public partial class DropCommerceDbContext
             if (entry.State != EntityState.Deleted && customerId is long canonicalCustomerId && (await _storeCustomers.GetByIdAsync(canonicalCustomerId, tenant, ct)) is not { IsActive: true })
                 throw new SecurityFailure(400, "Security.CustomerUnavailable", "Cliente indisponível ou de outra loja.");
 
-            if (entry.State != EntityState.Deleted && properties.FirstOrDefault(Property => Property.Name == "ProductId")?.GetValue(entry.Entity) is long canonicalProductId && (await _storeProducts.GetByIdAsync(canonicalProductId, tenant, ct)) is not { IsActive: true })
+            var transferred = entry.Entity is DropProduct { CatalogProduct: { SourceExportId: not null, IsReturning: false, IsReturned: false } };
+
+            if (!transferred && entry.State != EntityState.Deleted && properties.FirstOrDefault(Property => Property.Name == "ProductId")?.GetValue(entry.Entity) is long canonicalProductId && (await _storeProducts.GetByIdAsync(canonicalProductId, tenant, ct)) is not { IsActive: true })
                 throw new SecurityFailure(400, "Security.ProductUnavailable", "Produto indisponível ou de outra loja.");
 
             if (principal.FindFirst(SecurityNames.Actor)?.Value == "customer")

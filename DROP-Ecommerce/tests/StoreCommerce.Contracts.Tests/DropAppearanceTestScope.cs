@@ -7,6 +7,9 @@ using DropCommerce.Application.Security;
 using DropCommerce.Infrastructure.Data;
 using DropCommerce.Infrastructure.Data.Context;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Readers;
+using DropCommerce.Infrastructure.Data.Contracts;
+using DropCommerce.Application.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +37,7 @@ internal sealed class DropAppearanceTestScope : IAsyncDisposable
     public IServiceProvider Services => scope!.ServiceProvider;
     public IMediator Mediator => Services.GetRequiredService<IMediator>();
 
-    public async Task InitializeAsync(ContractsApiFixture store, StoreActor owner)
+    public async Task InitializeAsync(ContractsApiFixture store, StoreActor owner, TimeProvider? clock = null, int capacity = 20)
     {
         var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("DRP_CONTRACTS_TEST_POSTGRES"));
 
@@ -72,6 +75,21 @@ internal sealed class DropAppearanceTestScope : IAsyncDisposable
             new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() }));
         services.AddDropApplication();
         services.AddDropInfrastructure(connection.ConnectionString);
+
+        if (clock is not null)
+        {
+            services.AddSingleton<IStoreCustomerRefitApi>(RestService.For<IStoreCustomerRefitApi>(storeClient,
+                new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() }));
+            services.AddScoped<IStoreCustomerReader, StoreCustomerReader>();
+            services.Configure<DropQueueOptions>(Options =>
+            {
+                Options.PurchaseIdentityKey = "test-only-not-a-production-secret-123456789";
+                Options.ConcurrentBuyersPerEvent = capacity;
+            });
+            services.AddScoped<DropQueueService>(Services => ActivatorUtilities.CreateInstance<DropQueueService>(Services, clock));
+            services.AddScoped<DropCheckoutService>(Services => ActivatorUtilities.CreateInstance<DropCheckoutService>(Services, clock));
+        }
+
         provider = services.BuildServiceProvider();
         scope = provider.CreateScope();
         var db = Services.GetRequiredService<DropCommerceDbContext>();

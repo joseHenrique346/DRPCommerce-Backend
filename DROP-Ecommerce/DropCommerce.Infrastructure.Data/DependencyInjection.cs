@@ -34,6 +34,14 @@ public static class DependencyInjection
         services.AddScoped<IAppearanceContext, DropAppearanceContext>();
         services.AddScoped<IAppearanceEntitlements, DropAppearanceEntitlements>();
         services.AddScoped<IStoreAppearanceReader, StoreAppearanceReader>();
+        services.AddScoped<IStoreCommercialReader, StoreCommercialReader>();
+        services.AddScoped<DropCommerce.Application.Contracts.DropCommercialWriteScope>();
+        services.AddScoped<Contracts.DropCatalogService>();
+        services.AddScoped<Contracts.DropStockSagaService>();
+        services.AddOptions<DropCommerce.Application.Contracts.DropQueueOptions>();
+        services.AddScoped<Contracts.DropQueueService>();
+        services.AddScoped<IStoreDropPayments, StoreDropPayments>();
+        services.AddScoped<Contracts.DropCheckoutService>();
         services.AddScoped<IMediaAssetReader, DropMediaAssetReader>();
         services.AddScoped<IAppearanceResources, DropAppearanceResources>();
         services.AddScoped<IDropAppearanceEventRepository, DropAppearanceEventRepository>();
@@ -52,7 +60,16 @@ public static class DependencyInjection
         services.AddScoped<IQueueEntryRepository, QueueEntryRepository>();
 
         if (!string.IsNullOrWhiteSpace(storeApiBaseUrl))
+        {
             AddStoreIntegration(services, storeApiBaseUrl);
+            services.AddHttpClient("DropContractSync", Client =>
+            {
+                Client.BaseAddress = new Uri(storeApiBaseUrl);
+                Client.Timeout = TimeSpan.FromSeconds(10);
+            });
+            services.AddHostedService<Workers.DropContractReconciliationWorker>();
+            services.AddHostedService<Workers.DropQueueExpirationWorker>();
+        }
 
         return services;
     }

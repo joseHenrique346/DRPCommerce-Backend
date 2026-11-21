@@ -8,6 +8,10 @@ public class DropReservationConfiguration : IEntityTypeConfiguration<DropReserva
 {
     public void Configure(EntityTypeBuilder<DropReservation> builder)
     {
+        builder.Property(Reservation => Reservation.PurchaseIdentityHash).HasMaxLength(64);
+        builder.Property(Reservation => Reservation.IdempotencyKey).HasMaxLength(100);
+        builder.HasIndex(Reservation => new { Reservation.QueueSessionId, Reservation.CustomerId, Reservation.IdempotencyKey }).IsUnique();
+        builder.HasOne<QueueSession>().WithMany().HasForeignKey(Reservation => Reservation.QueueSessionId).OnDelete(DeleteBehavior.Restrict);
         builder.ToTable("reserva");
 
         builder.HasKey(e => e.Id);

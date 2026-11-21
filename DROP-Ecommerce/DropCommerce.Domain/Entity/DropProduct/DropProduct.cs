@@ -7,7 +7,10 @@ public class DropProduct : BaseEntity, ISoftDeletable
     #region Properties
 
     public long DropEventId { get; private set; }
-    public long ProductId { get; private set; }
+    public long? ProductId { get; private set; }
+    public long? CatalogProductId { get; private set; }
+    public DropCatalogProduct? CatalogProduct { get; private set; }
+    public bool IsContractBlocked { get; private set; }
     public string SKU { get; private set; }
     public int UnitsAllocated { get; private set; }
     public int UnitsSold { get; private set; }
@@ -30,9 +33,11 @@ public class DropProduct : BaseEntity, ISoftDeletable
 
     #region Constructors
 
-    protected DropProduct() { }
+    protected DropProduct()
+    {
+    }
 
-    private DropProduct(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    private DropProduct(long dropEventId, long? productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
         DropEventId = dropEventId;
         ProductId = productId;
@@ -48,10 +53,10 @@ public class DropProduct : BaseEntity, ISoftDeletable
 
     #region Functions
 
-    public static DropProduct Create(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    public static DropProduct Create(long dropEventId, long? productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
         BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
-        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateIdNullable(productId, nameof(productId));
         BaseValidate.ValidateString(sku, nameof(sku));
         BaseValidate.ValidateMinimum(unitsAllocated, 1, nameof(unitsAllocated));
         BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
@@ -61,10 +66,10 @@ public class DropProduct : BaseEntity, ISoftDeletable
         return new DropProduct(dropEventId, productId, sku, unitsAllocated, unitsSold, maxPerCustomer, price, isActive);
     }
 
-    public void Update(long dropEventId, long productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
+    public void Update(long dropEventId, long? productId, string sku, int unitsAllocated, int unitsSold, int maxPerCustomer, decimal price, bool isActive)
     {
         BaseValidate.ValidateId(dropEventId, nameof(dropEventId));
-        BaseValidate.ValidateId(productId, nameof(productId));
+        BaseValidate.ValidateIdNullable(productId, nameof(productId));
         BaseValidate.ValidateString(sku, nameof(sku));
         BaseValidate.ValidateMinimum(unitsAllocated, 1, nameof(unitsAllocated));
         BaseValidate.ValidatePositive(unitsSold, nameof(unitsSold));
@@ -85,6 +90,28 @@ public class DropProduct : BaseEntity, ISoftDeletable
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
+    }
+
+    public void BindCatalog(DropCatalogProduct product)
+    {
+        CatalogProduct = product;
+        CatalogProductId = product.Id;
+        ProductId = product.StoreProductId;
+    }
+
+    public void BlockForContract()
+    {
+        IsContractBlocked = true;
+    }
+
+    public void ReactivateForContract()
+    {
+        IsContractBlocked = false;
+    }
+
+    public void RegisterSale(int quantity)
+    {
+        UnitsSold = checked(UnitsSold + quantity);
     }
 
     #endregion

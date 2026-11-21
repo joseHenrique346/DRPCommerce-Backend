@@ -11,6 +11,14 @@ public class DropOrderItem : BaseEntity
     public int Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
     public decimal TotalPrice { get; private set; }
+    public long? CatalogVariantId { get; private set; }
+    public string? OptionsSnapshotJson { get; private set; }
+
+    public void BindVariantSnapshot(long variantId, string optionsJson)
+    {
+        CatalogVariantId = variantId;
+        OptionsSnapshotJson = optionsJson;
+    }
 
     #region Navigation Properties
 

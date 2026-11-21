@@ -1,6 +1,9 @@
 # Integração Store / Drop
 
-O Store é fonte canônica de identidade, clientes, funcionários, produtos, lojas e memberships. O Drop mantém banco próprio; IDs externos não são FKs entre bancos.
+O Store é fonte canônica de identidade, clientes, funcionários, lojas e memberships, além dos
+produtos da Vitrine. O DROP também possui catálogo próprio. Mantém banco próprio; IDs externos
+não são FKs entre bancos. O [fluxo comercial](../Application/FluxoComercial.md) documenta a
+sincronização durável de contrato, a transferência de estoque e a ponte de pagamentos.
 
 ## Validação de sessão
 
@@ -39,7 +42,10 @@ Essas rotas não substituem autenticação pública com um header de tenant. Nã
 
 Application define IStoreProductReader, IStoreEnterpriseReader, IStoreCustomerReader e IStoreEmployeeReader, com contratos próprios, sem depender de Refit.
 
-O Store já expõe consulta de variantes, mas `IStoreProductRefitApi`/leitor atual ainda usa os contratos básicos de produto. Consumir SKUs nessa integração e criar os comandos internos de reserva/conversão em pedido são trabalhos pendentes; a nova rota de consulta não executa essas operações.
+O leitor básico de produtos continua disponível. A transferência usa snapshots próprios de
+variações e confirmações duráveis; não reserva estoque remoto duplicado. `IStoreCommercialReader`
+consulta direitos atuais e `IStoreDropPayments` inicia/consulta a operação financeira da venda
+DROP com a conexão do lojista, sem criar pedido Store.
 
 Infrastructure contém os clients Refit, DTOs HTTP, adapters e StoreIntegrationResponseReader. DropCommerce.Security contém StoreServiceAuthenticationHandler, que injeta chave e tenant autenticado; lê o contexto da requisição por IHttpContextAccessor, evitando dependência de escopo incorreto no HttpClientFactory. Os clients dependem do contrato abstrato StoreAuthenticationHandler em Application, sem referenciar o projeto Security.
 

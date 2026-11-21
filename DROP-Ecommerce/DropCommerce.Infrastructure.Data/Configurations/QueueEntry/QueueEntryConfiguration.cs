@@ -8,6 +8,8 @@ public class QueueEntryConfiguration : IEntityTypeConfiguration<QueueEntry>
 {
     public void Configure(EntityTypeBuilder<QueueEntry> builder)
     {
+        builder.Property(Entry => Entry.PurchaseIdentityHash).HasMaxLength(64);
+        builder.HasIndex(Entry => new { Entry.DropEventId, Entry.PurchaseIdentityHash });
         builder.ToTable("entrada_fila");
 
         builder.HasKey(e => e.Id);

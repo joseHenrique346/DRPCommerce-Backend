@@ -29,6 +29,11 @@ public sealed class StorefrontDropRegistrationController(DropCommerceDbContext d
     {
         var customerId = CustomerId;
         var tenant = EnterpriseId;
+        var rights = await db.RefreshCommercialRightsAsync(tenant, ct);
+
+        if (!rights.AllowsDrop)
+            throw new SecurityFailure(409, "DropContract.ModuleRequired", "O contrato atual não permite novas inscrições DROP.");
+
         using var operation = scope.Begin();
 
         await using var tx = await db.Database.BeginTransactionAsync(ct);
@@ -41,7 +46,11 @@ public sealed class StorefrontDropRegistrationController(DropCommerceDbContext d
             ?? throw new SecurityFailure(404, "Drop.NotFound", "Evento indisponível.");
         var now = Now;
 
-        if (now < drop.RegistrationStartsAt || now > drop.RegistrationEndsAt)
+        if (!DropCommerceDbContext.IsPublished(drop) || now < drop.RegistrationStartsAt || now > drop.RegistrationEndsAt ||
+            !await db.DropProducts.AnyAsync(Product => Product.DropEventId == id && !Product.IsContractBlocked && Product.IsActive &&
+                Product.CatalogProduct != null && !Product.CatalogProduct.IsDeleted && !Product.CatalogProduct.IsContractBlocked &&
+                !Product.CatalogProduct.IsReturning && !Product.CatalogProduct.IsReturned &&
+                (Product.CatalogProduct.StoreProductId == null || Product.CatalogProduct.SourceExportId != null), ct))
             throw new SecurityFailure(409, "Drop.RegistrationClosed", "Inscrições fora do período permitido.");
 
         var registration = await db.DropRegistrations

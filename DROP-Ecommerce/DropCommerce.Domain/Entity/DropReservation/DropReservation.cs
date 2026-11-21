@@ -23,6 +23,40 @@ public class DropReservation : BaseEntity, ISoftDeletable
     public DateTime? CancelledAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
+    public long? QueueSessionId { get; private set; }
+    public string? IdempotencyKey { get; private set; }
+
+    public void SetIdempotencyKey(string key)
+    {
+        IdempotencyKey = key;
+    }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? PurchaseIdentityHash { get; private set; }
+    public ICollection<DropReservationLine> Lines { get; private set; } = [];
+
+    public void BindSession(long sessionId, string identityHash)
+    {
+        QueueSessionId = sessionId;
+        PurchaseIdentityHash = identityHash;
+    }
+
+    public void Expire(DateTime now)
+    {
+        if (DropReservationStatusId != DropReservationStatus.Active.Id)
+            return;
+
+        DropReservationStatusId = DropReservationStatus.Expired.Id;
+        CancelledAt = now;
+    }
+
+    public void Confirm(DateTime now)
+    {
+        if (DropReservationStatusId != DropReservationStatus.Active.Id || now >= ExpiresAt)
+            throw new InvalidOperationException("A reserva já expirou.");
+
+        DropReservationStatusId = DropReservationStatus.Confirmed.Id;
+        ConfirmedAt = now;
+    }
 
     #region Navigation Properties
 

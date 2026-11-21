@@ -159,7 +159,9 @@ public partial class StoreCommerceDbContext
                 throw new SecurityFailure(403, "ProductContract.UseReactivation", "Use o fluxo próprio de bloqueio e reativação.");
 
             if ((wasBlocked || product.IsContractBlocked) && !isDeleting &&
-                (!OnlyProductBlockFields(entry) || !policyChange && !reactivating))
+                (!OnlyProductBlockFields(entry) || !policyChange && !reactivating) &&
+                !(_dropStockTransfers.EnterpriseId == tenant && _dropStockTransfers.ProductId == product.Id &&
+                    OnlyModifiedFields(entry, nameof(Product.IsTransferredToDrop), nameof(Product.UpdatedAt))))
                 throw BlockedProduct();
 
             if (isDeleting)

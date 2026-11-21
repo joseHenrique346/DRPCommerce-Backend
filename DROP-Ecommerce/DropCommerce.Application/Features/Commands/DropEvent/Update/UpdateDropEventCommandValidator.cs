@@ -8,7 +8,7 @@ public class UpdateDropEventCommandValidator : AbstractValidator<UpdateDropEvent
     {
         RuleFor(x => x.id).GreaterThan(0);
         RuleFor(x => x.enterpriseId).GreaterThan(0);
-        RuleFor(x => x.productId).GreaterThan(0);
+        RuleFor(Command => Command.productId).GreaterThan(0).When(Command => Command.productId.HasValue);
         RuleFor(x => x.name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.slug).NotEmpty().MaximumLength(200);
         RuleFor(x => x.description).NotEmpty();

@@ -36,6 +36,15 @@ public sealed class AccountDeletionStore(StoreCommerceDbContext context, IIdenti
             blockers.Add(new AccountDeletionBlocker("AccountDeletion.PendingPayments",
                 "Conclua ou cancele os pedidos e pagamentos pendentes antes de excluir a conta.", Math.Max(pendingPayments, pendingOrders)));
 
+        var dropSales = await context.Set<DropSalePaymentIntent>().IgnoreQueryFilters().CountAsync(Intent =>
+            Intent.EnterpriseId == enterpriseId && Intent.CustomerId == customerId &&
+            (Intent.Status == "pending" || Intent.Status == "review_required" || Intent.FulfillmentReviewRequired ||
+                !Intent.FulfillmentClosed || Intent.AcknowledgedRevision < Intent.Revision), ct);
+
+        if (dropSales > 0)
+            blockers.Add(new AccountDeletionBlocker("AccountDeletion.PendingDropSales",
+                "Há vendas DROP com pagamento, revisão ou entrega pendente.", dropSales));
+
         var uncertainPayments = await context.PaymentAttempts.IgnoreQueryFilters()
             .CountAsync(Attempt => Attempt.EnterpriseId == enterpriseId && Attempt.CustomerId == customerId &&
                 (Attempt.Status == PaymentCreationStatus.Processing || Attempt.Status == PaymentCreationStatus.OutcomeUnknown ||
