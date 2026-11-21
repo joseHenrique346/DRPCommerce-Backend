@@ -1,5 +1,11 @@
 # Integrações externas — situação e próximos passos
 
+Situação de 21/11/2026: as sete partes comerciais incluem [assinatura mensal da plataforma](PlanosEContratos.md)
+e [catálogo, fila, reserva e pagamento DROP](../Drop/Application/FluxoComercial.md).
+O [roteiro do TCC](ValidacaoComercialTcc.md) valida as APIs com provedores simulados;
+isso não conclui homologação externa. Melhor Envio é a próxima integração, após essas partes.
+As atualizações datadas abaixo preservam o histórico do planejamento.
+
 Atualização de 18/11/2026: [backend Mercado Pago](MercadoPago.md) implementado com OAuth, Checkout Pro, webhook assinado e reconciliação. Desabilitado por padrão; faltam URLs/segredos, frontend e homologação real em sandbox. Os registros anteriores abaixo devem ser lidos como histórico.
 
 Atualização de 16/11/2026 na #93: implementada a [fundação de conexões e tentativas de pagamento](PreparacaoPagamentos.md), com tokens protegidos, snapshot financeiro, IDs separados e recuperação de criação interrompida. O adapter ativo continua manual; OAuth, webhooks e adapters reais permanecem pendentes. As tabelas abaixo descrevem a base anterior e devem ser lidas junto dessa atualização.
@@ -14,22 +20,27 @@ O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisit
 | --- | --- | --- |
 | Venda Store | Checkout idempotente, totais do servidor, compromisso de estoque/cupom, numeração e histórico. | Ligar pagamento e frete reais preservando essas invariantes. |
 | Pagamento | Seleção por loja, adapter Mercado Pago, OAuth, webhook assinado e consulta/reconciliação; modo manual preservado. | Configuração do ambiente, frontend e homologação em sandbox. |
+| Contratação SaaS | Assinatura mensal, upgrade, downgrade, sete dias de carência, concessão confirmada e reconciliação. | Configuração da conta da plataforma, frontend e homologação externa da recorrência. |
 | Reembolso | Intenção persistida, I/O fora do lock, adapter de estorno integral e recuperação por consulta. | Homologação no provedor e fluxo operacional de parcial/contestação. |
 | Frete | Dimensões/peso por produto e sobrescritas por SKU; Shipment com dados de envio. | Cotar, selecionar, congelar custo, comprar/gerar/imprimir etiqueta e rastrear pelo Melhor Envio. ShippingCost permanece zero no cálculo atual. |
 | Fiscal | Entidade Invoice e referências comerciais. | Emitente/perfil fiscal, transmissão, autorização, XML/DANFE, consulta e cancelamento. |
-| Drop | Evento, inscrição, entrada na fila e consultas privadas. | Admissão, reserva no estoque canônico, correlação com venda Store e recuperação entre bancos. |
+| Drop | Catálogo próprio, admissão, CPF/evento, reserva por variação, estoque exclusivo, pedido próprio e ponte financeira Store com recuperação. | Frontend, homologação externa, operação de revisão financeira e capacidade sob carga. |
 
 Fontes internas: [checkout/pedidos](../Store/Application/OrdersAndCheckout.md), [endpoints](../Store/Api/Endpoints.md), [estoque](../Store/Application/ProductsAndInventory.md), [Store/Drop](../Drop/Infrastructure/StoreIntegration.md).
 
 ## Decisões do recorte
 
 - A loja cliente deve receber a venda na própria conta; configuração, credencial e IDs externos precisam distinguir loja e ambiente.
-- A implementação inicial de pagamento deve priorizar o caminho completo de uma venda, confirmação e estorno integral. Não ampliar para cobrança de assinatura ou divisão financeira complexa do SaaS agora.
-- O Store continua dono do estoque por SKU e de seu pedido financeiro. A venda originada no Drop precisa de correlação que impeça duas cobranças, duas notas ou duas baixas.
+- A assinatura SaaS foi aprovada e implementada em fluxo separado das vendas dos lojistas. A investigação de estorno foi adiada; divisão financeira complexa continua fora do MVP.
+- Estoque fica sob controle exclusivo de um módulo. Após transferência comprovada, o DROP controla seu saldo/pedido e usa uma intenção financeira separada no Store; não cria outro pedido Store ou outra baixa.
 - Homologação de pagamento/frete/fiscal não representa dinheiro liquidado, postagem real ou documento fiscal válido em produção.
 - CRM e ERP completos ficam fora do MVP; manter contratos internos claros não exige contratar esses sistemas agora.
 
-## Mercado Pago — entrega mínima pendente
+## Mercado Pago — base implementada e homologação pendente
+
+Os itens de infraestrutura abaixo já possuem implementação descrita em [Mercado Pago](MercadoPago.md)
+e [planos/assinaturas](PlanosEContratos.md). Conferir configuração e homologação conforme o
+ambiente; não executar novamente o planejamento como se não houvesse adapter ou webhook.
 
 1. Definir aplicação, ambiente, conexão autorizada da conta de cada vendedor e guarda/renovação de credenciais no backend.
 2. Implementar adapter atrás de IPaymentGateway, com tentativa persistida, referência do pedido e IDs externos separados conforme o produto/API escolhido.

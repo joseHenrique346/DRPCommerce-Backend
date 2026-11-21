@@ -74,7 +74,8 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         {
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions
             {
-                EnvironmentName = Environments.Development
+                EnvironmentName = Environments.Development,
+                ApplicationName = typeof(EnterpriseContractController).Assembly.GetName().Name
             });
             builder.Logging.ClearProviders();
             builder.WebHost.UseTestServer();
@@ -207,6 +208,11 @@ public sealed class ContractsApiFixture : IAsyncLifetime
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         return client;
+    }
+
+    internal HttpMessageHandler CreateHandler()
+    {
+        return app!.GetTestServer().CreateHandler();
     }
 
     public async Task<StoreActor> CreateStoreAsync(long planId = 1, long? addOnId = null, int activeProducts = 0, int inactiveProducts = 0)

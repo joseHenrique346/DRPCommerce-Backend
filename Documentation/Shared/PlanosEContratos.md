@@ -1,4 +1,4 @@
-# Planos e contratos por loja — Partes 1 a 4
+# Planos e contratos por loja — Partes 1 a 7
 
 A Parte 1 entrega o catálogo comercial, o contrato efetivo por loja, a revisão de direitos,
 a leitura do consumo local e a solicitação de mudança. Não cria cobranças, recorrência,
@@ -11,6 +11,9 @@ A Parte 4 aplica catálogo de temas e personalização por plano, fallback públ
 armazenados no Store, compartilhados com o DROP por API autenticada.
 A Parte 5 acrescenta assinatura mensal automática, faturas, confirmação financeira,
 trocas de oferta e carência. A homologação externa dessa cobrança permanece pendente.
+A Parte 6 aplica catálogo, cotas, fila, reservas, estoque e pagamentos ao DROP.
+A Parte 7 valida as duas APIs integradas e entrega o roteiro automatizado da demonstração,
+com provedores simulados e bancos descartáveis.
 
 A base foi portada de `feat/90-EstudoDeValorUsuarioSeparacaoContrato` para a branch de integração.
 Não houve merge completo da branch antiga: os fluxos atuais de pagamento foram preservados,
@@ -641,6 +644,12 @@ Detalhamento de rotas, configuração privada, migrations e limites operacionais
 [Fluxo comercial DROP](../Drop/Application/FluxoComercial.md).
 
 ## Próximos passos
+
+O [roteiro de validação e demonstração do TCC](ValidacaoComercialTcc.md) descreve o script
+`scripts/Test-CommercialFlow.ps1`, os três cenários integrados, os relatórios e os passos de
+implantação. A Parte 6 está no commit local `0b02bb6`, sem push; a Parte 7 fica sem commit.
+Validação da Parte 7 em 21/11/2026: 174 testes aprovados sem ignorados, build sem erros e
+modo Demo validado isoladamente. Não houve homologação externa ou cobrança real.
 
 Produtos e histórico Store estão protegidos na Parte 2; equipe e domínio, na Parte 3.
 Temas, personalização e logos estão protegidos no backend na Parte 4. A Parte 5 acrescenta

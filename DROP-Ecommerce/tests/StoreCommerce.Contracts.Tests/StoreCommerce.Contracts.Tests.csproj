@@ -13,6 +13,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.13" />
     <ProjectReference Include="../../src/Store/StoreCommerce.Api/StoreCommerce.Api.csproj" />
+    <ProjectReference Include="../../src/Drop/DropCommerce.Api/DropCommerce.Api.csproj" />
     <ProjectReference Include="../../DropCommerce.Infrastructure.Data/DropCommerce.Infrastructure.Data.csproj" />
   </ItemGroup>
 </Project>

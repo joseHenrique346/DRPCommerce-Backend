@@ -36,6 +36,7 @@ internal sealed class DropAppearanceTestScope : IAsyncDisposable
     private bool created;
     public IServiceProvider Services => scope!.ServiceProvider;
     public IMediator Mediator => Services.GetRequiredService<IMediator>();
+    internal string DatabaseConnectionString { get; private set; } = string.Empty;
 
     public async Task InitializeAsync(ContractsApiFixture store, StoreActor owner, TimeProvider? clock = null, int capacity = 20)
     {
@@ -56,6 +57,7 @@ internal sealed class DropAppearanceTestScope : IAsyncDisposable
         }
 
         connection.Database = databaseName;
+        DatabaseConnectionString = connection.ConnectionString;
         using var storeScope = store.Services.CreateScope();
         var options = storeScope.ServiceProvider.GetRequiredService<IOptions<SecurityOptions>>().Value;
         var principal = storeScope.ServiceProvider.GetRequiredService<JwtSessionService>().ValidateSignature(await store.FreshTokenAsync(owner));

@@ -1,5 +1,28 @@
 # Scripts
 
+## Validação comercial e demonstração do TCC
+
+`Test-CommercialFlow.ps1` compila a solução e executa a validação integrada das Partes 1–7.
+Requer SDK .NET 9 ou superior e PostgreSQL local com permissão para criar/remover bancos.
+Não inicia Store/DROP em portas públicas, não liga ngrok e não usa pagamentos reais.
+
+```powershell
+# Usa somente o servidor PostgreSQL da configuração privada local; o banco informado não é migrado.
+./scripts/Test-CommercialFlow.ps1 -Mode Full -UseLocalDevelopmentServer
+
+# Três cenários de demonstração com os passos apresentados no console.
+./scripts/Test-CommercialFlow.ps1 -Mode Demo -UseLocalDevelopmentServer
+```
+
+Como alternativa, configure `DRP_CONTRACTS_TEST_POSTGRES` por canal privado e omita
+`-UseLocalDevelopmentServer`. Apenas localhost/127.0.0.1/::1 são aceitos. Não envie a
+connection string na conversa nem a versione. `-NoRestore` usa as dependências já restauradas.
+
+Cada execução grava `build.log`, `tests.log`, `commercial.trx`, `report.json` e
+`demo-steps.txt` em `artifacts/commercial-validation/`, ignorado pelo Git. Testes ignorados,
+falhas ou uma seleção incompleta fazem o script falhar. Consulte
+[validação e demonstração comercial](../Documentation/Shared/ValidacaoComercialTcc.md).
+
 ## Backend local para o front
 
 `publicar-backend-local.bat` publica Store, Drop e Gateway em `artifacts/backend-local/`. O pacote gerado roda em Windows x64 sem Visual Studio e sem .NET instalado.

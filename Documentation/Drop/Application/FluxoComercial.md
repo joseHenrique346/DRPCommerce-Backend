@@ -1,7 +1,7 @@
 # DROP: catálogo, fila, estoque e venda
 
-Parte 6, revisada em 21/11/2026 na branch de integração. A Parte 5 foi commitada
-localmente em `1a85fc1`, sem push. Esta etapa deve permanecer sem commit até revisão.
+Parte 6, revisada em 21/11/2026 na branch de integração e commitada localmente em `0b02bb6`,
+sem push, antes da Parte 7 de validação. A Parte 5 está no commit local `1a85fc1`.
 
 ## Responsabilidade dos serviços
 
@@ -193,3 +193,6 @@ proteção distribuída contra abuso e medição de capacidade. O checkout DROP 
 zero; não representa cotação ou etiqueta de envio. O catálogo próprio oferece saldo inicial;
 reposição/edição avançada de inventário ainda precisa de workflow específico, sem alterar
 diretamente os saldos por CRUD.
+
+A Parte 7 acrescenta [validação integrada e roteiro do TCC](../../Shared/ValidacaoComercialTcc.md),
+com autenticação real entre as duas APIs, execução automatizada e relatórios fora do Git.
