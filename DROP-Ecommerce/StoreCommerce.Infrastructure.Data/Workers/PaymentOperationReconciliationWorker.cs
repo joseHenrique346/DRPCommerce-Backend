@@ -5,8 +5,7 @@ using StoreCommerce.Application.Payments;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 
-public sealed class PaymentOperationReconciliationWorker(IServiceScopeFactory scopes, TimeProvider time,
-    ILogger<PaymentOperationReconciliationWorker> logger) : BackgroundService
+public sealed class PaymentOperationReconciliationWorker(IServiceScopeFactory scopes, TimeProvider time, ILogger<PaymentOperationReconciliationWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

@@ -5,8 +5,7 @@ using SharedCommerce.Domain.Exceptions;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class DeactivateCustomerAccountCommandHandler(IdentityHandlerContext context, IAccountDeletionStore deletion,
-    IProductRepository products) : IdentityHandlerBase<DeactivateCustomerAccountCommand, bool>(context)
+public sealed class DeactivateCustomerAccountCommandHandler(IdentityHandlerContext context, IAccountDeletionStore deletion, IProductRepository products) : IdentityHandlerBase<DeactivateCustomerAccountCommand, bool>(context)
 {
     protected override async Task<bool> ExecuteAsync(DeactivateCustomerAccountCommand command, CancellationToken ct)
     {

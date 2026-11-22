@@ -647,7 +647,9 @@ Detalhamento de rotas, configuração privada, migrations e limites operacionais
 
 O [roteiro de validação e demonstração do TCC](ValidacaoComercialTcc.md) descreve o script
 `scripts/Test-CommercialFlow.ps1`, os três cenários integrados, os relatórios e os passos de
-implantação. A Parte 6 está no commit local `0b02bb6`, sem push; a Parte 7 fica sem commit.
+implantação. A Parte 6 está no commit local `0b02bb6`; a Parte 7 foi commitada localmente
+em `013fdbf`, sem push. A correção posterior de organização das Partes 5 e 6 está descrita
+em [Arquitetura dos fluxos comerciais](ArquiteturaComercial.md).
 Validação da Parte 7 em 21/11/2026: 174 testes aprovados sem ignorados, build sem erros e
 modo Demo validado isoladamente. Não houve homologação externa ou cobrança real.
 

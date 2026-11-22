@@ -1,5 +1,8 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
+using DropCommerce.Application.Contracts;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,7 +38,7 @@ public sealed class DropQueueExpirationWorker(IServiceScopeFactory scopes, ILogg
                     try
                     {
                         using var scope = scopes.CreateScope();
-                        await scope.ServiceProvider.GetRequiredService<DropQueueService>().TickAsync(drop.EnterpriseId, drop.DropEventId, stoppingToken);
+                        await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new AdmitDropQueueCommand(drop.EnterpriseId, drop.DropEventId), stoppingToken);
                     }
                     catch (Exception) when (!stoppingToken.IsCancellationRequested)
                     {

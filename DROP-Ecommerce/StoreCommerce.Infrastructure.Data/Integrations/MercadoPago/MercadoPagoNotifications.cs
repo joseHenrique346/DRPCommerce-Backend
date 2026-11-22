@@ -1,3 +1,6 @@
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Features.Commands;
+using MediatR;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -87,7 +90,7 @@ public sealed record MercadoPagoNotificationKey(long EnterpriseId, long Id);
 public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, IntegrationWriteScope scope,
     MercadoPagoSignature signature, MercadoPagoGateway gateway, IPaymentAttemptStore attempts,
     OrderLifecycleService lifecycle, IOptions<MercadoPagoOptions> options, TimeProvider time,
-    ILogger<MercadoPagoNotifications> logger, StoreCommerce.Infrastructure.Data.Payments.DropSalePaymentService dropPayments)
+    ILogger<MercadoPagoNotifications> logger, IMediator mediator)
 {
     public async Task ReceiveAsync(long connectionId, string paymentId, string requestId, string signatureHeader, CancellationToken ct)
     {
@@ -209,7 +212,7 @@ public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, Int
                     Intent.ExternalAccountId == connection.ExternalAccountId && Intent.Environment == connection.Environment, ct);
 
             if (drop is not null)
-                await dropPayments.ReconcileAsync(drop.EnterpriseId, drop.OperationId, ct);
+                await mediator.SendRequiredAsync(new ReconcileDropSalePaymentCommand(drop.EnterpriseId, drop.OperationId), ct);
 
             return;
         }

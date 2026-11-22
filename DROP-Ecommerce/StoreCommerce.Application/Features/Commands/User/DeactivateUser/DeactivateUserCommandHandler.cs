@@ -4,8 +4,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class DeactivateUserCommandHandler(IdentityHandlerContext context, IAccountDeletionStore deletion)
-    : IdentityHandlerBase<DeactivateUserCommand, bool>(context)
+public sealed class DeactivateUserCommandHandler(IdentityHandlerContext context, IAccountDeletionStore deletion) : IdentityHandlerBase<DeactivateUserCommand, bool>(context)
 {
     protected override async Task<bool> ExecuteAsync(DeactivateUserCommand command, CancellationToken ct)
     {

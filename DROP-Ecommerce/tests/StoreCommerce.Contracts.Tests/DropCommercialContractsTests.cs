@@ -1,9 +1,11 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
 using System.Net;
 using System.Net.Http.Json;
 using DropCommerce.Application.Contracts;
 using DropCommerce.Domain.Entity;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SharedCommerce.Application.Contracts.Drop;
@@ -25,8 +27,8 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         var owner = await store.CreateStoreAsync(planId: 5);
         await using var drop = new DropAppearanceTestScope();
         await drop.InitializeAsync(store, owner);
-        var catalog = drop.Services.GetRequiredService<DropCatalogService>();
-        var product = await catalog.CreateAsync(Product("own"), default);
+        var catalog = drop.Services.GetRequiredService<IMediator>();
+        var product = await catalog.SendRequiredAsync(new CreateDropCatalogProductCommand(Product("own")), default);
         Assert.Null(product.StoreProductId);
         Assert.Equal(2, product.Variants.Count);
         Assert.Equal(10, product.Variants.Sum(Variant => Variant.QuantityOnHand));
@@ -36,12 +38,12 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         Assert.Equal(1, await db.Set<DropCatalogProduct>().CountAsync());
         var first = await EventAsync(drop, owner);
         var second = await EventAsync(drop, owner);
-        await catalog.AssociateAsync(product.Id, new(first.Id, 10), default);
-        await catalog.AssociateAsync(product.Id, new(second.Id, 10), default);
+        await catalog.SendRequiredAsync(new AssociateDropCatalogProductCommand(product.Id, new(first.Id, 10)), default);
+        await catalog.SendRequiredAsync(new AssociateDropCatalogProductCommand(product.Id, new(second.Id, 10)), default);
         Publish(first);
         Publish(second);
         await db.SaveChangesAsync();
-        var usage = System.Text.Json.JsonSerializer.SerializeToElement(await catalog.GetUsageAsync(default));
+        var usage = System.Text.Json.JsonSerializer.SerializeToElement(await catalog.SendRequiredAsync(new GetDropCatalogUsageQuery(), default), System.Text.Json.JsonSerializerOptions.Web);
         Assert.Equal(2, usage.GetProperty("publishedPrincipalEvents").GetInt32());
         Assert.Equal(10, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
         Assert.False(db.Database.HasPendingModelChanges());
@@ -53,10 +55,10 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         var owner = await store.CreateStoreAsync(planId: 3);
         await using var drop = new DropAppearanceTestScope();
         await drop.InitializeAsync(store, owner);
-        var catalog = drop.Services.GetRequiredService<DropCatalogService>();
-        var product = await catalog.CreateAsync(Product("blocked"), default);
+        var catalog = drop.Services.GetRequiredService<IMediator>();
+        var product = await catalog.SendRequiredAsync(new CreateDropCatalogProductCommand(Product("blocked")), default);
         var dropEvent = await EventAsync(drop, owner);
-        var participation = await catalog.AssociateAsync(product.Id, new(dropEvent.Id, 100), default);
+        var participation = await catalog.SendRequiredAsync(new AssociateDropCatalogProductCommand(product.Id, new(dropEvent.Id, 100)), default);
         Publish(dropEvent);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
         await db.SaveChangesAsync();
@@ -65,13 +67,13 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         Assert.True(participation.IsContractBlocked);
         Assert.True(product.IsContractBlocked);
         Assert.True(participation.IsActive);
-        var failure = await Assert.ThrowsAsync<SecurityFailure>(() => catalog.CreateAsync(Product("forbidden"), default));
+        var failure = await Assert.ThrowsAsync<SecurityFailure>(() => catalog.SendRequiredAsync(new CreateDropCatalogProductCommand(Product("forbidden")), default));
         Assert.Equal("DropContract.ModuleRequired", failure.Code);
         db.ChangeTracker.Clear();
         await store.ChangeContractAsync(owner.EnterpriseId, 3, null);
         var rights = await db.RefreshCommercialRightsAsync(owner.EnterpriseId, default);
         Assert.True((await db.DropProducts.SingleAsync(Product => Product.Id == participation.Id)).IsContractBlocked);
-        await catalog.ReactivationAsync(new(rights.ContractRevision, "selected", [participation.Id]), true, default);
+        await catalog.SendRequiredAsync(new ReactivateDropParticipationsCommand(new(rights.ContractRevision, "selected", [participation.Id])), default);
         Assert.False((await db.DropProducts.SingleAsync(Product => Product.Id == participation.Id)).IsContractBlocked);
         Assert.Equal(10, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
         Assert.Contains(await db.Set<DropCommercialActivity>().ToListAsync(), Activity => Activity.Action == "participation_reactivated");
@@ -119,7 +121,7 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
 
             try
             {
-                await scope.ServiceProvider.GetRequiredService<DropCatalogService>().CreateAsync(Product(sku), default);
+                await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new CreateDropCatalogProductCommand(Product(sku)), default);
 
                 return true;
             }
@@ -140,15 +142,15 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         var owner = await store.CreateStoreAsync(planId: 5);
         await using var drop = new DropAppearanceTestScope();
         await drop.InitializeAsync(store, owner);
-        var catalog = drop.Services.GetRequiredService<DropCatalogService>();
-        var product = await catalog.CreateAsync(Product("draft"), default);
+        var catalog = drop.Services.GetRequiredService<IMediator>();
+        var product = await catalog.SendRequiredAsync(new CreateDropCatalogProductCommand(Product("draft")), default);
         await store.ChangeContractAsync(owner.EnterpriseId, 2, null);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
         await db.RefreshCommercialRightsAsync(owner.EnterpriseId, default);
         Assert.True(product.IsContractBlocked);
         await store.ChangeContractAsync(owner.EnterpriseId, 5, null);
         var rights = await db.RefreshCommercialRightsAsync(owner.EnterpriseId, default);
-        await catalog.ReactivateCatalogAsync(product.Id, rights.ContractRevision, default);
+        await catalog.SendRequiredAsync(new ReactivateDropCatalogProductCommand(product.Id, rights.ContractRevision), default);
         Assert.False((await db.Set<DropCatalogProduct>().SingleAsync()).IsContractBlocked);
         Assert.Equal(10, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
     }
@@ -169,8 +171,8 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         await store.ChangeContractAsync(owner.EnterpriseId, 2, null);
         await using var drop = new DropAppearanceTestScope();
         await drop.InitializeAsync(store, owner);
-        var saga = drop.Services.GetRequiredService<DropStockSagaService>();
-        var rejected = await saga.ImportAsync(export, default);
+        var saga = drop.Services.GetRequiredService<IMediator>();
+        var rejected = await saga.SendRequiredAsync(new ImportDropStockCommand(export), default);
         Assert.False(rejected.Accepted);
         var options = store.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions>>().Value;
         using var service = store.Client();
@@ -182,7 +184,7 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         using var repeated = await service.PostAsJsonAsync("/api/internal/drop-stock-transfers/return", returned);
         repeated.EnsureSuccessStatusCode();
         await store.ChangeContractAsync(owner.EnterpriseId, 3, null);
-        Assert.False((await saga.ImportAsync(export, default)).Accepted);
+        Assert.False((await saga.SendRequiredAsync(new ImportDropStockCommand(export), default)).Accepted);
         Assert.Equal(4, await SourceStockAsync(owner, productId));
         Assert.Equal(0, await drop.Services.GetRequiredService<DropCommerceDbContext>().Set<DropCatalogVariant>().CountAsync());
         using var anonymous = store.Client();
@@ -206,13 +208,13 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         Assert.Equal(0, await SourceStockAsync(owner, productId));
         await using var drop = new DropAppearanceTestScope();
         await drop.InitializeAsync(store, owner);
-        var saga = drop.Services.GetRequiredService<DropStockSagaService>();
-        var receipt = await saga.ImportAsync(export!, default);
+        var saga = drop.Services.GetRequiredService<IMediator>();
+        var receipt = await saga.SendRequiredAsync(new ImportDropStockCommand(export!), default);
         Assert.True(receipt.Accepted);
         Assert.Equal(8, await drop.Services.GetRequiredService<DropCommerceDbContext>().Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
-        await saga.ImportAsync(export!, default);
+        await saga.SendRequiredAsync(new ImportDropStockCommand(export!), default);
         Assert.Equal(8, await drop.Services.GetRequiredService<DropCommerceDbContext>().Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
-        var intent = await saga.ReturnAsync(receipt.CatalogProductId!.Value, default);
+        var intent = await saga.SendRequiredAsync(new ReturnDropCatalogStockCommand(receipt.CatalogProductId!.Value), default);
         Assert.Equal(0, await drop.Services.GetRequiredService<DropCommerceDbContext>().Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
         var returned = System.Text.Json.JsonSerializer.Deserialize<DropStockReturn>(intent.SnapshotJson)!;
         var options = store.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions>>().Value;
@@ -223,7 +225,7 @@ public sealed class DropCommercialContractsTests(ContractsApiFixture store)
         Assert.True(imported.IsSuccessStatusCode, await imported.Content.ReadAsStringAsync());
         using var duplicate = await service.PostAsJsonAsync("/api/internal/drop-stock-transfers/return", returned);
         duplicate.EnsureSuccessStatusCode();
-        await saga.CompleteReturnAsync(owner.EnterpriseId, returned.OperationId, default);
+        await saga.SendRequiredAsync(new CompleteDropStockReturnCommand(owner.EnterpriseId, returned.OperationId), default);
         Assert.Equal(8, await SourceStockAsync(owner, productId));
         Assert.Equal(0, await drop.Services.GetRequiredService<DropCommerceDbContext>().Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
     }

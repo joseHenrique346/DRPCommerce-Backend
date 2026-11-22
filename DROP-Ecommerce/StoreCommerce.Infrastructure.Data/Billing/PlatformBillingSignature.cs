@@ -1,9 +1,10 @@
+using StoreCommerce.Application.Billing;
 using Microsoft.Extensions.Options;
 using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 namespace StoreCommerce.Infrastructure.Data.Billing;
 
-public sealed class PlatformBillingSignature(IOptions<PlatformBillingOptions> options, TimeProvider time)
+public sealed class PlatformBillingSignature(IOptions<PlatformBillingOptions> options, TimeProvider time) : IPlatformBillingSignature
 {
     public string Verify(string paymentId, string requestId, string signature)
     {

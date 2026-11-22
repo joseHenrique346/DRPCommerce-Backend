@@ -1,3 +1,5 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
 using System.Globalization;
 using System.Text.Json;
 using DropCommerce.Application;
@@ -8,7 +10,6 @@ using DropCommerce.Infrastructure.Data;
 using DropCommerce.Infrastructure.Data.Context;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Readers;
-using DropCommerce.Infrastructure.Data.Contracts;
 using DropCommerce.Application.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -88,8 +89,7 @@ internal sealed class DropAppearanceTestScope : IAsyncDisposable
                 Options.PurchaseIdentityKey = "test-only-not-a-production-secret-123456789";
                 Options.ConcurrentBuyersPerEvent = capacity;
             });
-            services.AddScoped<DropQueueService>(Services => ActivatorUtilities.CreateInstance<DropQueueService>(Services, clock));
-            services.AddScoped<DropCheckoutService>(Services => ActivatorUtilities.CreateInstance<DropCheckoutService>(Services, clock));
+            services.UseHandlerClock(clock, typeof(DropCommerce.Application.DependencyInjection).Assembly);
         }
 
         provider = services.BuildServiceProvider();

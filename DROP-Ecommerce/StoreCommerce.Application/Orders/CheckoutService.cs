@@ -15,28 +15,7 @@ namespace StoreCommerce.Application.Orders;
 /// A intenção de pagamento é persistida junto do pedido. A chamada externa ocorre depois do commit;
 /// repetição ou interrupção recupera a mesma tentativa sem repetir uma criação de resultado desconhecido.
 /// </summary>
-public sealed class CheckoutService(
-    IOrderRepository orders,
-    IRepository<Transaction> transactions,
-    ICartRepository carts,
-    ICustomerAddressRepository addresses,
-    ICustomerRepository customers,
-    ICouponRepository coupons,
-    IRepository<CouponRedemption> redemptions,
-    IInventoryRepository inventory,
-    IProductRepository products,
-    CouponEligibilityService eligibility,
-    CategoryCatalogReader categoryReader,
-    StoreSettingsReader storeSettings,
-    OrderLifecycleService lifecycle,
-    IPaymentGatewayRegistry gateways,
-    IPaymentAttemptStore paymentAttempts,
-    PaymentAttemptService paymentAttemptService,
-    OrderWorkflowScope scope,
-    IUnitOfWork unitOfWork,
-    ICurrentIdentity actor,
-    ITenantProvider tenantProvider,
-    TimeProvider time)
+public sealed class CheckoutService(IOrderRepository orders, IRepository<Transaction> transactions, ICartRepository carts, ICustomerAddressRepository addresses, ICustomerRepository customers, ICouponRepository coupons, IRepository<CouponRedemption> redemptions, IInventoryRepository inventory, IProductRepository products, CouponEligibilityService eligibility, CategoryCatalogReader categoryReader, StoreSettingsReader storeSettings, OrderLifecycleService lifecycle, IPaymentGatewayRegistry gateways, IPaymentAttemptStore paymentAttempts, PaymentAttemptService paymentAttemptService, OrderWorkflowScope scope, IUnitOfWork unitOfWork, ICurrentIdentity actor, ITenantProvider tenantProvider, TimeProvider time)
 {
     public async Task<OrderDetailResponse> PlaceOrderAsync(CheckoutRequest request, CancellationToken ct)
     {

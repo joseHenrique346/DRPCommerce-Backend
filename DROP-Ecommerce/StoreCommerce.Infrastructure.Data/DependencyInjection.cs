@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Billing;
 using SharedCommerce.Infrastructure.Data;
 using SharedCommerce.Infrastructure.Data.Repositories;
 using SharedCommerce.Infrastructure.Data.Context;
@@ -52,10 +53,8 @@ public static class DependencyInjection
         services.AddScoped<StoreCommerce.Application.Contracts.EnterpriseContractWriteScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.DropStockTransferScope>();
-        services.AddScoped<Contracts.DropStockTransferService>();
         services.AddScoped<DropSalePaymentWriteScope>();
         services.AddScoped<IDropSaleGateway, MercadoPagoDropSaleGateway>();
-        services.AddScoped<Payments.DropSalePaymentService>();
         services.AddHostedService<Workers.DropSalePaymentReconciliationWorker>();
         services.AddScoped<StoreCommerce.Application.Contracts.OwnershipTransferWriteScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.ProductReactivationScope>();
@@ -112,17 +111,17 @@ public static class DependencyInjection
             Client.Timeout = TimeSpan.FromSeconds(30);
         });
         services.AddScoped<MercadoPagoApi>();
-        services.AddOptions<Billing.PlatformBillingOptions>();
+        services.AddOptions<PlatformBillingOptions>();
 
         if (configuration is not null)
-            services.Configure<Billing.PlatformBillingOptions>(configuration.GetSection("PlatformBilling"));
+            services.Configure<PlatformBillingOptions>(configuration.GetSection("PlatformBilling"));
 
         services.AddScoped<StoreCommerce.Application.Billing.IPlatformBillingProvider, Billing.MercadoPagoPlatformBillingProvider>();
         services.AddScoped<Billing.PlatformBillingSignature>();
+        services.AddScoped<IPlatformBillingSignature>(Provider => Provider.GetRequiredService<Billing.PlatformBillingSignature>());
+        services.AddScoped<IPlatformBillingNotificationRepository, PlatformBillingNotificationRepository>();
         services.AddScoped<StoreCommerce.Application.Billing.PlatformBillingWriteScope>();
         services.AddScoped<StoreCommerce.Application.Billing.IPlatformSubscriptionProvider, Billing.MercadoPagoSubscriptionProvider>();
-        services.AddScoped<Billing.PlatformBillingService>();
-        services.AddScoped<Billing.PlatformBillingNotifications>();
         services.AddHostedService<Workers.PlatformBillingWorker>();
         services.AddScoped<MercadoPagoAccess>();
         services.AddScoped<MercadoPagoGateway>();
@@ -152,6 +151,14 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IAccessRolePermissionRepository, AccessRolePermissionRepository>();
         services.AddScoped<IMembershipAccessRoleRepository, MembershipAccessRoleRepository>();
+
+        services.AddScoped<StoreCommerce.Application.Contracts.IDropStockTransferRepository, DropStockTransferRepository>();
+
+        services.AddScoped<StoreCommerce.Application.Payments.IDropSalePaymentRepository, DropSalePaymentRepository>();
+
+        services.AddScoped<StoreCommerce.Application.Billing.IPlatformBillingRepository, PlatformBillingRepository>();
+
+        services.AddScoped<StoreCommerce.Application.Contracts.IDropContractPublicationRepository, DropContractPublicationRepository>();
 
         return services;
     }

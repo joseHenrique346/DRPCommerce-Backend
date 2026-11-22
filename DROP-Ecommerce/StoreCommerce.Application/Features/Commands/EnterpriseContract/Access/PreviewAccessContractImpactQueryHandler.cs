@@ -1,3 +1,5 @@
+using StoreCommerce.Application.Result;
+using MediatR;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Contracts;
 using StoreCommerce.Application.Identity;
@@ -7,7 +9,7 @@ using StoreCommerce.Domain.StaticEntity;
 namespace StoreCommerce.Application.Features.Commands;
 
 public sealed class PreviewAccessContractImpactQueryHandler(
-    IdentityHandlerContext context, IEnterpriseAccessReader reader, AccessContractPolicyService policy)
+    IdentityHandlerContext context, IEnterpriseAccessReader reader, IMediator mediator)
     : EnterpriseContractHandlerBase<PreviewAccessContractImpactQuery, AccessContractImpactResponse>(context)
 {
     protected override async Task<AccessContractImpactResponse> ExecuteAsync(PreviewAccessContractImpactQuery command, CancellationToken ct)
@@ -26,8 +28,8 @@ public sealed class PreviewAccessContractImpactQueryHandler(
         if (state.Revision != request.ExpectedContractRevision)
             throw new SecurityFailure(409, "Contract.RevisionChanged", "O contrato mudou. Atualize a consulta.");
 
-        var selection = await policy.ValidateSelectionAsync(actor.EnterpriseId, request.PlanId, request.AddOnId,
-            request.RetainedMembershipIds, false, ct);
+        var selection = await mediator.SendRequiredAsync(new ValidateEnterpriseTeamSelectionQuery(actor.EnterpriseId, request.PlanId, request.AddOnId,
+            request.RetainedMembershipIds, false), ct);
         var members = await reader.MembersAsync(actor.EnterpriseId, ct);
         var active = TeamContractPolicy.ActiveAdditional(members);
         var domains = await reader.DomainsAsync(actor.EnterpriseId, ct);

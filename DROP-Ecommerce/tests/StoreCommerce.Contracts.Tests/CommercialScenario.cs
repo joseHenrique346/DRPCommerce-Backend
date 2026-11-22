@@ -1,9 +1,15 @@
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Features.Commands;
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
+using DropCommerce.Application.Contracts;
+using StoreCommerce.Application.Contracts;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using DropCommerce.Api.Controllers;
-using DropCommerce.Infrastructure.Data.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -56,8 +62,7 @@ internal sealed class CommercialScenario : IAsyncDisposable
                 Services.AddSingleton<IPlatformSubscriptionProvider>(Billing);
                 Services.AddSingleton<IPlatformBillingProvider>(Billing);
                 Services.AddSingleton<IDropSaleGateway>(Sales);
-                Services.AddScoped(Provider => ActivatorUtilities.CreateInstance<PlatformBillingService>(Provider, Clock));
-                Services.AddScoped(Provider => ActivatorUtilities.CreateInstance<DropSalePaymentService>(Provider, Clock));
+                Services.UseHandlerClock(Clock, typeof(StoreCommerce.Application.DependencyInjection).Assembly);
             }
         };
     }
@@ -107,8 +112,7 @@ internal sealed class CommercialScenario : IAsyncDisposable
         builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
         builder.Services.ConfigureAll<HttpClientFactoryOptions>(Options =>
             Options.HttpMessageHandlerBuilderActions.Add(Handler => Handler.PrimaryHandler = Store.CreateHandler()));
-        builder.Services.AddScoped(Provider => ActivatorUtilities.CreateInstance<DropQueueService>(Provider, Clock));
-        builder.Services.AddScoped(Provider => ActivatorUtilities.CreateInstance<DropCheckoutService>(Provider, Clock));
+        builder.Services.UseHandlerClock(Clock, typeof(DropCommerce.Application.DependencyInjection).Assembly);
 
         foreach (var service in builder.Services.Where(Service => Service.ServiceType == typeof(IHostedService) &&
             Service.ImplementationType?.Namespace?.StartsWith("DropCommerce.", StringComparison.Ordinal) == true).ToArray())

@@ -23,9 +23,7 @@ public sealed class ProviderTokens(string accessToken, string? refreshToken, Dat
     }
 }
 
-public sealed record ProviderConnectionInfo(long Id, string Provider, IntegrationEnvironment Environment,
-    string ExternalAccountId, string Scopes, bool IsConnected, DateTime AccessTokenExpiresAt,
-    DateTime? RefreshTokenExpiresAt, DateTime ConnectedAt, DateTime? DisconnectedAt);
+public sealed record ProviderConnectionInfo(long Id, string Provider, IntegrationEnvironment Environment, string ExternalAccountId, string Scopes, bool IsConnected, DateTime AccessTokenExpiresAt, DateTime? RefreshTokenExpiresAt, DateTime ConnectedAt, DateTime? DisconnectedAt);
 
 public interface IProviderTokenProtector
 {
@@ -60,8 +58,7 @@ public sealed class ProviderConnectionService(IProviderConnectionStore store, IP
     /// Ponto de entrada do callback OAuth futuro, após validar state/PKCE e consultar a identidade da conta no provedor.
     /// Não é exposto por HTTP nesta preparação.
     /// </summary>
-    public async Task SaveAuthorizedAsync(long enterpriseId, string provider, IntegrationEnvironment environment,
-        string verifiedAccountId, string scopes, ProviderTokens tokens, long authorizedByUserId, CancellationToken ct)
+    public async Task SaveAuthorizedAsync(long enterpriseId, string provider, IntegrationEnvironment environment, string verifiedAccountId, string scopes, ProviderTokens tokens, long authorizedByUserId, CancellationToken ct)
     {
         IntegrationProviders.Validate(provider, environment);
         ValidateTokens(tokens);
@@ -83,8 +80,7 @@ public sealed class ProviderConnectionService(IProviderConnectionStore store, IP
         await store.SaveAuthorizationAsync(connection, ct);
     }
 
-    public async Task<ProviderTokens> GetTokensAsync(long enterpriseId, string provider, IntegrationEnvironment environment,
-        CancellationToken ct)
+    public async Task<ProviderTokens> GetTokensAsync(long enterpriseId, string provider, IntegrationEnvironment environment, CancellationToken ct)
     {
         IntegrationProviders.Validate(provider, environment);
         var connection = await store.GetAsync(enterpriseId, provider, environment, ct);

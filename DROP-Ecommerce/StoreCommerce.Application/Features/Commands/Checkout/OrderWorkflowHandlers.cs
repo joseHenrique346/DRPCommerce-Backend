@@ -40,8 +40,7 @@ public sealed class PlaceOrderCommandHandler(CheckoutService checkout) : Workflo
     protected override Task<OrderDetailResponse> ExecuteAsync(PlaceOrderCommand request, CancellationToken ct) => checkout.PlaceOrderAsync(request.Request, ct);
 }
 
-public sealed class GetMyOrdersQueryHandler(IOrderRepository orders, ICurrentIdentity actor)
-    : WorkflowRequestHandler<GetMyOrdersQuery, PagedResponse<OrderSummaryResponse>>
+public sealed class GetMyOrdersQueryHandler(IOrderRepository orders, ICurrentIdentity actor)    : WorkflowRequestHandler<GetMyOrdersQuery, PagedResponse<OrderSummaryResponse>>
 {
     protected override async Task<PagedResponse<OrderSummaryResponse>> ExecuteAsync(GetMyOrdersQuery request, CancellationToken ct)
     {
@@ -58,8 +57,7 @@ public sealed class GetMyOrderQueryHandler(IOrderRepository orders, ICurrentIden
             ?? throw new SecurityFailure(404, "Order.NotFound", "Pedido não encontrado."), backoffice: false);
 }
 
-public sealed class CancelMyOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
-    : WorkflowRequestHandler<CancelMyOrderCommand, OrderDetailResponse>
+public sealed class CancelMyOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<CancelMyOrderCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(CancelMyOrderCommand request, CancellationToken ct)
     {
@@ -78,8 +76,7 @@ public sealed class GetOrderDetailQueryHandler(IOrderRepository orders) : Workfl
             ?? throw new SecurityFailure(404, "Order.NotFound", "Pedido não encontrado."), backoffice: true);
 }
 
-public sealed class ConfirmOrderPaymentCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
-    : WorkflowRequestHandler<ConfirmOrderPaymentCommand, OrderDetailResponse>
+public sealed class ConfirmOrderPaymentCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<ConfirmOrderPaymentCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(ConfirmOrderPaymentCommand request, CancellationToken ct)
     {
@@ -90,8 +87,7 @@ public sealed class ConfirmOrderPaymentCommandHandler(OrderLifecycleService life
     }
 }
 
-public sealed class AdvanceOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
-    : WorkflowRequestHandler<AdvanceOrderCommand, OrderDetailResponse>
+public sealed class AdvanceOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<AdvanceOrderCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(AdvanceOrderCommand request, CancellationToken ct)
     {
@@ -101,8 +97,7 @@ public sealed class AdvanceOrderCommandHandler(OrderLifecycleService lifecycle, 
     }
 }
 
-public sealed class ShipOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
-    : WorkflowRequestHandler<ShipOrderCommand, OrderDetailResponse>
+public sealed class ShipOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<ShipOrderCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(ShipOrderCommand request, CancellationToken ct)
     {
@@ -120,8 +115,7 @@ public sealed class ShipOrderCommandHandler(OrderLifecycleService lifecycle, IOr
 /// <summary>
 /// Busca de pedidos do backoffice usando a identificação histórica do comprador, independente do cadastro atual.
 /// </summary>
-public sealed class SearchOrdersQueryHandler(IOrderRepository orders)
-    : WorkflowRequestHandler<SearchOrdersQuery, PagedResponse<OrderSearchItemResponse>>
+public sealed class SearchOrdersQueryHandler(IOrderRepository orders)    : WorkflowRequestHandler<SearchOrdersQuery, PagedResponse<OrderSearchItemResponse>>
 {
     protected override async Task<PagedResponse<OrderSearchItemResponse>> ExecuteAsync(SearchOrdersQuery request, CancellationToken ct)
     {
@@ -135,8 +129,7 @@ public sealed class SearchOrdersQueryHandler(IOrderRepository orders)
     }
 }
 
-public sealed class CancelOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)
-    : WorkflowRequestHandler<CancelOrderCommand, OrderDetailResponse>
+public sealed class CancelOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<CancelOrderCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(CancelOrderCommand request, CancellationToken ct)
     {
@@ -146,8 +139,7 @@ public sealed class CancelOrderCommandHandler(OrderLifecycleService lifecycle, I
     }
 }
 
-public sealed class ApplyPaymentResultCommandHandler(OrderLifecycleService lifecycle)
-    : WorkflowRequestHandler<ApplyPaymentResultCommand, OrderDetailResponse>
+public sealed class ApplyPaymentResultCommandHandler(OrderLifecycleService lifecycle)    : WorkflowRequestHandler<ApplyPaymentResultCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(ApplyPaymentResultCommand request, CancellationToken ct)
     {

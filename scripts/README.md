@@ -3,6 +3,9 @@
 ## Validação comercial e demonstração do TCC
 
 `Test-CommercialFlow.ps1` compila a solução e executa a validação integrada das Partes 1–7.
+É um auxiliar local ignorado pelo Git; os comandos abaixo dependem de ele existir na máquina.
+Os testes continuam versionados e também podem ser executados diretamente com `dotnet test`,
+conforme o roteiro de validação comercial.
 Requer SDK .NET 9 ou superior e PostgreSQL local com permissão para criar/remover bancos.
 Não inicia Store/DROP em portas públicas, não liga ngrok e não usa pagamentos reais.
 

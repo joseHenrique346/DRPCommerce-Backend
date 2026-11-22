@@ -1,3 +1,7 @@
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Payments;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -22,18 +26,18 @@ public sealed class DropSalePaymentReconciliationWorker(IServiceScopeFactory sco
             try
             {
                 using var discovery = scopes.CreateScope();
-                var due = await discovery.ServiceProvider.GetRequiredService<DropSalePaymentService>().DueAsync(stoppingToken);
+                var due = await discovery.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new ListDueDropSalePaymentsQuery(), stoppingToken);
 
                 foreach (var intent in due)
                 {
                     using var scope = scopes.CreateScope();
-                    var service = scope.ServiceProvider.GetRequiredService<DropSalePaymentService>();
+                    var service = scope.ServiceProvider.GetRequiredService<IMediator>();
                     using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
                     timeout.CancelAfter(TimeSpan.FromSeconds(60));
 
                     try
                     {
-                        await service.ReconcileAsync(intent.EnterpriseId, intent.OperationId, timeout.Token);
+                        await service.SendRequiredAsync(new ReconcileDropSalePaymentCommand(intent.EnterpriseId, intent.OperationId), timeout.Token);
                     }
                     catch (Exception) when (!stoppingToken.IsCancellationRequested)
                     {
@@ -42,7 +46,7 @@ public sealed class DropSalePaymentReconciliationWorker(IServiceScopeFactory sco
                     finally
                     {
                         using var persist = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                        await service.PostponeAsync(intent.EnterpriseId, intent.OperationId, persist.Token);
+                        await service.SendRequiredAsync(new PostponeDropSalePaymentCommand(intent.EnterpriseId, intent.OperationId), persist.Token);
                     }
                 }
             }

@@ -1,8 +1,11 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
+using DropCommerce.Application.Contracts;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Domain.Entity;
@@ -67,9 +70,9 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
 
         using (var scope = scenario.Drop.Services.CreateScope())
         {
-            var checkout = scope.ServiceProvider.GetRequiredService<DropCheckoutService>();
-            await checkout.ReconcileOrderAsync(scenario.Owner.EnterpriseId, orderId, default);
-            await checkout.ReconcileOrderAsync(scenario.Owner.EnterpriseId, orderId, default);
+            var checkout = scope.ServiceProvider.GetRequiredService<IMediator>();
+            await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(scenario.Owner.EnterpriseId, orderId), default);
+            await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(scenario.Owner.EnterpriseId, orderId), default);
         }
 
         var paid = await CommercialScenario.JsonAsync(await client.GetAsync($"/api/storefront/drop/purchases/{orderId}"));
@@ -247,7 +250,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         } };
     }
 
-    private static async Task<ScenarioEvent> CreateEventAsync(CommercialScenario scenario)
+    internal static async Task<ScenarioEvent> CreateEventAsync(CommercialScenario scenario, bool registrationOpen = false)
     {
         using var owner = scenario.Client(await scenario.Store.FreshTokenAsync(scenario.Owner));
         var product = await CommercialScenario.JsonAsync(await owner.PostAsJsonAsync("/api/drop-catalog/products", Product()));
@@ -255,7 +258,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         var body = new { enterpriseId = scenario.Owner.EnterpriseId, productId = (long?)null, name = "DROP TCC", slug = "tcc-" + Guid.NewGuid().ToString("N"),
             description = "Demonstração integrada", coverImageUrl = "https://images.example.invalid/cover.png", bannerImageUrl = "https://images.example.invalid/banner.png",
             statusId = 1, totalUnitsAvailable = 5, unitsReserved = 0, unitsSold = 0, price = 20m, requiresRegistration = false, isPublic = false,
-            registrationStartsAt = now.AddDays(-2), registrationEndsAt = now.AddDays(-1), queueOpensAt = now.AddHours(-1),
+            registrationStartsAt = now.AddDays(-2), registrationEndsAt = registrationOpen ? now.AddDays(1) : now.AddDays(-1), queueOpensAt = now.AddHours(-1),
             dropStartsAt = now.AddMinutes(-1), dropEndsAt = now.AddMonths(3) };
         var added = await CommercialScenario.JsonAsync(await owner.PostAsJsonAsync("/api/drop-events/add", body));
         var eventId = added.GetProperty("content")[0].GetProperty("id").GetInt64();
@@ -271,5 +274,5 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
             participation.GetProperty("id").GetInt64());
     }
 
-    private sealed record ScenarioEvent(long EventId, long ProductId, long VariantId, long ParticipationId);
+    internal sealed record ScenarioEvent(long EventId, long ProductId, long VariantId, long ParticipationId);
 }

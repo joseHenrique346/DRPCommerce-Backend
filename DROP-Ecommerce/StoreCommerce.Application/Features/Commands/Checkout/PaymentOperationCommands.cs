@@ -8,11 +8,9 @@ using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed record ResolvePaymentOperationCommand(long OrderId, long OperationId, string? Reference, string? Note,
-    bool Retry) : IRequest<Result<OrderDetailResponse>>;
+public sealed record ResolvePaymentOperationCommand(long OrderId, long OperationId, string? Reference, string? Note, bool Retry) : IRequest<Result<OrderDetailResponse>>;
 
-public sealed class ResolvePaymentOperationCommandHandler(IPaymentOperationStore operations, IOrderRepository orders,
-    ICurrentIdentity actor) : WorkflowRequestHandler<ResolvePaymentOperationCommand, OrderDetailResponse>
+public sealed class ResolvePaymentOperationCommandHandler(IPaymentOperationStore operations, IOrderRepository orders, ICurrentIdentity actor) : WorkflowRequestHandler<ResolvePaymentOperationCommand, OrderDetailResponse>
 {
     protected override async Task<OrderDetailResponse> ExecuteAsync(ResolvePaymentOperationCommand request, CancellationToken ct)
     {

@@ -41,29 +41,14 @@ public interface IPaymentGateway
 }
 
 /// <param name="IdempotencyKey">Chave estável por pedido, para o gateway não cobrar duas vezes.</param>
-public sealed record PaymentRequest(
-    long EnterpriseId,
-    long OrderId,
-    long CustomerId,
-    string CustomerName,
-    string CustomerEmail,
-    decimal Amount,
-    string CurrencyCode,
-    long TransactionMethodId,
-    DateTime ExpiresAt,
-    string IdempotencyKey,
-    PaymentProviderContext Context,
-    string ExternalReference,
-    string? ReturnFlow = null);
+public sealed record PaymentRequest(long EnterpriseId, long OrderId, long CustomerId, string CustomerName, string CustomerEmail, decimal Amount, string CurrencyCode, long TransactionMethodId, DateTime ExpiresAt, string IdempotencyKey, PaymentProviderContext Context, string ExternalReference, string? ReturnFlow = null);
 
-public sealed record PaymentProviderContext(string Provider, IntegrationEnvironment Environment,
-    string ExternalAccountId, long? ProviderConnectionId);
+public sealed record PaymentProviderContext(string Provider, IntegrationEnvironment Environment, string ExternalAccountId, long? ProviderConnectionId);
 
 /// <summary>
 /// Cobrança criada. CheckoutUrl (cartão/redirecionamento) e Instructions (código Pix, linha digitável) são exibidos ao cliente.
 /// </summary>
-public sealed record PaymentSession(string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt,
-    string? PreferenceId = null, string? PaymentId = null);
+public sealed record PaymentSession(string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt, string? PreferenceId = null, string? PaymentId = null);
 
 /// <summary>
 /// Resultado de pagamento informado pelo gateway (webhook) ou pelo backoffice (confirmação manual).

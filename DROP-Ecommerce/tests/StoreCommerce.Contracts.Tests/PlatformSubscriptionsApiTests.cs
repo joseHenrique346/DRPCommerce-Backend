@@ -1,3 +1,7 @@
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Features.Commands;
+using MediatR;
+using StoreCommerce.Application.Contracts;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
@@ -44,7 +48,7 @@ public sealed class PlatformBillingFixture : IAsyncLifetime
                 });
                 services.AddSingleton<IPlatformSubscriptionProvider>(Provider);
                 services.AddSingleton<IPlatformBillingProvider>(Provider);
-                services.AddScoped(Service => ActivatorUtilities.CreateInstance<PlatformBillingService>(Service, Clock));
+                services.UseHandlerClock(Clock, typeof(StoreCommerce.Application.DependencyInjection).Assembly);
             }
         };
     }
@@ -359,7 +363,7 @@ public sealed class PlatformSubscriptionsApiTests(PlatformBillingFixture fixture
         var deliveries = await db.Set<PlatformBillingNotification>().Where(Notification => Notification.ResourceId == remote.Id).ToListAsync();
         Assert.Single(deliveries);
         Assert.Equal(1, (await ContractAsync(owner)).PlanId);
-        await scope.ServiceProvider.GetRequiredService<PlatformBillingNotifications>().ProcessAsync(deliveries[0].Id, default);
+        await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new ProcessPlatformBillingNotificationCommand(deliveries[0].Id), default);
         Assert.Equal(4, (await ContractAsync(owner)).PlanId);
     }
 
@@ -427,7 +431,7 @@ public sealed class PlatformSubscriptionsApiTests(PlatformBillingFixture fixture
     private async Task ReconcileAsync(StoreActor owner, long id)
     {
         using var scope = Api.Services.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<PlatformBillingService>().ReconcileAsync(owner.EnterpriseId, id, default);
+        await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new ReconcilePlatformSubscriptionCommand(owner.EnterpriseId, id), default);
     }
 
     private async Task<Enterprise> ContractAsync(StoreActor owner)

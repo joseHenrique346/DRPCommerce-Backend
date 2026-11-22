@@ -4,8 +4,7 @@ namespace StoreCommerce.Application.Features.Commands;
 
 public sealed record GetAccountDeletionEligibilityQuery(bool Customer) : IIdentityRequest<AccountDeletionEligibility>;
 
-public sealed class GetAccountDeletionEligibilityQueryHandler(IdentityHandlerContext context, IAccountDeletionStore deletion)
-    : IdentityHandlerBase<GetAccountDeletionEligibilityQuery, AccountDeletionEligibility>(context)
+public sealed class GetAccountDeletionEligibilityQueryHandler(IdentityHandlerContext context, IAccountDeletionStore deletion) : IdentityHandlerBase<GetAccountDeletionEligibilityQuery, AccountDeletionEligibility>(context)
 {
     protected override async Task<AccountDeletionEligibility> ExecuteAsync(GetAccountDeletionEligibilityQuery command, CancellationToken ct)
     {

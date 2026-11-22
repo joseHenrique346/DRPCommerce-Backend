@@ -1,11 +1,5 @@
 namespace StoreCommerce.Application.Billing;
 
-public sealed record PlatformRecurringSubscription(string Id, string Reference, string AccountId,
-    decimal MonthlyAmount, string Currency, string Status, string? CheckoutUrl);
-
-public sealed record PlatformRecurringInvoice(string Id, string SubscriptionId, decimal Amount,
-    string Currency, DateTime DebitDate, string? PaymentId);
-
 public interface IPlatformSubscriptionProvider
 {
     Task<PlatformRecurringSubscription> CreateAsync(string reference, string payerEmail, decimal monthlyAmount, CancellationToken ct);

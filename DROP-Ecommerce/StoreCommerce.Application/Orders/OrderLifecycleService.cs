@@ -27,18 +27,7 @@ public sealed record ShipmentDetails(long ShipmentTypeId, string? CarrierName, s
 /// Máquina de estados do pedido com seus efeitos: baixa e devolução de estoque, uso do cupom e pagamento.
 /// Trabalha sempre com a loja informada (sem depender da requisição), para servir backoffice, vitrine, worker e webhook.
 /// </summary>
-public sealed partial class OrderLifecycleService(
-    IOrderRepository orders,
-    IRepository<Transaction> transactions,
-    IRepository<CouponRedemption> redemptions,
-    IInventoryRepository inventory,
-    IProductRepository products,
-    IUnitOfWork unitOfWork,
-    StoreSettingsReader storeSettings,
-    IPaymentOperationStore operations,
-    OrderWorkflowScope scope,
-    ICurrentIdentity actor,
-    TimeProvider time)
+public sealed partial class OrderLifecycleService(IOrderRepository orders, IRepository<Transaction> transactions, IRepository<CouponRedemption> redemptions, IInventoryRepository inventory, IProductRepository products, IUnitOfWork unitOfWork, StoreSettingsReader storeSettings, IPaymentOperationStore operations, OrderWorkflowScope scope, ICurrentIdentity actor, TimeProvider time)
 {
     public const string ExpiredReason = "Pagamento não confirmado no prazo.";
 
@@ -49,9 +38,8 @@ public sealed partial class OrderLifecycleService(
     /// O checkout já comprometeu esse uso; a confirmação não o conta novamente.
     /// Repetir a confirmação de um pedido já pago não faz nada.
     /// </summary>
-    public Task<Order> ConfirmPaymentAsync(long enterpriseId, long orderId, OrderChangeSource source, long? actorId,
-        long? transactionMethodId, string? gatewayReference, decimal? paidAmount, string? note, CancellationToken ct) =>
-        RunAsync(enterpriseId, orderId, null, async order =>
+    public Task<Order> ConfirmPaymentAsync(long enterpriseId, long orderId, OrderChangeSource source, long? actorId, long? transactionMethodId, string? gatewayReference, decimal? paidAmount, string? note, CancellationToken ct)
+        => RunAsync(enterpriseId, orderId, null, async order =>
         {
             if (order.IsPaid)
                 return;
@@ -86,9 +74,8 @@ public sealed partial class OrderLifecycleService(
             await RegisterCouponUseAsync(order, now, ct);
         }, ct);
 
-    public Task<Order> AdvanceAsync(long enterpriseId, long orderId, OrderStep step, OrderChangeSource source, long? actorId, string? note,
-        CancellationToken ct) =>
-        RunAsync(enterpriseId, orderId, null, order =>
+    public Task<Order> AdvanceAsync(long enterpriseId, long orderId, OrderStep step, OrderChangeSource source, long? actorId, string? note, CancellationToken ct)
+        => RunAsync(enterpriseId, orderId, null, order =>
         {
             var now = Now;
 
@@ -109,9 +96,8 @@ public sealed partial class OrderLifecycleService(
     /// Em processamento → Enviado. Pedidos com produtos físicos exigem os dados do envio; pedidos só com itens digitais ou
     /// serviços podem ser marcados como enviados sem eles.
     /// </summary>
-    public Task<Order> ShipAsync(long enterpriseId, long orderId, ShipmentDetails? details, OrderChangeSource source, long? actorId, string? note,
-        CancellationToken ct) =>
-        RunAsync(enterpriseId, orderId, null, order =>
+    public Task<Order> ShipAsync(long enterpriseId, long orderId, ShipmentDetails? details, OrderChangeSource source, long? actorId, string? note, CancellationToken ct)
+        => RunAsync(enterpriseId, orderId, null, order =>
         {
             var now = Now;
             var physical = order.ListOrderItem.Any(item => item.ProductId.HasValue && item.ProductVariant?.Product.IsDigital != true);
@@ -132,8 +118,7 @@ public sealed partial class OrderLifecycleService(
     /// se o pedido estava pago, solicita o estorno para processamento independente. Com customerId, só o próprio cliente cancela e apenas
     /// pedidos que ainda aguardam pagamento. O backoffice exige orders.cancel e, para pedidos pagos, orders.refund.
     /// </summary>
-    public async Task<Order> CancelAsync(long enterpriseId, long orderId, string reason, OrderChangeSource source, long? actorId,
-        long? customerId, CancellationToken ct)
+    public async Task<Order> CancelAsync(long enterpriseId, long orderId, string reason, OrderChangeSource source, long? actorId, long? customerId, CancellationToken ct)
     {
         return await RunAsync(enterpriseId, orderId, customerId, async order =>
         {

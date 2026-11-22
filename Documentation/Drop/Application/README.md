@@ -1,6 +1,6 @@
 # Drop — Application
 
-O módulo possui Commands/Queries, validators e contratos de leitores do Store para eventos, produtos, inscrições, fila, reservas e pedidos. Parte do storefront atual consulta/grava por controllers com DbContext; a organização não é idêntica à dos novos fluxos comerciais do Store.
+O módulo possui Commands/Queries, validators e contratos de leitores do Store para eventos, produtos, inscrições, fila, reservas e pedidos. Nos fluxos comerciais das Partes 5 e 6, os validators conferem os dados de entrada e os handlers executam as regras, conforme [Arquitetura dos fluxos comerciais](../../Shared/ArquiteturaComercial.md). Os controllers legados de consulta de waitlist, notificações, pedidos e reservas ainda usam DbContext; eles não foram modificados nesta correção.
 
 ## Implementado
 

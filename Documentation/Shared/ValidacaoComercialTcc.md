@@ -2,13 +2,16 @@
 
 Parte 7 da divisão aprovada: validar contratação, upgrade, downgrade, vencimento,
 recuperação e isolamento; documentar contratos e entregar um roteiro reproduzível.
-A Parte 6 está no commit local `0b02bb6`, sem push. Esta etapa permanece sem commit.
+A Parte 6 está no commit local `0b02bb6`; a Parte 7, em `013fdbf`, sem push.
+As correções posteriores de arquitetura permanecem sem commit.
 
 ## O que é executado
 
-O script [Test-CommercialFlow.ps1](../../scripts/Test-CommercialFlow.ps1) compila a solução
+O script local `scripts/Test-CommercialFlow.ps1` compila a solução
 e executa testes sobre PostgreSQL local descartável. O modo `Full` executa toda a suíte;
 `Demo`, os três cenários `CommercialEndToEndTests` com a categoria `TccDemo`.
+Esse auxiliar fica fora do Git e foi preservado na máquina de desenvolvimento. Um clone
+novo contém os testes, mas não contém o script.
 
 Nos cenários novos, as duas APIs usam suas composições reais de controllers, autenticação,
 validação de sessão, resolução de domínio, permissões, Refit e persistência. TestServer
@@ -38,6 +41,13 @@ Também é possível fornecer `DRP_CONTRACTS_TEST_POSTGRES` no ambiente e omitir
 Fora do script, testes PostgreSQL podem ser ignorados se faltar essa variável; o script
 recusa esse resultado e não anuncia sucesso parcial.
 
+Em um clone sem o auxiliar local, configure `DRP_CONTRACTS_TEST_POSTGRES` por canal privado
+e execute os testes diretamente. Confira no resultado que nenhum teste foi ignorado:
+
+```powershell
+dotnet test ./DROP-Ecommerce/tests/StoreCommerce.Contracts.Tests/StoreCommerce.Contracts.Tests.csproj
+```
+
 Arquivos por execução, em `artifacts/commercial-validation/<execução>/`:
 
 | Arquivo | Evidência |
@@ -48,7 +58,7 @@ Arquivos por execução, em `artifacts/commercial-validation/<execução>/`:
 | `report.json` | Modo, horário UTC, contadores e resultado global, sem connection string |
 | `demo-steps.txt` | Passos comprovados pelos três cenários da apresentação |
 
-O modo Full exige pelo menos 174 testes nesta revisão; Demo exige três. Todos precisam
+O modo Full exige pelo menos 189 testes nesta revisão; Demo exige três. Todos precisam
 passar, sem ignorados. Os artefatos ficam fora do Git. Não editar o relatório para ocultar
 uma falha: abrir o diagnóstico, corrigir o problema e gerar outra execução.
 
@@ -143,3 +153,19 @@ Full aprovou 174 testes, sem ignorados, com compilação da solução sem erros.
 verificadas as recusas de servidor remoto e conexão ausente antes do build/acesso ao banco.
 As migrations só foram aplicadas nos bancos descartáveis das fixtures. Os relatórios desta
 execução ficam em `artifacts/commercial-validation/20261121-161615-c9a4be07/`, fora do Git.
+
+A Parte 7 foi commitada localmente em `013fdbf`, sem push. Após a correção de arquitetura
+das Partes 5 e 6, Full aprovou 181 testes, sem falhas ou ignorados, com build sem erros.
+Os sete testes adicionais cobrem dependências entre camadas, entrada dos controllers pelo
+MediatR, handlers únicos, campos JSON e inscrição idempotente/isolada pela API.
+O relatório dessa execução está em `artifacts/commercial-validation/20261121-203545-27e96c79/`.
+As correções posteriores ao commit da Parte 7 permanecem sem commit para revisão.
+
+Após o esclarecimento do padrão pelo usuário, a regra dos casos de uso foi transferida
+para os handlers, os onze Services de regra/orquestração foram removidos e os workers
+passaram a acionar Commands/Queries. Validators passaram a verificar a estrutura de entrada.
+Essa revisão aprovou 189 testes, zero falhas e zero ignorados, com build sem erros,
+em `artifacts/commercial-validation/20261122-004222-dfff9f9b/`.
+Os oito testes adicionais verificam a ausência dos Services e a validação de catálogo,
+reserva, CPF, transferência, importação, dinheiro/moeda/UTC e modo de reativação.
+A revisão continua sem commit; Mercado Pago real e bancos existentes não foram utilizados.

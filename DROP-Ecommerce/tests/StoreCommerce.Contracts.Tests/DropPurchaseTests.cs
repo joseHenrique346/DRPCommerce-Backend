@@ -1,7 +1,13 @@
+using DropCommerce.Application.Security;
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Features.Commands;
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
+using DropCommerce.Application.Contracts;
 using System.Net.Http.Json;
 using DropCommerce.Domain.Entity;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,15 +30,15 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
     public void Cpf_identity_is_validated_and_scoped_to_the_event_without_storing_plaintext()
     {
         const string secret = "test-only-private-key-with-at-least-32-characters";
-        var hash = DropQueueService.PurchaseIdentity(secret, 1, 10, "529.982.247-25");
+        var hash = DropPurchaseIdentity.Create(secret, 1, 10, "529.982.247-25");
         Assert.Equal(64, hash.Length);
         Assert.DoesNotContain("52998224725", hash);
-        Assert.Equal(hash, DropQueueService.PurchaseIdentity(secret, 1, 10, "52998224725"));
-        Assert.NotEqual(hash, DropQueueService.PurchaseIdentity(secret, 1, 11, "52998224725"));
-        Assert.NotEqual(hash, DropQueueService.PurchaseIdentity(secret, 2, 10, "52998224725"));
-        Assert.Throws<SecurityFailure>(() => DropQueueService.PurchaseIdentity(secret, 1, 10, "11111111111"));
-        Assert.Throws<SecurityFailure>(() => DropQueueService.PurchaseIdentity(secret, 1, 10, "52998224726"));
-        Assert.Throws<SecurityFailure>(() => DropQueueService.PurchaseIdentity("short", 1, 10, "52998224725"));
+        Assert.Equal(hash, DropPurchaseIdentity.Create(secret, 1, 10, "52998224725"));
+        Assert.NotEqual(hash, DropPurchaseIdentity.Create(secret, 1, 11, "52998224725"));
+        Assert.NotEqual(hash, DropPurchaseIdentity.Create(secret, 2, 10, "52998224725"));
+        Assert.Throws<SecurityFailure>(() => DropPurchaseIdentity.Create(secret, 1, 10, "11111111111"));
+        Assert.Throws<SecurityFailure>(() => DropPurchaseIdentity.Create(secret, 1, 10, "52998224726"));
+        Assert.Throws<SecurityFailure>(() => DropPurchaseIdentity.Create("short", 1, 10, "52998224725"));
     }
 
     [PostgresFact]
@@ -45,34 +51,32 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         var (product, participation, dropEvent) = await ProductEventAsync(drop, owner);
         var buyer = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, buyer.Token);
-        var queue = drop.Services.GetRequiredService<DropQueueService>();
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+        var queue = drop.Services.GetRequiredService<IMediator>();
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
         var session = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
         var deadline = session.ExpiresAt;
         Assert.Equal(clock.UtcNow.AddMinutes(15), deadline);
         clock.Advance(TimeSpan.FromMinutes(2));
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "529.982.247-25" }, default);
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "529.982.247-25" }), default);
         Assert.Equal(deadline, (await db.QueueSessions.IgnoreQueryFilters().SingleAsync()).ExpiresAt);
         var variants = product.Variants.OrderBy(Variant => Variant.Id).ToArray();
         var request = new ReserveDropPurchase(participation.Id, session.Id, "two-colors", [new(variants[0].Id, 2), new(variants[1].Id, 1)]);
-        var reservation = await queue.ReserveAsync(dropEvent.Id, request, default);
+        var reservation = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, request), default);
         Assert.Equal(3, reservation.Quantity);
         Assert.Equal(deadline, reservation.ExpiresAt);
         Assert.Equal(32, reservation.TotalAmount);
-        var repeat = await queue.ReserveAsync(dropEvent.Id, request, default);
+        var repeat = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, request), default);
         Assert.Equal(reservation.Id, repeat.Id);
         Assert.Equal(3, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
-        var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.ReserveAsync(dropEvent.Id,
-            new(participation.Id, session.Id, "one-more", [new(variants[0].Id, 1)]), default));
+        var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "one-more", [new(variants[0].Id, 1)])), default));
         Assert.Equal("DropPurchase.PurchaseLimit", failure.Code);
         db.ChangeTracker.Clear();
         var second = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, second.Token);
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var secondSession = await db.QueueSessions.IgnoreQueryFilters().OrderByDescending(Session => Session.Id).FirstAsync();
-        failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.ReserveAsync(dropEvent.Id,
-            new(participation.Id, secondSession.Id, "another-account", [new(variants[1].Id, 1)]), default));
+        failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, secondSession.Id, "another-account", [new(variants[1].Id, 1)])), default));
         Assert.Equal("DropPurchase.PurchaseLimit", failure.Code);
         Assert.Equal(1, await db.DropReservations.IgnoreQueryFilters().CountAsync());
     }
@@ -87,20 +91,19 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         var (product, participation, dropEvent) = await ProductEventAsync(drop, owner);
         var buyer = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, buyer.Token);
-        var queue = drop.Services.GetRequiredService<DropQueueService>();
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+        var queue = drop.Services.GetRequiredService<IMediator>();
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
         var session = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
-        var reservation = await queue.ReserveAsync(dropEvent.Id,
-            new(participation.Id, session.Id, "expires", [new(product.Variants.First().Id, 3)]), default);
+        var reservation = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "expires", [new(product.Variants.First().Id, 3)])), default);
         var second = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, second.Token);
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "11144477735" }, default);
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "11144477735" }), default);
         Assert.Equal(1, await db.QueueSessions.IgnoreQueryFilters().CountAsync());
         clock.Advance(TimeSpan.FromMinutes(15));
         // O worker admite sem sessão HTTP de comprador ou dono.
         drop.Services.GetRequiredService<IHttpContextAccessor>().HttpContext!.User = new System.Security.Claims.ClaimsPrincipal();
-        await queue.TickAsync(owner.EnterpriseId, dropEvent.Id, default);
+        await queue.SendRequiredAsync(new AdmitDropQueueCommand(owner.EnterpriseId, dropEvent.Id), default);
         Assert.Equal(0, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
         Assert.Equal(10, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityOnHand));
         Assert.Equal(3, (await db.DropReservations.IgnoreQueryFilters().SingleAsync(Reservation => Reservation.Id == reservation.Id)).DropReservationStatusId);
@@ -121,23 +124,21 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         await drop.InitializeAsync(store, owner, clock);
         var (product, participation, firstEvent) = await ProductEventAsync(drop, owner);
         var secondEvent = await CreateEventAsync(drop, owner);
-        var secondParticipation = await drop.Services.GetRequiredService<DropCatalogService>().AssociateAsync(product.Id, new(secondEvent.Id, 3), default);
+        var secondParticipation = await drop.Services.GetRequiredService<IMediator>().SendRequiredAsync(new AssociateDropCatalogProductCommand(product.Id, new(secondEvent.Id, 3)), default);
         await PublishAsync(drop, secondEvent);
         var buyer = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, buyer.Token);
-        var queue = drop.Services.GetRequiredService<DropQueueService>();
+        var queue = drop.Services.GetRequiredService<IMediator>();
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
-        await queue.JoinAsync(firstEvent.Id, new() { CPF = "52998224725" }, default);
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(firstEvent.Id, new() { CPF = "52998224725" }), default);
         var first = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
-        await queue.ReserveAsync(firstEvent.Id, new(participation.Id, first.Id, "first", [new(product.Variants.First().Id, 3)]), default);
-        await queue.JoinAsync(secondEvent.Id, new() { CPF = "52998224725" }, default);
+        await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(firstEvent.Id, new(participation.Id, first.Id, "first", [new(product.Variants.First().Id, 3)])), default);
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(secondEvent.Id, new() { CPF = "52998224725" }), default);
         var second = await db.QueueSessions.IgnoreQueryFilters().OrderByDescending(Session => Session.Id).FirstAsync();
-        var shortage = await Assert.ThrowsAsync<SecurityFailure>(() => queue.ReserveAsync(secondEvent.Id,
-            new(secondParticipation.Id, second.Id, "second", [new(product.Variants.First().Id, 3)]), default));
+        var shortage = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(secondEvent.Id, new(secondParticipation.Id, second.Id, "second", [new(product.Variants.First().Id, 3)])), default));
         Assert.Equal("DropPurchase.InsufficientStock", shortage.Code);
         db.ChangeTracker.Clear();
-        var reservation = await queue.ReserveAsync(secondEvent.Id,
-            new(secondParticipation.Id, second.Id, "second-color", [new(product.Variants.Last().Id, 3)]), default);
+        var reservation = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(secondEvent.Id, new(secondParticipation.Id, second.Id, "second-color", [new(product.Variants.Last().Id, 3)])), default);
         Assert.Equal(3, reservation.Quantity);
         Assert.Equal(6, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
     }
@@ -152,8 +153,8 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         var (product, participation, dropEvent) = await ProductEventAsync(drop, owner);
         var buyer = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, buyer.Token);
-        var queue = drop.Services.GetRequiredService<DropQueueService>();
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+        var queue = drop.Services.GetRequiredService<IMediator>();
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
         var session = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
 
@@ -163,8 +164,7 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
 
             try
             {
-                await scope.ServiceProvider.GetRequiredService<DropQueueService>().ReserveAsync(dropEvent.Id,
-                    new(participation.Id, session.Id, key, [new(product.Variants.First().Id, quantity)]), default);
+                await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, key, [new(product.Variants.First().Id, quantity)])), default);
 
                 return true;
             }
@@ -202,16 +202,15 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             var buyer = await source.CreateCustomerAsync(owner.EnterpriseId);
             SetBuyer(source, drop, buyer.Token);
             var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
-            var queue = drop.Services.GetRequiredService<DropQueueService>();
-            await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+            var queue = drop.Services.GetRequiredService<IMediator>();
+            await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
             var session = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
-            var reservation = await queue.ReserveAsync(dropEvent.Id,
-                new(participation.Id, session.Id, "checkout", [new(product.Variants.First().Id, 2)]), default);
-            var checkout = drop.Services.GetRequiredService<DropCheckoutService>();
-            await Assert.ThrowsAnyAsync<Exception>(() => checkout.CheckoutAsync(reservation.Id, default));
+            var reservation = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "checkout", [new(product.Variants.First().Id, 2)])), default);
+            var checkout = drop.Services.GetRequiredService<IMediator>();
+            await Assert.ThrowsAnyAsync<Exception>(() => checkout.SendRequiredAsync(new CheckoutDropPurchaseCommand(reservation.Id), default));
             db.ChangeTracker.Clear();
-            await checkout.CheckoutAsync(reservation.Id, default);
-            await checkout.CheckoutAsync(reservation.Id, default);
+            await checkout.SendRequiredAsync(new CheckoutDropPurchaseCommand(reservation.Id), default);
+            await checkout.SendRequiredAsync(new CheckoutDropPurchaseCommand(reservation.Id), default);
             Assert.Equal(1, gateway.Creates);
             Assert.Equal(1, gateway.Recoveries);
             var order = await db.DropOrders.IgnoreQueryFilters().SingleAsync();
@@ -225,8 +224,8 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             await source.ChangeContractAsync(owner.EnterpriseId, 2, null);
             await db.RefreshCommercialRightsAsync(owner.EnterpriseId, default);
             gateway.Status = "approved";
-            await checkout.ReconcileOrderAsync(owner.EnterpriseId, order.Id, default);
-            await checkout.ReconcileOrderAsync(owner.EnterpriseId, order.Id, default);
+            await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(owner.EnterpriseId, order.Id), default);
+            await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(owner.EnterpriseId, order.Id), default);
             order = await db.DropOrders.IgnoreQueryFilters().SingleAsync();
             Assert.Equal(2, order.DropOrderPaymentStatusId);
             Assert.Equal(2, order.DropOrderStatusId);
@@ -235,8 +234,7 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             Assert.Equal(0, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
             Assert.Equal(2, (await db.DropProducts.IgnoreQueryFilters().SingleAsync()).UnitsSold);
             Assert.Equal(1, gateway.Creates);
-            var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.ReserveAsync(dropEvent.Id,
-                new(participation.Id, session.Id, "blocked", [new(product.Variants.First().Id, 1)]), default));
+            var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "blocked", [new(product.Variants.First().Id, 1)])), default));
             Assert.Equal("DropPurchase.InvalidReservation", failure.Code);
         }
         finally
@@ -259,9 +257,9 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             using var scope = source.Services.CreateScope();
             var principal = scope.ServiceProvider.GetRequiredService<JwtSessionService>().ValidateSignature(buyer.Token);
             var customerId = SharedCommerce.Application.Security.SecurityNames.Id(principal, SharedCommerce.Application.Security.SecurityNames.Customer);
-            var payments = scope.ServiceProvider.GetRequiredService<DropSalePaymentService>();
+            var payments = scope.ServiceProvider.GetRequiredService<IMediator>();
             var request = new StartDropSalePayment(Guid.NewGuid(), 100, customerId, 20, "BRL", DateTime.UtcNow.AddMinutes(14));
-            var receipt = await payments.StartAsync(owner.EnterpriseId, request, default);
+            var receipt = await payments.SendRequiredAsync(new StartDropSalePaymentCommand(owner.EnterpriseId, request), default);
             var security = source.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions>>().Value;
             using var service = source.Client();
             service.DefaultRequestHeaders.Add("X-Service-Key", security.InternalServiceKey);
@@ -272,7 +270,7 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
             db.ChangeTracker.Clear();
             gateway.Status = "approved";
-            receipt = await payments.ReconcileAsync(owner.EnterpriseId, request.OperationId, default);
+            receipt = await payments.SendRequiredAsync(new ReconcileDropSalePaymentCommand(owner.EnterpriseId, request.OperationId), default);
             var eligibility = await scope.ServiceProvider.GetRequiredService<IAccountDeletionStore>()
                 .InspectCustomerAsync(owner.EnterpriseId, customerId, DateTime.UtcNow, default);
             // O recibo aprovado ainda não foi confirmado pelo DROP, logo continua bloqueado.
@@ -309,23 +307,22 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         var buyer = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, buyer.Token);
         var db = drop.Services.GetRequiredService<DropCommerceDbContext>();
-        var queue = drop.Services.GetRequiredService<DropQueueService>();
-        await queue.JoinAsync(dropEvent.Id, new() { CPF = "52998224725" }, default);
+        var queue = drop.Services.GetRequiredService<IMediator>();
+        await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var session = await db.QueueSessions.IgnoreQueryFilters().SingleAsync();
-        var reservation = await queue.ReserveAsync(dropEvent.Id,
-            new(participation.Id, session.Id, "late", [new(product.Variants.First().Id, 1)]), default);
+        var reservation = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "late", [new(product.Variants.First().Id, 1)])), default);
         // O provedor padrão está desabilitado neste fixture: a intenção local sobrevive ao erro externo.
-        var checkout = drop.Services.GetRequiredService<DropCheckoutService>();
-        await Assert.ThrowsAnyAsync<Exception>(() => checkout.CheckoutAsync(reservation.Id, default));
+        var checkout = drop.Services.GetRequiredService<IMediator>();
+        await Assert.ThrowsAnyAsync<Exception>(() => checkout.SendRequiredAsync(new CheckoutDropPurchaseCommand(reservation.Id), default));
         db.ChangeTracker.Clear();
         var order = await db.DropOrders.IgnoreQueryFilters().SingleAsync();
         var receipt = new DropSalePaymentReceipt(order.PaymentOperationId!.Value, owner.EnterpriseId, order.Id,
             order.CustomerId, order.TotalAmount, "BRL", "approved", null, "test-payment", 3);
-        await Assert.ThrowsAsync<SecurityFailure>(() => checkout.ApplyReceiptAsync(receipt with { Amount = receipt.Amount + 1 }, default));
+        await Assert.ThrowsAsync<SecurityFailure>(() => checkout.SendRequiredAsync(new ApplyDropPaymentReceiptCommand(receipt with { Amount = receipt.Amount + 1 }), default));
         Assert.Equal(1, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
         clock.Advance(TimeSpan.FromMinutes(15));
-        await checkout.ApplyReceiptAsync(receipt, default);
-        await checkout.ApplyReceiptAsync(receipt, default);
+        await checkout.SendRequiredAsync(new ApplyDropPaymentReceiptCommand(receipt), default);
+        await checkout.SendRequiredAsync(new ApplyDropPaymentReceiptCommand(receipt), default);
         order = await db.DropOrders.IgnoreQueryFilters().SingleAsync();
         Assert.Equal("DropPayment.LateApproval", order.FinancialReviewCode);
         Assert.Equal(6, order.DropOrderStatusId);
@@ -344,11 +341,11 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
 
     private static async Task<(DropCatalogProduct Product, DropProduct Participation, DropEvent Event)> ProductEventAsync(DropAppearanceTestScope scope, StoreActor owner)
     {
-        var catalog = scope.Services.GetRequiredService<DropCatalogService>();
-        var product = await catalog.CreateAsync(new("Camiseta", "Produto próprio", [new("BLUE", new() { ["color"] = "blue" }, 10, 5),
-            new("BLACK", new() { ["color"] = "black" }, 12, 5)]), default);
+        var catalog = scope.Services.GetRequiredService<IMediator>();
+        var product = await catalog.SendRequiredAsync(new CreateDropCatalogProductCommand(new("Camiseta", "Produto próprio", [new("BLUE", new() { ["color"] = "blue" }, 10, 5),
+            new("BLACK", new() { ["color"] = "black" }, 12, 5)])), default);
         var dropEvent = await CreateEventAsync(scope, owner);
-        var participation = await catalog.AssociateAsync(product.Id, new(dropEvent.Id, 3), default);
+        var participation = await catalog.SendRequiredAsync(new AssociateDropCatalogProductCommand(product.Id, new(dropEvent.Id, 3)), default);
         await PublishAsync(scope, dropEvent);
 
         return (product, participation, dropEvent);

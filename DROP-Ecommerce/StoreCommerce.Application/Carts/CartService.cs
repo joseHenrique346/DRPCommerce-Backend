@@ -12,19 +12,7 @@ namespace StoreCommerce.Application.Carts;
 /// Casos de uso do carrinho do cliente autenticado na vitrine. O carrinho não reserva estoque: a disponibilidade
 /// de cada item é calculada a cada consulta com o saldo atual do SKU.
 /// </summary>
-public sealed class CartService(
-    ICartRepository carts,
-    IProductRepository products,
-    ICustomerRepository customers,
-    ICouponRepository coupons,
-    CouponEligibilityService eligibility,
-    StoreSettingsReader storeSettings,
-    CategoryCatalogReader categoryReader,
-    CartWriteScope writes,
-    IUnitOfWork unitOfWork,
-    ICurrentIdentity actor,
-    ITenantProvider tenantProvider,
-    TimeProvider time)
+public sealed class CartService(ICartRepository carts, IProductRepository products, ICustomerRepository customers, ICouponRepository coupons, CouponEligibilityService eligibility, StoreSettingsReader storeSettings, CategoryCatalogReader categoryReader, CartWriteScope writes, IUnitOfWork unitOfWork, ICurrentIdentity actor, ITenantProvider tenantProvider, TimeProvider time)
 {
     private sealed record CartContext(long EnterpriseId, long CustomerId, StoreSettings Settings, IReadOnlySet<long> VisibleCategories);
 

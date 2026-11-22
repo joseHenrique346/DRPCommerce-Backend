@@ -3,6 +3,9 @@
 Parte 6, revisada em 21/11/2026 na branch de integração e commitada localmente em `0b02bb6`,
 sem push, antes da Parte 7 de validação. A Parte 5 está no commit local `1a85fc1`.
 
+A Parte 7 foi commitada localmente em `013fdbf`. A refatoração posterior das Partes 5 e 6
+é descrita em [Arquitetura dos fluxos comerciais](../../Shared/ArquiteturaComercial.md).
+
 ## Responsabilidade dos serviços
 
 O Store conserva identidade, contrato comercial e conexão Mercado Pago da loja. O DROP

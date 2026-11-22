@@ -11,17 +11,7 @@ namespace StoreCommerce.Application.Contracts.Order;
 /// Endereço de entrega, em ordem de prioridade: AddressId (endereço salvo do cliente); UseProfileAddress (endereço padrão
 /// salvo ou, se não houver, o do cadastro); ou os campos de endereço informados.
 /// </summary>
-public sealed record CheckoutRequest(
-    string IdempotencyKey,
-    long PaymentMethodId,
-    string? CouponCode,
-    bool UseProfileAddress,
-    string? ShippingAddressLine,
-    string? ShippingCity,
-    long? ShippingStateId,
-    string? ShippingZipCode,
-    string? Notes,
-    long? AddressId = null);
+public sealed record CheckoutRequest(string IdempotencyKey, long PaymentMethodId, string? CouponCode, bool UseProfileAddress, string? ShippingAddressLine, string? ShippingCity, long? ShippingStateId, string? ShippingZipCode, string? Notes, long? AddressId = null);
 
 public sealed record CancelOrderRequest(string Reason);
 
@@ -56,17 +46,11 @@ public sealed record OrderItemDetailResponse(
 /// <summary>
 /// Cobrança do pedido. CheckoutUrl e Instructions vêm do gateway (link de pagamento, código Pix, linha digitável).
 /// </summary>
-public sealed record PaymentInfoResponse(
-    string Provider, long MethodId, string Method, long StatusId, string Status, decimal Amount, string Reference,
-    string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt, DateTime? PaidAt, DateTime? RefundedAt,
-    PaymentAttemptInfoResponse? Attempt = null);
+public sealed record PaymentInfoResponse(string Provider, long MethodId, string Method, long StatusId, string Status, decimal Amount, string Reference, string? CheckoutUrl, string? Instructions, DateTime? ExpiresAt, DateTime? PaidAt, DateTime? RefundedAt, PaymentAttemptInfoResponse? Attempt = null);
 
-public sealed record PaymentAttemptInfoResponse(long Id, PaymentCreationStatus CreationStatus, string CurrencyCode,
-    string? PreferenceId, IReadOnlyList<string> PaymentIds);
+public sealed record PaymentAttemptInfoResponse(long Id, PaymentCreationStatus CreationStatus, string CurrencyCode, string? PreferenceId, IReadOnlyList<string> PaymentIds);
 
-public sealed record OrderHistoryResponse(
-    long? FromStatusId, string? FromStatus, long ToStatusId, string ToStatus, long? FromPaymentStatusId, long ToPaymentStatusId,
-    string ToPaymentStatus, OrderChangeSource Source, long? ActorId, string Reason, DateTime ChangedAt)
+public sealed record OrderHistoryResponse(long? FromStatusId, string? FromStatus, long ToStatusId, string ToStatus, long? FromPaymentStatusId, long ToPaymentStatusId, string ToPaymentStatus, OrderChangeSource Source, long? ActorId, string Reason, DateTime ChangedAt)
 {
     public static OrderHistoryResponse FromEntity(OrderStatusHistory history, bool includeActor) => new(
         history.FromStatusId, history.FromStatusId is long from ? OrderLabels.Status(from) : null,
@@ -77,37 +61,9 @@ public sealed record OrderHistoryResponse(
 
 public sealed record BuyerSnapshotResponse(string Name, string Email, string Phone, DateTime? CapturedAt, BuyerSnapshotSource? Source);
 
-public sealed record PaymentOperationInfoResponse(long Id, PaymentOperationKind Kind, PaymentOperationStatus Status,
-    decimal Amount, string? CurrencyCode, string? Reference, string? ResolutionCode, DateTime? CompletedAt);
+public sealed record PaymentOperationInfoResponse(long Id, PaymentOperationKind Kind, PaymentOperationStatus Status, decimal Amount, string? CurrencyCode, string? Reference, string? ResolutionCode, DateTime? CompletedAt);
 
-public sealed record OrderDetailResponse(
-    long Id,
-    long Number,
-    long CustomerId,
-    long StatusId,
-    string Status,
-    long PaymentStatusId,
-    string PaymentStatus,
-    decimal SubTotal,
-    decimal DiscountAmount,
-    decimal ShippingCost,
-    decimal TaxAmount,
-    decimal TotalAmount,
-    long? CouponId,
-    string ShippingAddressLine,
-    string ShippingCity,
-    long ShippingStateId,
-    string ShippingZipCode,
-    string Notes,
-    DateTime? PaymentExpiresAt,
-    bool CanCustomerCancel,
-    DateTime CreatedAt,
-    IReadOnlyList<OrderItemDetailResponse> Items,
-    PaymentInfoResponse? Payment,
-    IReadOnlyList<ShipmentInfoResponse> Shipments,
-    IReadOnlyList<OrderHistoryResponse> History,
-    BuyerSnapshotResponse? Buyer = null,
-    IReadOnlyList<PaymentOperationInfoResponse>? PaymentOperations = null)
+public sealed record OrderDetailResponse(long Id, long Number, long CustomerId, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal SubTotal, decimal DiscountAmount, decimal ShippingCost, decimal TaxAmount, decimal TotalAmount, long? CouponId, string ShippingAddressLine, string ShippingCity, long ShippingStateId, string ShippingZipCode, string Notes, DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt, IReadOnlyList<OrderItemDetailResponse> Items, PaymentInfoResponse? Payment, IReadOnlyList<ShipmentInfoResponse> Shipments, IReadOnlyList<OrderHistoryResponse> History, BuyerSnapshotResponse? Buyer = null, IReadOnlyList<PaymentOperationInfoResponse>? PaymentOperations = null)
 {
     public static OrderDetailResponse FromEntity(OrderEntity order, bool backoffice)
     {
@@ -151,9 +107,7 @@ public sealed record OrderDetailResponse(
     }
 }
 
-public sealed record OrderSummaryResponse(
-    long Id, long Number, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal TotalAmount,
-    DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt)
+public sealed record OrderSummaryResponse(long Id, long Number, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal TotalAmount, DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt)
 {
     public static OrderSummaryResponse FromEntity(OrderEntity order) => new(
         order.Id, order.OrderNumber, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId), order.OrderPaymentStatusId,
@@ -163,9 +117,7 @@ public sealed record OrderSummaryResponse(
 /// <summary>
 /// Linha da busca de pedidos do backoffice.
 /// </summary>
-public sealed record OrderSearchItemResponse(
-    long Id, long Number, long CustomerId, string CustomerName, long StatusId, string Status, long PaymentStatusId, string PaymentStatus,
-    decimal SubTotal, decimal DiscountAmount, decimal TotalAmount, long? CouponId, long? PaymentMethodId, DateTime CreatedAt)
+public sealed record OrderSearchItemResponse(long Id, long Number, long CustomerId, string CustomerName, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal SubTotal, decimal DiscountAmount, decimal TotalAmount, long? CouponId, long? PaymentMethodId, DateTime CreatedAt)
 {
     public static OrderSearchItemResponse FromEntity(OrderEntity order, string customerName) => new(
         order.Id, order.OrderNumber, order.CustomerId, customerName, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId),

@@ -1,6 +1,9 @@
+using DropCommerce.Application.Result;
+using DropCommerce.Application.Features.Commands;
+using MediatR;
+using DropCommerce.Application.Contracts;
 using System.Net.Http.Json;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Contracts;
 using DropCommerce.Domain.Entity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -78,7 +81,7 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             try
             {
                 using var scope = scopes.CreateScope();
-                var receipt = await scope.ServiceProvider.GetRequiredService<DropStockSagaService>().ImportAsync(export, ct);
+                var receipt = await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new ImportDropStockCommand(export), ct);
 
                 if (receipt.Accepted)
                 {
@@ -111,7 +114,7 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             {
                 await SendAsync(client, "/api/internal/drop-stock-transfers/return", returned.EnterpriseId, returned, ct);
                 using var scope = scopes.CreateScope();
-                await scope.ServiceProvider.GetRequiredService<DropStockSagaService>().CompleteReturnAsync(returned.EnterpriseId, returned.OperationId, ct);
+                await scope.ServiceProvider.GetRequiredService<IMediator>().SendRequiredAsync(new CompleteDropStockReturnCommand(returned.EnterpriseId, returned.OperationId), ct);
             }
             catch (Exception) when (!ct.IsCancellationRequested)
             {
@@ -129,9 +132,9 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             try
             {
                 using var scope = scopes.CreateScope();
-                var checkout = scope.ServiceProvider.GetRequiredService<DropCheckoutService>();
-                await checkout.ApplyReceiptAsync(receipt, ct);
-                await checkout.AcknowledgeFulfillmentAsync(receipt.EnterpriseId, receipt.DropOrderId, ct);
+                var checkout = scope.ServiceProvider.GetRequiredService<IMediator>();
+                await checkout.SendRequiredAsync(new ApplyDropPaymentReceiptCommand(receipt), ct);
+                await checkout.SendRequiredAsync(new AcknowledgeDropFulfillmentCommand(receipt.EnterpriseId, receipt.DropOrderId), ct);
             }
             catch (Exception) when (!ct.IsCancellationRequested)
             {
@@ -150,12 +153,12 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             try
             {
                 using var scope = scopes.CreateScope();
-                var checkout = scope.ServiceProvider.GetRequiredService<DropCheckoutService>();
+                var checkout = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                 if (!order.PaymentIntentAccepted)
-                    await checkout.ReconcileOrderAsync(order.EnterpriseId, order.Id, ct);
+                    await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(order.EnterpriseId, order.Id), ct);
                 else
-                    await checkout.AcknowledgeFulfillmentAsync(order.EnterpriseId, order.Id, ct);
+                    await checkout.SendRequiredAsync(new AcknowledgeDropFulfillmentCommand(order.EnterpriseId, order.Id), ct);
             }
             catch (Exception) when (!ct.IsCancellationRequested)
             {

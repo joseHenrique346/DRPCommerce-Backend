@@ -1,3 +1,5 @@
+using StoreCommerce.Application.Result;
+using MediatR;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Contracts;
 using StoreCommerce.Application.Identity;
@@ -11,7 +13,7 @@ namespace StoreCommerce.Application.Features.Commands;
 public sealed class RequestEnterpriseContractChangeCommandHandler(
     IdentityHandlerContext context,
     IEntityRepository<EnterpriseContractChange> changes,
-    AccessContractPolicyService accessPolicy)
+    IMediator mediator)
     : EnterpriseContractHandlerBase<RequestEnterpriseContractChangeCommand, EnterpriseContractChangeResponse>(context)
 {
     protected override async Task<EnterpriseContractChangeResponse> ExecuteAsync(
@@ -67,8 +69,8 @@ public sealed class RequestEnterpriseContractChangeCommandHandler(
         if (current.Revision != request.ExpectedContractRevision)
             throw new SecurityFailure(409, "Contract.RevisionChanged", "O contrato mudou. Consulte os direitos atuais.");
 
-        var selection = await accessPolicy.ValidateSelectionAsync(tenant, request.PlanId, request.AddOnId,
-            request.RetainedMembershipIds, true, ct);
+        var selection = await mediator.SendRequiredAsync(new ValidateEnterpriseTeamSelectionQuery(tenant, request.PlanId, request.AddOnId,
+            request.RetainedMembershipIds, true), ct);
 
         var now = Now;
         var pending = await changes.FindAsync(Change =>

@@ -29,6 +29,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
+        services.AddScoped<DropCommerce.Application.Contracts.ICurrentDropActor, CurrentDropActor>();
         services.AddSingleton<StoreIntegrationScope>();
         services.AddSharedInfrastructure();
         services.AddScoped<IAppearanceContext, DropAppearanceContext>();
@@ -36,12 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IStoreAppearanceReader, StoreAppearanceReader>();
         services.AddScoped<IStoreCommercialReader, StoreCommercialReader>();
         services.AddScoped<DropCommerce.Application.Contracts.DropCommercialWriteScope>();
-        services.AddScoped<Contracts.DropCatalogService>();
-        services.AddScoped<Contracts.DropStockSagaService>();
         services.AddOptions<DropCommerce.Application.Contracts.DropQueueOptions>();
-        services.AddScoped<Contracts.DropQueueService>();
         services.AddScoped<IStoreDropPayments, StoreDropPayments>();
-        services.AddScoped<Contracts.DropCheckoutService>();
         services.AddScoped<IMediaAssetReader, DropMediaAssetReader>();
         services.AddScoped<IAppearanceResources, DropAppearanceResources>();
         services.AddScoped<IDropAppearanceEventRepository, DropAppearanceEventRepository>();
@@ -70,6 +67,16 @@ public static class DependencyInjection
             services.AddHostedService<Workers.DropContractReconciliationWorker>();
             services.AddHostedService<Workers.DropQueueExpirationWorker>();
         }
+
+        services.AddScoped<DropCommerce.Application.Contracts.IDropCatalogRepository, DropCatalogRepository>();
+
+        services.AddScoped<DropCommerce.Application.Contracts.IDropQueueRepository, DropQueueRepository>();
+
+        services.AddScoped<DropCommerce.Application.Contracts.IDropCheckoutRepository, DropCheckoutRepository>();
+
+        services.AddScoped<DropCommerce.Application.Contracts.IDropStockSagaRepository, DropStockSagaRepository>();
+
+        services.AddScoped<DropCommerce.Application.Contracts.IDropStorefrontRepository, DropStorefrontRepository>();
 
         return services;
     }

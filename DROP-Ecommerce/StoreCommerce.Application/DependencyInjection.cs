@@ -1,3 +1,6 @@
+using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Payments;
+using StoreCommerce.Application.Contracts;
 using SharedCommerce.Application;
 using FluentValidation;
 using MediatR;
@@ -21,7 +24,6 @@ public static class DependencyInjection
         services.AddScoped<IdentityHandlerContext>();
         services.AddScoped<Media.MediaAssetService>();
         services.AddScoped<Media.MediaRetentionService>();
-        services.AddScoped<AccessContractPolicyService>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponEligibilityService>();
         services.AddScoped<CartService>();
