@@ -1,5 +1,5 @@
+using StoreCommerce.Domain.Interfaces.Tenancy;
 using System.Text.Json.Serialization;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 

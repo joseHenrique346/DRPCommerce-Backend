@@ -1,3 +1,5 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Application.Interfaces.StoreManagement;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;

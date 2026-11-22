@@ -1,4 +1,4 @@
-﻿namespace StoreCommerce.Domain.Entity;
+namespace StoreCommerce.Domain.Entity;
 
 public class BaseEntity
 {

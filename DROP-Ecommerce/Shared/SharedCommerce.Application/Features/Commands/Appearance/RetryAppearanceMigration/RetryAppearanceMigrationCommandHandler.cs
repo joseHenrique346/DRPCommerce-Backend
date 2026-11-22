@@ -1,5 +1,5 @@
+using SharedCommerce.Application.Interfaces.Appearance;
 using MediatR;
-using SharedCommerce.Application.Interfaces;
 
 namespace SharedCommerce.Application.Features.Commands;
 

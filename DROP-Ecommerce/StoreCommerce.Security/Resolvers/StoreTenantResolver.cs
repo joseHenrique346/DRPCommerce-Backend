@@ -1,7 +1,8 @@
+using SharedCommerce.Application.Interfaces.Tenancy;
+using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using StoreCommerce.Application.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -13,7 +14,7 @@ namespace StoreCommerce.Security.Resolvers;
 /// </summary>
 public sealed class StoreTenantResolver(
     IIdentityRepositories data, IOptions<SecurityOptions> settings,
-    StoreCommerce.Application.Contracts.IEnterpriseDomainAccess domains) : IRequestTenantResolver
+    StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess domains) : IRequestTenantResolver
 {
     /// <summary>
     /// Valida chamadas internas ou identifica a loja pelo domínio verificado, impedindo o uso de um tenant não confiável.

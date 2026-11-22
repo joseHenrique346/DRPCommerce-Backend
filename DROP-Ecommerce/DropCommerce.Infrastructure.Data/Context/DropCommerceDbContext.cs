@@ -1,8 +1,10 @@
+using DropCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Domain.Interfaces.Persistence;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data.Context;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
-using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

@@ -1,6 +1,7 @@
+using SharedCommerce.Application.Interfaces.Appearance;
+using SharedCommerce.Application.Interfaces.Media;
 using MediatR;
 using SharedCommerce.Application.Contracts.Appearance;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Application.Validation;
 using SharedCommerce.Domain.Entity;
 using SharedCommerce.Domain.Exceptions;

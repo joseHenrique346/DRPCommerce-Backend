@@ -1,3 +1,6 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Enums.Integrations;
+using StoreCommerce.Domain.Enums.Payments;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;

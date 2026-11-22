@@ -1,8 +1,8 @@
+using SharedCommerce.Application.Interfaces.Media;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SharedCommerce.Application.Interfaces;
-using StoreCommerce.Application.Result;
-using StoreCommerce.Domain.Interfaces;
+using SharedCommerce.Application.Result;
 
 namespace StoreCommerce.Api.Controllers;
 

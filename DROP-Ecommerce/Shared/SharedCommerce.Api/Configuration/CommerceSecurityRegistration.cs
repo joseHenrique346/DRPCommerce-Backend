@@ -1,3 +1,5 @@
+using SharedCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Interfaces.Tenancy;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
@@ -11,7 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Application.Options;
 using SharedCommerce.Application.Security;
 using SharedCommerce.Domain.Exceptions;

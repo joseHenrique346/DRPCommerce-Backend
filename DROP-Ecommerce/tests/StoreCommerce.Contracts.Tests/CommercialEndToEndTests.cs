@@ -1,4 +1,4 @@
-using DropCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using MediatR;
 using DropCommerce.Application.Contracts;

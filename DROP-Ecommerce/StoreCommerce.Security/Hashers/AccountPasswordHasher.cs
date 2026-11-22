@@ -1,8 +1,9 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Identity;
 using SharedCommerce.Application.Security;
 using Microsoft.AspNetCore.Identity;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Security.Hashers;
 

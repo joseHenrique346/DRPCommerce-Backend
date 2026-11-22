@@ -1,6 +1,6 @@
+using SharedCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;

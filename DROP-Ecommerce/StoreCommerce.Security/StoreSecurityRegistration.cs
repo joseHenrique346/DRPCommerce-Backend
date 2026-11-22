@@ -1,6 +1,9 @@
+using StoreCommerce.Application.Interfaces.StoreManagement;
+using SharedCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Interfaces.Tenancy;
+using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Api.Configuration;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;

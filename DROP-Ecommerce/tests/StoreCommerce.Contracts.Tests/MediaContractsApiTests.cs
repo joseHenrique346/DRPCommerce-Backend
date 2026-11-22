@@ -139,7 +139,7 @@ public sealed class MediaContractsApiTests(ContractsApiFixture fixture)
     {
         var owner = await fixture.CreateStoreAsync(planId: 4);
         using var scope = fixture.Services.CreateScope();
-        using var identity = scope.ServiceProvider.GetRequiredService<StoreCommerce.Application.Identity.IIdentityOperationScope>().Begin();
+        using var identity = scope.ServiceProvider.GetRequiredService<StoreCommerce.Application.Interfaces.Identity.IIdentityOperationScope>().Begin();
         var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
         var image = PngLogoValidator.Validate(Logo);
         db.MediaAssets.Add(StoreCommerce.Domain.Entity.MediaAsset.Create(owner.EnterpriseId, image.Content, image.Hash, image.Width, image.Height));

@@ -1,4 +1,6 @@
-using DropCommerce.Application.Result;
+using DropCommerce.Application.Interfaces.Identity;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Interfaces;
+using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using System.Globalization;
 using System.Text.Json;

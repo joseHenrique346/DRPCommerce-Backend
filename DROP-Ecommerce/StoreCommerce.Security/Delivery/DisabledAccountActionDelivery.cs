@@ -1,3 +1,5 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Enums.Identity;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Api.Controllers;

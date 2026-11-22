@@ -1,13 +1,25 @@
+using SharedCommerce.Application.Interfaces.Appearance;
+using SharedCommerce.Application.Interfaces.Media;
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Application.Integrations.Providers.Interfaces;
+using StoreCommerce.Application.Interfaces.Billing;
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Application.Interfaces.Payments;
+using StoreCommerce.Domain.Interfaces.AccessControl;
+using StoreCommerce.Domain.Interfaces.Catalog;
+using StoreCommerce.Domain.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Inventory;
+using StoreCommerce.Domain.Interfaces.Orders;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
 using StoreCommerce.Application.Billing;
 using SharedCommerce.Infrastructure.Data;
 using SharedCommerce.Infrastructure.Data.Repositories;
 using SharedCommerce.Infrastructure.Data.Context;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Domain.StaticEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 using StoreCommerce.Infrastructure.Data.Providers;
 using StoreCommerce.Infrastructure.Data.Repositories;
@@ -36,7 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IAppearanceEntitlements, StoreAppearanceEntitlements>();
         services.AddScoped<IMediaAssetReader, StoreMediaAssetReader>();
         services.AddScoped<StoreCommerce.Application.Media.MediaWriteScope>();
-        services.AddScoped<StoreCommerce.Application.Media.IMediaAssetStore, MediaAssetStore>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Media.IMediaAssetStore, MediaAssetStore>();
         services.AddScoped<IAppearanceResources, StoreAppearanceResources>();
         services.AddScoped<IAppearanceRepository>(provider => new AppearanceRepository<StoreCommerceDbContext>(
             provider.GetRequiredService<StoreCommerceDbContext>(),
@@ -58,10 +70,10 @@ public static class DependencyInjection
         services.AddHostedService<Workers.DropSalePaymentReconciliationWorker>();
         services.AddScoped<StoreCommerce.Application.Contracts.OwnershipTransferWriteScope>();
         services.AddScoped<StoreCommerce.Application.Contracts.ProductReactivationScope>();
-        services.AddScoped<StoreCommerce.Application.Contracts.IEnterpriseContractUsageReader, EnterpriseContractUsageReader>();
-        services.AddScoped<StoreCommerce.Application.Contracts.IStoreActivityReader, StoreActivityReader>();
-        services.AddScoped<StoreCommerce.Application.Contracts.IEnterpriseDomainAccess, EnterpriseDomainAccess>();
-        services.AddScoped<StoreCommerce.Application.Contracts.IEnterpriseAccessReader, EnterpriseAccessReader>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Commercial.IEnterpriseContractUsageReader, EnterpriseContractUsageReader>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IStoreActivityReader, StoreActivityReader>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess, EnterpriseDomainAccess>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseAccessReader, EnterpriseAccessReader>();
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
         services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();
 
@@ -116,17 +128,17 @@ public static class DependencyInjection
         if (configuration is not null)
             services.Configure<PlatformBillingOptions>(configuration.GetSection("PlatformBilling"));
 
-        services.AddScoped<StoreCommerce.Application.Billing.IPlatformBillingProvider, Billing.MercadoPagoPlatformBillingProvider>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Billing.IPlatformBillingProvider, Billing.MercadoPagoPlatformBillingProvider>();
         services.AddScoped<Billing.PlatformBillingSignature>();
         services.AddScoped<IPlatformBillingSignature>(Provider => Provider.GetRequiredService<Billing.PlatformBillingSignature>());
         services.AddScoped<IPlatformBillingNotificationRepository, PlatformBillingNotificationRepository>();
         services.AddScoped<StoreCommerce.Application.Billing.PlatformBillingWriteScope>();
-        services.AddScoped<StoreCommerce.Application.Billing.IPlatformSubscriptionProvider, Billing.MercadoPagoSubscriptionProvider>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Billing.IPlatformSubscriptionProvider, Billing.MercadoPagoSubscriptionProvider>();
         services.AddHostedService<Workers.PlatformBillingWorker>();
         services.AddScoped<MercadoPagoAccess>();
         services.AddScoped<MercadoPagoGateway>();
         services.AddScoped<IPaymentGateway>(Provider => Provider.GetRequiredService<MercadoPagoGateway>());
-        services.AddScoped<StoreCommerce.Application.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
         services.AddScoped<IProviderTokenRefresher, MercadoPagoTokenRefresher>();
         services.AddScoped<MercadoPagoAuthorizationService>();
@@ -152,13 +164,13 @@ public static class DependencyInjection
         services.AddScoped<IAccessRolePermissionRepository, AccessRolePermissionRepository>();
         services.AddScoped<IMembershipAccessRoleRepository, MembershipAccessRoleRepository>();
 
-        services.AddScoped<StoreCommerce.Application.Contracts.IDropStockTransferRepository, DropStockTransferRepository>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Inventory.IDropStockTransferRepository, DropStockTransferRepository>();
 
-        services.AddScoped<StoreCommerce.Application.Payments.IDropSalePaymentRepository, DropSalePaymentRepository>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Payments.IDropSalePaymentRepository, DropSalePaymentRepository>();
 
-        services.AddScoped<StoreCommerce.Application.Billing.IPlatformBillingRepository, PlatformBillingRepository>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Billing.IPlatformBillingRepository, PlatformBillingRepository>();
 
-        services.AddScoped<StoreCommerce.Application.Contracts.IDropContractPublicationRepository, DropContractPublicationRepository>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Integrations.IDropContractPublicationRepository, DropContractPublicationRepository>();
 
         return services;
     }

@@ -1,0 +1,16 @@
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
+using StoreCommerce.Application.Features.Commands.Base.Handlers;
+using StoreCommerce.Domain.Entity;
+
+namespace StoreCommerce.Application.Features.Commands;
+
+public class CreateListEmployeePositionCommandHandler(IEmployeePositionRepository repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
+    : BaseCreateListHandler<CreateEmployeePositionCommand, CreateListEmployeePositionCommand, EmployeePosition>(repository, unitOfWork)
+{
+    protected override IReadOnlyCollection<CreateEmployeePositionCommand> GetCommandList(CreateListEmployeePositionCommand request) => request.commands;
+
+    protected override EmployeePosition CreateEntity(CreateEmployeePositionCommand command) =>
+        EmployeePosition.Create(tenantProvider.GetEnterpriseId(), command.name, command.description, command.isActive);
+}

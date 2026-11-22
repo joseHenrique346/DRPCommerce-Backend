@@ -14,7 +14,7 @@ Controller → Command/Query → Validator → Handler
 Os endpoints de assinatura SaaS, recebimento do webhook, catálogo DROP, fila, reserva,
 checkout, entrega, transferência de estoque, sincronização comercial e vitrine do DROP
 enviam requests pelo MediatR. Os requests, handlers e validadores ficam em
-`Features/Commands/<Entidade>/<Operação>`, com consultas dentro de `Queries`.
+`Features/Commands/<Contexto>/<Feature>/<Operação>`, com consultas dentro de `Queries`.
 Os contratos de entrada/saída pertencem a Application, com um tipo público por arquivo.
 Os retornos anônimos dos fluxos controlados foram substituídos por DTOs nomeados.
 
@@ -27,9 +27,14 @@ permitiria ignorar essas etapas.
 Os handlers contêm as regras e a coordenação dos casos de uso. Foram removidos os dez
 Services de orquestração introduzidos nas Partes 5 e 6 e o auxiliar
 `AccessContractPolicyService`, cuja regra passou a `ValidateEnterpriseTeamSelectionQueryHandler`.
-Os handlers de cobrança ficam em `Features/Commands/PlatformBilling`; venda DROP,
+Os handlers de cobrança ficam em `Features/Commands/Billing/PlatformBilling`; venda DROP,
 transferência, catálogo, inscrição, fila e pedidos têm pastas próprias sob `Features/Commands`.
 As implementações de repositórios ficam em `Infrastructure.Data/Repositories`.
+
+A estrutura de pastas atual está descrita em
+[Organização do projeto](OrganizacaoDoProjeto.md). A revisão de organização separa
+tipos e contextos; ela não encerra os desvios de responsabilidade dos Services
+existentes nem amplia o alcance das afirmações sobre as Partes 5 e 6 acima.
 
 Workers e reconciliação acionam Commands/Queries pelo MediatR. Operações compartilhadas,
 como reconciliar uma assinatura, expirar reservas e aplicar um recibo de pagamento,

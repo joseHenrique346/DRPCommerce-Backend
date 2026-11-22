@@ -1,7 +1,9 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Application.Interfaces.Payments;
+using StoreCommerce.Domain.Enums.Integrations;
 using DropCommerce.Application.Security;
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Application.Features.Commands;
-using DropCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using MediatR;
 using DropCommerce.Application.Contracts;

@@ -24,4 +24,3 @@ public sealed class InvitationAcceptanceController(IMediator mediator) : Control
         return this.ToIdentityActionResult(await mediator.Send(new AcceptInvitationCommand(request.Token), ct));
     }
 }
-

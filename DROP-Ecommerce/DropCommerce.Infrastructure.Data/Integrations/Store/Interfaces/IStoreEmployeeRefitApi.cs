@@ -1,0 +1,11 @@
+using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Contracts;
+using Refit;
+
+namespace DropCommerce.Infrastructure.Data.Integrations.Store.Interfaces;
+
+public interface IStoreEmployeeRefitApi
+{
+    [Get("/api/internal/employees/get-by-id/{employeeId}")]
+    Task<ApiResponse<StoreApiResponse<StoreEmployeeResponse>>> GetByIdAsync(long employeeId, CancellationToken cancellationToken);
+}

@@ -1,0 +1,100 @@
+using StoreCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Domain.Entity.Base;
+using StoreCommerce.Domain.StaticEntity;
+
+namespace StoreCommerce.Domain.Entity;
+
+public class Document : BaseEntity, ITenantEntity
+{
+    #region Constants
+    public const int ReferenceTypeMaxLength = 500;
+    public const int NumberMaxLength = 100;
+    public const int FileUrlMaxLength = 500;
+    #endregion
+
+    #region Properties
+    public long EnterpriseId { get; private set; }
+    public long ReferenceId { get; private set; }
+    public string ReferenceType { get; private set; }
+    public long DocumentTypeId { get; private set; }
+    public string Number { get; private set; }
+    public string FileUrl { get; private set; }
+    public long DocumentStatusId { get; private set; }
+    public DateTime IssuedAt { get; private set; }
+    public DateTime? ExpiresAt { get; private set; }
+
+    #region Navigation Properties
+    public Enterprise Enterprise { get; private set; }
+    public DocumentType DocumentType { get; private set; }
+    public DocumentStatus DocumentStatus { get; private set; }
+    #endregion
+
+    #endregion
+
+    #region Constructor
+    protected Document() { }
+
+    private Document(long enterpriseId, long referenceId, string referenceType, long documentTypeId, string number, string fileUrl, long documentStatusId, DateTime issuedAt, DateTime? expiresAt)
+    {
+        EnterpriseId = enterpriseId;
+        ReferenceId = referenceId;
+        ReferenceType = referenceType;
+        DocumentTypeId = documentTypeId;
+        Number = number;
+        FileUrl = fileUrl;
+        DocumentStatusId = documentStatusId;
+        IssuedAt = issuedAt;
+        ExpiresAt = expiresAt;
+    }
+    #endregion
+
+    #region Functions
+    public static Document Create(long enterpriseId, long referenceId, string referenceType, long documentTypeId, string number, string fileUrl, long documentStatusId, DateTime issuedAt, DateTime? expiresAt)
+    {
+        BaseValidate.ValidatePositive(enterpriseId, nameof(EnterpriseId));
+        BaseValidate.ValidatePositive(referenceId, nameof(ReferenceId));
+        BaseValidate.ValidateNotNullOrEmpty(referenceType, nameof(ReferenceType));
+        BaseValidate.ValidateMaxLength(referenceType, ReferenceTypeMaxLength, nameof(ReferenceType));
+        BaseValidate.ValidatePositive(documentTypeId, nameof(DocumentTypeId));
+        BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
+        BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
+        BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
+        BaseValidate.ValidateNotFuture(issuedAt, nameof(IssuedAt));
+        BaseValidate.ValidateNullableGreaterThan(expiresAt, issuedAt, nameof(ExpiresAt));
+
+        return new Document(enterpriseId, referenceId, referenceType, documentTypeId, number, fileUrl, documentStatusId, issuedAt, expiresAt);
+    }
+
+    public void UpdateDetails(long referenceId, string referenceType, long documentTypeId, string number, string fileUrl, long documentStatusId, DateTime issuedAt, DateTime? expiresAt)
+    {
+        BaseValidate.ValidatePositive(referenceId, nameof(ReferenceId));
+        BaseValidate.ValidateNotNullOrEmpty(referenceType, nameof(ReferenceType));
+        BaseValidate.ValidateMaxLength(referenceType, ReferenceTypeMaxLength, nameof(ReferenceType));
+        BaseValidate.ValidatePositive(documentTypeId, nameof(DocumentTypeId));
+        BaseValidate.ValidateNotNullOrEmpty(number, nameof(Number));
+        BaseValidate.ValidateMaxLength(number, NumberMaxLength, nameof(Number));
+        BaseValidate.ValidateMaxLength(fileUrl, FileUrlMaxLength, nameof(FileUrl));
+        BaseValidate.ValidateUrlFormat(fileUrl, nameof(FileUrl));
+        BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
+        BaseValidate.ValidateNotFuture(issuedAt, nameof(IssuedAt));
+        BaseValidate.ValidateNullableGreaterThan(expiresAt, issuedAt, nameof(ExpiresAt));
+
+        ReferenceId = referenceId;
+        ReferenceType = referenceType;
+        DocumentTypeId = documentTypeId;
+        Number = number;
+        FileUrl = fileUrl;
+        DocumentStatusId = documentStatusId;
+        IssuedAt = issuedAt;
+        ExpiresAt = expiresAt;
+    }
+
+    public void UpdateStatus(long documentStatusId)
+    {
+        BaseValidate.ValidatePositive(documentStatusId, nameof(DocumentStatusId));
+        DocumentStatusId = documentStatusId;
+    }
+    #endregion
+}

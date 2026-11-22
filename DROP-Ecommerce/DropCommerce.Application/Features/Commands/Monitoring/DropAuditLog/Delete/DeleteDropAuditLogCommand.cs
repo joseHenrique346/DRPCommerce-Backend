@@ -1,0 +1,6 @@
+using SharedCommerce.Application.Result;
+using MediatR;
+
+namespace DropCommerce.Application.Features.Commands;
+
+public record class DeleteDropAuditLogCommand(long id) : IRequest<Result<bool>> { }

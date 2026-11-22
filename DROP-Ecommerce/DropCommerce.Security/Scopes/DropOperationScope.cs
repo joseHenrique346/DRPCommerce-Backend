@@ -1,3 +1,4 @@
+using DropCommerce.Application.Interfaces.Identity;
 using DropCommerce.Application.Security;
 
 namespace DropCommerce.Security.Scopes;

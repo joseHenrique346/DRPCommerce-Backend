@@ -1,5 +1,6 @@
+using StoreCommerce.Domain.Enums.Integrations;
+using StoreCommerce.Domain.Interfaces.Tenancy;
 using StoreCommerce.Domain.Integrations;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Domain.Entity;
 

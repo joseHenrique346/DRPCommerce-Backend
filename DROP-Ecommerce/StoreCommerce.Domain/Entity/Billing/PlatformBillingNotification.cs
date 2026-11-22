@@ -1,3 +1,4 @@
+using StoreCommerce.Domain.Enums.Integrations;
 using StoreCommerce.Domain.Integrations;
 
 namespace StoreCommerce.Domain.Entity;

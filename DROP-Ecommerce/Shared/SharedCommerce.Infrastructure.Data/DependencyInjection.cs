@@ -1,5 +1,5 @@
+using SharedCommerce.Application.Interfaces.Media;
 using Microsoft.Extensions.DependencyInjection;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Infrastructure.Data.Context;
 using SharedCommerce.Infrastructure.Data.Providers;
 using SharedCommerce.Infrastructure.Data.Workers;

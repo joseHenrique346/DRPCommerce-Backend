@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Interfaces.Identity;
 using StoreCommerce.Application.Identity;
 
 namespace StoreCommerce.Security.Scopes;

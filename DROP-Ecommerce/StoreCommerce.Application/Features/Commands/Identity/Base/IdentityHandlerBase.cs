@@ -1,10 +1,12 @@
+using StoreCommerce.Application.Interfaces.StoreManagement;
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Options;
 using MediatR;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 

@@ -1,4 +1,6 @@
-using StoreCommerce.Application.Result;
+using StoreCommerce.Application.Interfaces.Billing;
+using StoreCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Application.Features.Commands;
 using MediatR;
 using StoreCommerce.Application.Contracts;

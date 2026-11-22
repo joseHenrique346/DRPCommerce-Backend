@@ -1,6 +1,8 @@
+using DropCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Interfaces.Tenancy;
 using SharedCommerce.Api.Configuration;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Security.Handlers;
@@ -47,4 +49,3 @@ public static class DropSecurityRegistration
         return services;
     }
 }
-

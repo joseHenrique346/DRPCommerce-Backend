@@ -1,8 +1,9 @@
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using StoreCommerce.Application.Identity;
 using Microsoft.AspNetCore.Http;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Security.Context;
 

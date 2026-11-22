@@ -1,6 +1,6 @@
+using StoreCommerce.Domain.Interfaces.StoreManagement;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;

@@ -1,4 +1,6 @@
-using DropCommerce.Application.Result;
+using SharedCommerce.Application.Interfaces.Appearance;
+using StoreCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using MediatR;
 using System.Net;
@@ -9,7 +11,6 @@ using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SharedCommerce.Application.Contracts.Drop;
-using SharedCommerce.Application.Interfaces;
 using DropCommerce.Application.Appearance;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Identity;

@@ -1,9 +1,12 @@
+using SharedCommerce.Domain.Interfaces.Persistence;
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Inventory;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
 using AppearanceBaseEntity = SharedCommerce.Domain.Entity.Base.BaseEntity;
 

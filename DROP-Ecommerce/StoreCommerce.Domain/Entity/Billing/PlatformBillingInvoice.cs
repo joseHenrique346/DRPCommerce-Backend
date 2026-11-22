@@ -1,4 +1,4 @@
-using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.Interfaces.Tenancy;
 
 namespace StoreCommerce.Domain.Entity;
 

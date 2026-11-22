@@ -1,8 +1,9 @@
+using StoreCommerce.Application.Interfaces.Billing;
+using StoreCommerce.Domain.Interfaces.Persistence;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Billing;
 using StoreCommerce.Application.Contracts;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;

@@ -1,11 +1,19 @@
+using DropCommerce.Application.Interfaces.Appearance;
+using DropCommerce.Domain.Interfaces.Catalog;
+using DropCommerce.Domain.Interfaces.Events;
+using DropCommerce.Domain.Interfaces.Orders;
+using DropCommerce.Domain.Interfaces.Persistence;
+using DropCommerce.Domain.Interfaces.Queue;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Interfaces;
+using SharedCommerce.Application.Interfaces.Appearance;
+using SharedCommerce.Application.Interfaces.Media;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data;
 using SharedCommerce.Infrastructure.Data.Repositories;
 using SharedCommerce.Infrastructure.Data.Context;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Domain.StaticEntity;
 using DropCommerce.Application.Appearance;
 using DropCommerce.Application.Integrations.Store.Interfaces;
-using DropCommerce.Domain.Interfaces;
 using DropCommerce.Infrastructure.Data.Context;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Readers;
@@ -29,7 +37,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
-        services.AddScoped<DropCommerce.Application.Contracts.ICurrentDropActor, CurrentDropActor>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Identity.ICurrentDropActor, CurrentDropActor>();
         services.AddSingleton<StoreIntegrationScope>();
         services.AddSharedInfrastructure();
         services.AddScoped<IAppearanceContext, DropAppearanceContext>();
@@ -68,15 +76,15 @@ public static class DependencyInjection
             services.AddHostedService<Workers.DropQueueExpirationWorker>();
         }
 
-        services.AddScoped<DropCommerce.Application.Contracts.IDropCatalogRepository, DropCatalogRepository>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Catalog.IDropCatalogRepository, DropCatalogRepository>();
 
-        services.AddScoped<DropCommerce.Application.Contracts.IDropQueueRepository, DropQueueRepository>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Queue.IDropQueueRepository, DropQueueRepository>();
 
-        services.AddScoped<DropCommerce.Application.Contracts.IDropCheckoutRepository, DropCheckoutRepository>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Orders.IDropCheckoutRepository, DropCheckoutRepository>();
 
-        services.AddScoped<DropCommerce.Application.Contracts.IDropStockSagaRepository, DropStockSagaRepository>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Inventory.IDropStockSagaRepository, DropStockSagaRepository>();
 
-        services.AddScoped<DropCommerce.Application.Contracts.IDropStorefrontRepository, DropStorefrontRepository>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Storefront.IDropStorefrontRepository, DropStorefrontRepository>();
 
         return services;
     }

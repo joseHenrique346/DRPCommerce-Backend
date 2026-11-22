@@ -1,4 +1,4 @@
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Application.Contracts;
 using SharedCommerce.Application;

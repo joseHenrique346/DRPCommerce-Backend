@@ -1,7 +1,8 @@
+using SharedCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -18,7 +19,7 @@ namespace StoreCommerce.Security.Services;
 /// </summary>
 public sealed class JwtSessionService(
     IIdentityRepositories data, IOptions<SecurityOptions> settings, TimeProvider time,
-    StoreCommerce.Application.Contracts.IEnterpriseDomainAccess domains) : ISessionValidator, ISessionTokenIssuer
+    StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess domains) : ISessionValidator, ISessionTokenIssuer
 {
     private SecurityOptions Options => settings.Value;
     private DateTime Now => time.GetUtcNow().UtcDateTime;

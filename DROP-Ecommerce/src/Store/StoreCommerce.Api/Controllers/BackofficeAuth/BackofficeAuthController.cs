@@ -1,3 +1,4 @@
+using StoreCommerce.Domain.Enums.Identity;
 using SharedCommerce.Application.Security;
 using MediatR;
 using StoreCommerce.Api.Extensions;
@@ -213,4 +214,3 @@ public sealed class BackofficeAuthController(IMediator mediator, IAntiforgery an
         return NoContent();
     }
 }
-

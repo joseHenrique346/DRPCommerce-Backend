@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SharedCommerce.Application.Contracts.Appearance;
 using SharedCommerce.Application.Features.Commands;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Domain.Exceptions;
 using Xunit;
 

@@ -1,16 +1,7 @@
-using StoreCommerce.Domain.Interfaces;
+using StoreCommerce.Domain.Enums.Inventory;
+using StoreCommerce.Domain.Interfaces.Tenancy;
 
 namespace StoreCommerce.Domain.Entity;
-
-public enum StockMovementType
-{
-    Adjustment = 1,
-    Reservation = 2,
-    Release = 3,
-    Commit = 4,
-    Expiration = 5,
-    Return = 6
-}
 
 public class StockMovement : BaseEntity, ITenantEntity
 {
