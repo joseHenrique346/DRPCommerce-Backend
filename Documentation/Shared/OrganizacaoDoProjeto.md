@@ -49,7 +49,7 @@ StoreCommerce.Application/
         SearchProductsQueryValidator.cs
       Contracts/Requests/
       Contracts/Responses/
-      Support/
+      Auxiliar/
     Orders/Checkout/PlaceOrder/
     Orders/Order/Writers/
     Identity/Authentication/
@@ -69,6 +69,26 @@ como `UserResponse.cs` e `UserResponse.Mapping.cs`.
 
 Contratos de entrada e saída, Writers específicos, policies, mappers, validadores
 auxiliares, opções e escopos ficam junto de sua feature em subpastas específicas.
+
+As features não usam uma pasta genérica `Models`. Classifique os tipos pela
+responsabilidade:
+
+| Pasta na feature | Conteúdo | Exemplos |
+| --- | --- | --- |
+| `Contracts/Requests` | Entradas e componentes de Commands, casos de uso e chamadas de integração | `CategoryOrderItem`, `PlatformWebhookBody`, `StockReservationItem` |
+| `Contracts/Responses` | Saídas de Queries, leituras e integrações, incluindo componentes da resposta | `DropPendingOrder`, `DropQueueWorkKey`, `AppearanceManifest` |
+| `Auxiliar` | Contextos, seleções, estados de execução e auxiliares exclusivamente internos | `CartPurchaseContext`, `ProductReactivationSelection`, `PaymentAttemptWork`, `OrderLabels` |
+
+Request e Response não se restringem à API HTTP. Uma Query de worker também
+possui um contrato de saída. Um contexto preparado durante a execução, por outro
+lado, continua sendo suporte interno. Payloads persistidos e dados de leases
+permanecem internos; a mudança de pasta não os transforma em contratos HTTP.
+Quando um componente de contrato também for reutilizado na outra direção,
+mantenha um único tipo junto de sua finalidade principal.
+
+A pasta `Auxiliar` mantém o nome em português por solicitação do usuário, como
+exceção à nomenclatura em inglês das demais pastas.
+
 Interfaces ficam em `Interfaces/<Context>`; enums ficam em `Enums/<Context>` da
 Application ou do Domain, conforme a camada em que já eram definidos.
 `Behaviours` contém somente o pipeline transversal.

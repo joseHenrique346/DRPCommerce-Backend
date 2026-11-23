@@ -18,6 +18,9 @@ Quando o pedido for apenas organização, preserve condições, operadores, orde
 - Em Application, mantenha as features em `Features/Commands/<Context>/<Feature>`. Quando o contexto já identificar a feature, não repita o nome da pasta.
 - Cada operação deve ter seus próprios arquivos de Command/Query, Handler e Validator. Coloque consultas em `Queries/<Operation>` e comandos em `<Operation>` dentro da feature.
 - Mantenha contratos, auxiliares, validações e escopos dentro da feature correspondente, em subpastas com responsabilidade explícita. Não concentre operações diferentes em arquivos como `Commands.cs`, `Handlers.cs` ou `Validators.cs`.
+- Use Auxiliar para as pastas de estruturas e auxiliares internos. Esse nome em português é uma exceção solicitada pelo usuário à regra de nomes de pastas em inglês.
+- Não use uma pasta genérica Models nas features. Coloque entradas e seus componentes em Contracts/Requests, saídas e seus componentes em Contracts/Responses e estruturas exclusivamente internas em Auxiliar.
+- Requests e Responses também incluem contratos de Commands, Queries e integrações internas. Contextos, seleções e estados de execução não devem ser classificados como contratos só por transportarem dados entre auxiliares. Reutilize componentes compartilhados sem duplicar tipos.
 - Separe interfaces em `Interfaces/<Context>`, com um tipo por arquivo. DTOs e implementações não devem ficar no arquivo de uma interface.
 - Separe enums em `Enums/<Context>` na camada Application ou Domain correspondente, com um enum por arquivo. Não declare enums junto de entidades, Services ou DTOs.
 - Integrações podem ficar em `Integrations/<Provider>`, separando interfaces, contratos e implementações técnicas. Os casos de uso continuam em `Features/Commands`.
