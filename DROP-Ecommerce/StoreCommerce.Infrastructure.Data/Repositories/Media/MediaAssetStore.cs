@@ -1,14 +1,17 @@
 using StoreCommerce.Application.Interfaces.Media;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SharedCommerce.Application.Options;
 using SharedCommerce.Application.Validation;
 using SharedCommerce.Domain.Entity;
 using StoreCommerce.Application.Media;
+using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;
 
-public sealed class MediaAssetStore(StoreCommerceDbContext db) : IMediaAssetStore
+public sealed class MediaAssetStore(StoreCommerceDbContext db, IOptions<SecurityOptions> options) : IMediaAssetStore
 {
     public Task<MediaAsset?> FindAsync(long tenant, long id, CancellationToken ct)
     {
@@ -30,10 +33,15 @@ public sealed class MediaAssetStore(StoreCommerceDbContext db) : IMediaAssetStor
 
     public async Task<IReadOnlyList<MediaAssetSummary>> ListAsync(long tenant, CancellationToken ct)
     {
-        return await db.MediaAssets.IgnoreQueryFilters().AsNoTracking().Where(Asset =>
-            Asset.EnterpriseId == tenant && !Asset.IsDeleted).OrderByDescending(Asset => Asset.Id).Take(100)
-            .Select(Asset => new MediaAssetSummary(Asset.Id, Asset.PublicId, Asset.Width, Asset.Height, Asset.ByteLength,
-                Asset.CreatedAt, Asset.IsRetainedByDrop)).ToListAsync(ct);
+        var apiBaseUrl = options.Value.StorefrontApiBaseUrl;
+
+        return await (from Asset in db.MediaAssets.IgnoreQueryFilters().AsNoTracking()
+            join Enterprise in db.Enterprises.IgnoreQueryFilters() on Asset.EnterpriseId equals Enterprise.Id
+            where Asset.EnterpriseId == tenant && !Asset.IsDeleted
+            orderby Asset.Id descending
+            select new MediaAssetSummary(Asset.Id, Asset.PublicId, Asset.Width, Asset.Height, Asset.ByteLength,
+                Asset.CreatedAt, Asset.IsRetainedByDrop, StorefrontUrls.Media(apiBaseUrl, Enterprise.StorefrontSlug, Asset.PublicId)))
+            .Take(100).ToListAsync(ct);
     }
 
     public async Task<long> BytesAsync(long tenant, CancellationToken ct)

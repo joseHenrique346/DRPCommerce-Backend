@@ -13,7 +13,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Api.Controllers;
 
-[Route("api/storefront/auth")]
+[Route("api/storefront/{storeSlug}/auth")]
 [Authorize(Policy = SecurityNames.Storefront)]
 [EnableRateLimiting("auth")]
 public sealed class StorefrontAuthController(IMediator mediator, IAntiforgery antiforgery) : AuthControllerBase(mediator, antiforgery)
@@ -69,7 +69,7 @@ public sealed class StorefrontAuthController(IMediator mediator, IAntiforgery an
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
-        if (Request.Cookies.ContainsKey(CustomerContext ? "__Host-DRP-StorefrontRefresh" : "__Host-DRP-BackofficeRefresh"))
+        if (Request.Cookies.ContainsKey(CookieName))
         {
             var result = await Mediator.Send(new LogoutCommand(RefreshCookie(), CustomerContext), ct);
 

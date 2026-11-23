@@ -62,13 +62,13 @@ Confirmação de e-mail e recuperação têm entidades e casos de uso preparados
 - Membership: única por `(EnterpriseId, UserId)`.
 - Índice parcial: no máximo um dono principal ativo por loja; cadastro e transferência preservam sua existência.
 - Hostname único globalmente; no máximo um domínio primário por loja.
-- Loja nova recebe subdomínio da plataforma, já verificado e primário.
+- Loja nova recebe um slug único para sua página pública.
 - Domínio próprio começa não verificado e inativo; publicação depende de prova DNS TXT.
 - Para desativar/excluir um domínio primário, escolha outro primário primeiro.
 - Employee: relação 1:1 opcional com membership e referências funcionais da mesma loja.
 - FKs compostas de tenant protegem relações de memberships, perfis, convites, funcionários e transferências.
 - Query filters e proteção de SaveChanges rejeitam dados ou referências de outra loja.
-- Tenant do storefront vem do Host verificado; tenant administrativo vem da membership autenticada.
+- Tenant do storefront vem do slug de uma loja ativa. Tenant administrativo vem da membership autenticada.
 - DTO, query string ou cabeçalho público não concedem autoridade sobre um tenant.
 - Operações de clientes usam CustomerId autenticado, não um ID escolhido no body.
 

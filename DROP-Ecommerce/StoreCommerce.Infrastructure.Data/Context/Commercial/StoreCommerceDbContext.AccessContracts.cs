@@ -1,6 +1,5 @@
 using StoreCommerce.Domain.Interfaces.Tenancy;
 using Microsoft.EntityFrameworkCore;
-using SharedCommerce.Application.Security;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Contracts;
 using StoreCommerce.Domain.Contracts;
@@ -163,49 +162,28 @@ public partial class StoreCommerceDbContext
             return;
 
         var domains = await EnterpriseDomains.IgnoreQueryFilters().Where(Domain => Domain.EnterpriseId == tenant).ToListAsync(ct);
-        var platform = domains.Where(Domain => Domain.IsVerified &&
-                DomainHostPolicy.IsPlatformHost(Domain.NormalizedHost, _securityOptions.StorefrontBaseDomain))
-            .OrderByDescending(Domain => Domain.IsPrimary).ThenBy(Domain => Domain.Id).FirstOrDefault();
 
-        if (platform is null)
-        {
-            var host = HostName.Normalize("loja-" + tenant + "-" + Guid.NewGuid().ToString("N")[..8] + "." +
-                _securityOptions.StorefrontBaseDomain);
-            platform = EnterpriseDomain.Create(tenant, host, false, false);
-            platform.Verify();
-            EnterpriseDomains.Add(platform);
-        }
-
-        // Libera o índice parcial antes de promover o fallback, dentro da transação do contrato.
-        if (domains.Any(Domain => Domain.IsPrimary && Domain.Id != platform.Id))
-            await Database.ExecuteSqlInterpolatedAsync(
-                $"UPDATE dominio_empresa SET is_primary = FALSE WHERE enterprise_id = {tenant} AND is_primary", ct);
-
-        foreach (var domain in domains.Where(Domain =>
-            !DomainHostPolicy.IsPlatformHost(Domain.NormalizedHost, _securityOptions.StorefrontBaseDomain)))
+        foreach (var domain in domains)
         {
             if (domain.IsActive || !domain.IsContractBlocked)
                 AddStoreActivity(tenant, "domain_contract_blocked", null, null, "custom_domain_unavailable", new { domainId = domain.Id });
 
             domain.BlockForContract();
         }
-
-        foreach (var domain in domains.Where(Domain => Domain.IsPrimary && Domain != platform))
-            domain.SetPublication(false, domain.IsActive);
-
-        platform.SetPublication(true, true);
     }
 
     private void GuardDomainContractWrites(long tenant, EnterpriseEntitlements rights)
     {
+        if (rights.AllowsCustomDomain)
+            return;
+
         foreach (var entry in ChangeTracker.Entries<EnterpriseDomain>().Where(Entry =>
             Entry.Entity.EnterpriseId == tenant && Entry.State is EntityState.Added or EntityState.Modified))
         {
             var domain = entry.Entity;
-            var platform = DomainHostPolicy.IsPlatformHost(domain.NormalizedHost, _securityOptions.StorefrontBaseDomain);
 
-            if (!platform && !rights.AllowsCustomDomain && (entry.State == EntityState.Added || domain.IsActive ||
-                entry.Property(Domain => Domain.IsVerified).IsModified && domain.IsVerified))
+            if (entry.State == EntityState.Added || domain.IsActive ||
+                entry.Property(Domain => Domain.IsVerified).IsModified && domain.IsVerified)
                 throw new SecurityFailure(409, "Domain.PlanRequired", "O contrato não permite cadastrar, verificar ou ativar domínio próprio.");
         }
     }

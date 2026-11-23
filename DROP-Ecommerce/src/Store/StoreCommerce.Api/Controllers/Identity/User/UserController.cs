@@ -56,7 +56,7 @@ public sealed class UserController(IMediator mediator) : ControllerBase
         if (result.IsFailure)
             return this.ToIdentityActionResult(result);
 
-        Response.ClearDeletedAccountCookie(false);
+        Response.ClearRefreshCookie(false);
 
         return NoContent();
     }

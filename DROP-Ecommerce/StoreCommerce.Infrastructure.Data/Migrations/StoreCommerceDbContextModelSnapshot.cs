@@ -1991,6 +1991,11 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("state_id");
 
+                    b.Property<string>("StorefrontSlug")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)")
+                        .HasColumnName("storefront_slug");
+
                     b.Property<string>("TradeName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -2015,6 +2020,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
 
                     b.HasIndex("StateId")
                         .HasDatabaseName("ix_empresa_state_id");
+
+                    b.HasIndex("StorefrontSlug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_empresa_storefront_slug");
 
                     b.HasIndex("PlanId", "AddOnId")
                         .HasDatabaseName("ix_empresa_plan_id_add_on_id");

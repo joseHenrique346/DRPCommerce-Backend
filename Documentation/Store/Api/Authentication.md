@@ -38,13 +38,14 @@ Configure segredos por variáveis de ambiente, user-secrets ou outro armazenamen
 | Security__SigningKey | Chave aleatória com pelo menos 32 bytes, igual nos dois serviços |
 | Security__Issuer | Emissor igual nos dois serviços; padrão DRPCommerce |
 | Security__InternalServiceKey | Segredo distinto, pelo menos 32 caracteres, igual nos dois serviços |
-| Security__StorefrontBaseDomain | Domínio controlado pela plataforma para subdomínios das lojas |
+| Security__StorefrontBaseUrl | Raiz HTTPS pública do front para as URLs das lojas |
+| Security__StorefrontApiBaseUrl | Prefixo externo da API Store para URLs de mídia |
 | Security__BackofficeUrl | URL administrativa para futura entrega de ações |
 | Security__AllowedOrigins__0, __1, ... | Origins exatas de frontends autorizados no CORS |
 | Security__TrustedProxies__0, __1, ... | IPs exatos dos proxies confiáveis |
 | Security__RequireConfirmedEmail | false nesta etapa sem envio de e-mail |
 
-Para desenvolvimento, `stores.localhost` pode servir como base, por exemplo `loja-a.stores.localhost`. Configure resolução DNS/hosts e HTTPS apropriados. O cadastro de loja não cria DNS ou certificados automaticamente.
+Para desenvolvimento, use a URL HTTPS do front como base pública e faça as chamadas de uma loja em `/api/storefront/{storeSlug}/`. O Gateway acrescenta seu prefixo externo ao publicar o Store. [Storefront por loja](../../Shared/StorefrontPorLoja.md)
 
 Cookies de refresh e CSRF são Secure. Use HTTPS também no desenvolvimento e configure confiança no certificado local. Os clients internos mantêm validação TLS.
 
@@ -55,7 +56,7 @@ Tokens administrativos com loja selecionada incluem `plan_id`, `contract_revisio
 tokens anteriores à implantação também precisam ser renovados. Veja
 [planos e contratos](../../Shared/PlanosEContratos.md) para catálogo, leitura de direitos e solicitação sem concessão.
 
-1. Faça GET `/api/auth/csrf` ou `/api/storefront/auth/csrf` com `credentials: "include"`.
+1. Faça GET `/api/auth/csrf` ou `/api/storefront/{storeSlug}/auth/csrf` com `credentials: "include"`.
 2. Guarde `requestToken` em memória. O servidor também configura o cookie CSRF HttpOnly.
 3. Envie POST de cadastro/login com `X-CSRF-TOKEN: requestToken` e `credentials: "include"`.
 4. Guarde o accessToken em memória e envie `Authorization: Bearer <accessToken>` nas operações protegidas.
@@ -69,7 +70,7 @@ Serialize as renovações no frontend, inclusive entre abas. Duas requisições 
 
 No Swagger do Store, as operações que usam `CookieCsrfAttribute` e não são GET/HEAD exibem um parâmetro obrigatório de header chamado `X-CSRF-TOKEN`. Isso inclui cadastro, login, refresh, seleção de loja, logout, troca de senha, revogação de sessão e ações de e-mail dos fluxos administrativo e de cliente. GET de CSRF e listagem de sessões não exigem esse header. As ações de e-mail continuam indisponíveis nesta etapa.
 
-1. Abra o Swagger em HTTPS e execute o GET `csrf` do fluxo desejado: `/api/auth/csrf` para administração ou `/api/storefront/auth/csrf` para cliente. O fluxo de cliente exige domínio de loja ativo e verificado.
+1. Abra o Swagger em HTTPS e execute o GET `csrf` do fluxo desejado: `/api/auth/csrf` para administração ou `/api/storefront/{storeSlug}/auth/csrf` para cliente. O fluxo de cliente exige domínio de loja ativo e verificado.
 2. Copie somente o valor de `requestToken` retornado. O navegador guarda o cookie correspondente.
 3. Abra a operação, clique em `Try it out` e preencha o campo `X-CSRF-TOKEN` com esse valor, sem prefixo Bearer.
 4. Preencha o body, quando existir, e clique em `Execute` no mesmo host HTTPS e contexto de autenticação usados para obter o CSRF.
@@ -88,7 +89,7 @@ Os Swaggers do Store e do Drop possuem o botão `Authorize`, com o esquema HTTP 
 
 O refresh token permanece exclusivamente no cookie HttpOnly; não deve ser colocado no `Authorize`. Antes de renovar um access token expirado, clique em `Logout` dentro do diálogo `Authorize` para retirar o Bearer do Swagger (isso não encerra a sessão no backend), obtenha um novo CSRF sem Bearer e execute `refresh`. Depois, autorize com o novo access token e obtenha outro CSRF para as operações autenticadas. Ao selecionar outra loja, também substitua o Bearer pelo access token retornado e renove o CSRF.
 
-Os cookies são `__Host-DRP-BackofficeRefresh` e `__Host-DRP-StorefrontRefresh`, com HttpOnly, Secure, SameSite=Strict e Path=/, sem Domain. São vinculados ao host. Para lojas com domínio próprio, publique as rotas storefront sob o domínio da loja por proxy; uma API central em outro site não é compatível com esses cookies Strict sem rever o contrato.
+Os cookies são `__Host-DRP-BackofficeRefresh` e `__Host-DRP-StorefrontRefresh-<enterpriseId>`, com HttpOnly, Secure, SameSite=Strict e Path=/, sem Domain. O slug indica qual cookie de cliente o servidor lê e qual loja precisa constar no Bearer.
 
 ## Backoffice: /api/auth
 
@@ -111,11 +112,11 @@ Login devolve `accessToken`, `accessTokenExpiresAt`, `requiresEnterpriseSelectio
 
 `POST select-enterprise` usa membership pertencente ao dono do cookie, validada no banco. Seu ID não é um tenant arbitrário.
 
-## Storefront: /api/storefront/auth
+## Storefront: /api/storefront/{storeSlug}/auth
 
 Mesmas operações de csrf, register, login, refresh, logout, logout-all, sessions e change-password, mas com audience `storefront` e contexto de cliente.
 
-Cadastro recebe fullName, email, password, phone, addressLine, city, stateId, zipCode, country, gender e dateOfBirth. Não recebe EnterpriseId: a loja é resolvida pelo Host verificado e ativo.
+Cadastro recebe fullName, email, password, phone, addressLine, city, stateId, zipCode, country, gender e dateOfBirth. A loja ativa é resolvida pelo slug da rota.
 
 Não há seleção de lojas para o comprador. O cliente da loja A não acessa a loja B com o mesmo JWT, nem usa endpoints administrativos.
 
@@ -123,20 +124,20 @@ Rotas adicionais do Store:
 
 | Rota | Acesso |
 |---|---|
-| GET /api/storefront/store | Contato/nome da loja do Host, público |
-| GET /api/storefront/products?page=1&pageSize=20 | Produtos ativos, sem preço de custo, público |
-| GET /api/storefront/products/search e /products/by-slug/{slug} | Catálogo filtrado/paginado e detalhe com SKUs, públicos |
-| GET /api/storefront/categories/tree e /categories/by-slug/{slug} | Categorias visíveis na loja, públicas |
-| GET /api/storefront/coupons/validate | Prévia de cupom, pública com cliente opcional; não ocupa uso |
-| GET/PUT /api/storefront/me | Perfil do cliente autenticado |
-| GET /api/storefront/me/deletion | Consulta impedimentos para excluir o perfil desta loja |
-| DELETE /api/storefront/me | Exclusão com currentPassword no corpo + CSRF; preserva vendas e bloqueia pendências |
-| Rotas /api/storefront/me/addresses | Endereços próprios; consulta, cadastro, edição, exclusão e definição de padrão nas ações específicas |
-| Rotas /api/storefront/cart | Carrinho próprio, itens e seleção; métodos e corpos definidos por ação na referência |
-| POST /api/storefront/checkout | Compra selecionados do carrinho; cliente, preço e desconto resolvidos no servidor |
-| GET /api/storefront/orders | Pedidos próprios |
-| GET /api/storefront/orders/{id} | Pedido próprio; outro cliente recebe 404 |
-| POST /api/storefront/orders/{id}/cancel | Cliente cancela pedido próprio ainda pendente |
+| GET /api/storefront/{storeSlug}/store | Contato, nome e URL pública da loja identificada pelo slug |
+| GET /api/storefront/{storeSlug}/products?page=1&pageSize=20 | Produtos ativos, sem preço de custo, público |
+| GET /api/storefront/{storeSlug}/products/search e /products/by-slug/{slug} | Catálogo filtrado/paginado e detalhe com SKUs, públicos |
+| GET /api/storefront/{storeSlug}/categories/tree e /categories/by-slug/{slug} | Categorias visíveis na loja, públicas |
+| GET /api/storefront/{storeSlug}/coupons/validate | Prévia de cupom, pública com cliente opcional; não ocupa uso |
+| GET/PUT /api/storefront/{storeSlug}/me | Perfil do cliente autenticado |
+| GET /api/storefront/{storeSlug}/me/deletion | Consulta impedimentos para excluir o perfil desta loja |
+| DELETE /api/storefront/{storeSlug}/me | Exclusão com currentPassword no corpo + CSRF; preserva vendas e bloqueia pendências |
+| Rotas /api/storefront/{storeSlug}/me/addresses | Endereços próprios; consulta, cadastro, edição, exclusão e definição de padrão nas ações específicas |
+| Rotas /api/storefront/{storeSlug}/cart | Carrinho próprio, itens e seleção; métodos e corpos definidos por ação na referência |
+| POST /api/storefront/{storeSlug}/checkout | Compra selecionados do carrinho; cliente, preço e desconto resolvidos no servidor |
+| GET /api/storefront/{storeSlug}/orders | Pedidos próprios |
+| GET /api/storefront/{storeSlug}/orders/{id} | Pedido próprio; outro cliente recebe 404 |
+| POST /api/storefront/{storeSlug}/orders/{id}/cancel | Cliente cancela pedido próprio ainda pendente |
 
 PUT de perfil não aceita e-mail, senha, status ou privilégio. Troca de senha usa seu caso de uso específico.
 
@@ -151,7 +152,7 @@ Os grupos acima resumem funcionalidades, não significam que todos os verbos sej
 | GET /api/users/me/deletion | Consulta impedimentos para excluir a conta global |
 | DELETE /api/users/me | Exclui perfil mediante currentPassword no corpo + CSRF; bloqueado enquanto dono principal de loja |
 | GET /api/enterprises/mine | Memberships próprias, incluindo lojas pausadas |
-| POST /api/enterprises/register | Cria Enterprise, dono principal, subdomínio, configurações e papéis padrão, atomicamente |
+| POST /api/enterprises/register | Cria Enterprise com slug, dono principal, configurações e papéis padrão, atomicamente |
 | PUT /api/enterprises/current | Dados da loja; somente dono principal |
 | PUT /api/enterprises/{id}/activation | Body booleano; verifica propriedade no banco, inclusive para reativar loja |
 | GET /api/enterprise-memberships/get-all | Membros da loja, dono principal |
@@ -231,7 +232,7 @@ O convite cria o vínculo de acesso, mas o onboarding automático do perfil Empl
 - Tokens de confirmação/recuperação preparados: 30 minutos.
 - Login: a partir de 5 falhas, bloqueio de 30 segundos; novas falhas após espera aumentam até 15 minutos. Contadores persistidos por conta; clientes são independentes por loja.
 - Janela deslizante por IP/política: auth 15/min, refresh 30/min e rotas storefront api 180/min, seis segmentos. Não é limitador distribuído.
-- `GET /api/auth/csrf` e `GET /api/storefront/auth/csrf` usam a política `api`, separada do orçamento `auth` de cadastro/login. Atingir o limite de login não impede obter outro token CSRF.
+- `GET /api/auth/csrf` e `GET /api/storefront/{storeSlug}/auth/csrf` usam a política `api`, separada do orçamento `auth` de cadastro/login. Atingir o limite de login não impede obter outro token CSRF.
 - Rejeições do limitador retornam 429 em `application/problem+json`, com `status`, `title`, `detail`, `code: "Security.RateLimited"` e `traceId`. O header `Retry-After` sempre informa segundos inteiros positivos e é exposto pelo CORS. O limitador deslizante do .NET 9 não fornece o prazo nos metadados; nesse caso a resposta usa uma espera conservadora de 60 segundos, correspondente a uma janela completa. Se o limitador fornecer metadados, o prazo é arredondado para cima.
 - Retenção após expiração: 7 dias; limpeza periódica a cada 6 horas. Tokens consumidos são mantidos durante a vida da família para detectar replay.
 

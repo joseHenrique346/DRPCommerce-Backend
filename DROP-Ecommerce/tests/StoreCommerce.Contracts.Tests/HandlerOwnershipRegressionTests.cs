@@ -17,38 +17,38 @@ public sealed class HandlerOwnershipRegressionTests(ContractsApiFixture fixture)
     {
         var (owner, productId, _) = await ProductAsync();
         using var buyer = await BuyerAsync(owner.EnterpriseId);
-        var first = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/me/addresses", Address("Primeiro", false)));
+        var first = await ContentAsync(await buyer.PostAsJsonAsync("me/addresses", Address("Primeiro", false)));
         var firstId = first.EnumerateArray().Single().GetProperty("id").GetInt64();
         Assert.True(first.EnumerateArray().Single().GetProperty("isDefault").GetBoolean());
 
-        var second = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/me/addresses", Address("Segundo", false)));
+        var second = await ContentAsync(await buyer.PostAsJsonAsync("me/addresses", Address("Segundo", false)));
         var secondId = second.EnumerateArray().Single(Item => Item.GetProperty("id").GetInt64() != firstId).GetProperty("id").GetInt64();
-        var defaults = await ContentAsync(await buyer.PutAsync($"/api/storefront/me/addresses/{secondId}/default", null));
+        var defaults = await ContentAsync(await buyer.PutAsync($"me/addresses/{secondId}/default", null));
         Assert.Equal(secondId, defaults.EnumerateArray().Single(Item => Item.GetProperty("isDefault").GetBoolean()).GetProperty("id").GetInt64());
 
-        await ContentAsync(await buyer.PutAsJsonAsync($"/api/storefront/me/addresses/{firstId}", Address("Atualizado", false)));
-        var remaining = await ContentAsync(await buyer.DeleteAsync($"/api/storefront/me/addresses/{secondId}"));
+        await ContentAsync(await buyer.PutAsJsonAsync($"me/addresses/{firstId}", Address("Atualizado", false)));
+        var remaining = await ContentAsync(await buyer.DeleteAsync($"me/addresses/{secondId}"));
         var remainingAddress = remaining.EnumerateArray().Single();
         Assert.Equal(firstId, remainingAddress.GetProperty("id").GetInt64());
         Assert.Equal("Atualizado", remainingAddress.GetProperty("label").GetString());
         Assert.True(remainingAddress.GetProperty("isDefault").GetBoolean());
 
-        var cart = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 1 }));
+        var cart = await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 1 }));
         var itemId = cart.GetProperty("items").EnumerateArray().Single().GetProperty("id").GetInt64();
-        cart = await ContentAsync(await buyer.PutAsJsonAsync($"/api/storefront/cart/items/{itemId}", new { quantity = 2 }));
+        cart = await ContentAsync(await buyer.PutAsJsonAsync($"cart/items/{itemId}", new { quantity = 2 }));
         Assert.Equal(2, cart.GetProperty("items").EnumerateArray().Single().GetProperty("quantity").GetInt32());
 
-        cart = await ContentAsync(await buyer.PutAsJsonAsync("/api/storefront/cart/selection", new { selected = false }));
+        cart = await ContentAsync(await buyer.PutAsJsonAsync("cart/selection", new { selected = false }));
         Assert.False(cart.GetProperty("items").EnumerateArray().Single().GetProperty("isSelected").GetBoolean());
-        cart = await ContentAsync(await buyer.PutAsJsonAsync("/api/storefront/cart/selection", new { selected = true }));
+        cart = await ContentAsync(await buyer.PutAsJsonAsync("cart/selection", new { selected = true }));
         Assert.True(cart.GetProperty("items").EnumerateArray().Single().GetProperty("isSelected").GetBoolean());
 
-        cart = await ContentAsync(await buyer.DeleteAsync($"/api/storefront/cart/items/{itemId}"));
+        cart = await ContentAsync(await buyer.DeleteAsync($"cart/items/{itemId}"));
         Assert.Empty(cart.GetProperty("items").EnumerateArray());
-        await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 1 }));
-        cart = await ContentAsync(await buyer.DeleteAsync("/api/storefront/cart"));
+        await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 1 }));
+        cart = await ContentAsync(await buyer.DeleteAsync("cart"));
         Assert.Empty(cart.GetProperty("items").EnumerateArray());
-        var savedAddresses = await ContentAsync(await buyer.GetAsync("/api/storefront/me/addresses"));
+        var savedAddresses = await ContentAsync(await buyer.GetAsync("me/addresses"));
         Assert.Single(savedAddresses.EnumerateArray());
     }
 
@@ -57,14 +57,14 @@ public sealed class HandlerOwnershipRegressionTests(ContractsApiFixture fixture)
     {
         var (owner, productId, variantId) = await ProductAsync();
         using var buyer = await BuyerAsync(owner.EnterpriseId);
-        var cart = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 1 }));
+        var cart = await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 1 }));
         var itemId = cart.GetProperty("items").EnumerateArray().Single().GetProperty("id").GetInt64();
         await AdjustAsync(owner, variantId, -8);
-        cart = await ContentAsync(await buyer.PutAsync($"/api/storefront/cart/items/{itemId}/await-stock", null));
+        cart = await ContentAsync(await buyer.PutAsync($"cart/items/{itemId}/await-stock", null));
         Assert.True(cart.GetProperty("items").EnumerateArray().Single().GetProperty("isAwaitingStock").GetBoolean());
 
         await AdjustAsync(owner, variantId, 8);
-        cart = await ContentAsync(await buyer.GetAsync("/api/storefront/cart"));
+        cart = await ContentAsync(await buyer.GetAsync("cart"));
         var item = cart.GetProperty("items").EnumerateArray().Single();
         Assert.True(item.GetProperty("backInStock").GetBoolean());
         Assert.False(item.GetProperty("isSelected").GetBoolean());
@@ -75,17 +75,17 @@ public sealed class HandlerOwnershipRegressionTests(ContractsApiFixture fixture)
     {
         var (owner, productId, variantId) = await ProductAsync();
         using var buyer = await BuyerAsync(owner.EnterpriseId);
-        await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 2 }));
+        await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 2 }));
         var request = Checkout();
-        var order = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/checkout", request));
+        var order = await ContentAsync(await buyer.PostAsJsonAsync("checkout", request));
         var orderId = order.GetProperty("id").GetInt64();
-        var repeated = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/checkout", request));
+        var repeated = await ContentAsync(await buyer.PostAsJsonAsync("checkout", request));
         Assert.Equal(orderId, repeated.GetProperty("id").GetInt64());
         Assert.Equal((8, 2), await StockAsync(variantId));
 
-        var cancelled = await ContentAsync(await buyer.PostAsJsonAsync($"/api/storefront/orders/{orderId}/cancel", new { reason = "Teste de cancelamento" }));
+        var cancelled = await ContentAsync(await buyer.PostAsJsonAsync($"orders/{orderId}/cancel", new { reason = "Teste de cancelamento" }));
         Assert.Equal(OrderStatus.Cancelled.Id, cancelled.GetProperty("statusId").GetInt64());
-        await ContentAsync(await buyer.PostAsJsonAsync($"/api/storefront/orders/{orderId}/cancel", new { reason = "Repetição" }));
+        await ContentAsync(await buyer.PostAsJsonAsync($"orders/{orderId}/cancel", new { reason = "Repetição" }));
         Assert.Equal((8, 0), await StockAsync(variantId));
 
         using var scope = fixture.Services.CreateScope();
@@ -98,8 +98,8 @@ public sealed class HandlerOwnershipRegressionTests(ContractsApiFixture fixture)
     {
         var (owner, productId, variantId) = await ProductAsync();
         using var buyer = await BuyerAsync(owner.EnterpriseId);
-        await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 2 }));
-        var order = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/checkout", Checkout()));
+        await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 2 }));
+        var order = await ContentAsync(await buyer.PostAsJsonAsync("checkout", Checkout()));
         var orderId = order.GetProperty("id").GetInt64();
         using var backoffice = fixture.Client(owner.Token);
 
@@ -141,10 +141,10 @@ public sealed class HandlerOwnershipRegressionTests(ContractsApiFixture fixture)
         }
 
         using var buyer = await BuyerAsync(owner.EnterpriseId);
-        await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId, quantity = 1 }));
+        await ContentAsync(await buyer.PostAsJsonAsync("cart/items", new { productId, quantity = 1 }));
         var request = Checkout(code);
-        var order = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/checkout", request));
-        var repeated = await ContentAsync(await buyer.PostAsJsonAsync("/api/storefront/checkout", request));
+        var order = await ContentAsync(await buyer.PostAsJsonAsync("checkout", request));
+        var repeated = await ContentAsync(await buyer.PostAsJsonAsync("checkout", request));
         Assert.Equal(OrderStatus.Confirmed.Id, order.GetProperty("statusId").GetInt64());
         Assert.Equal(order.GetProperty("id").GetInt64(), repeated.GetProperty("id").GetInt64());
         Assert.Equal((7, 0), await StockAsync(variantId));

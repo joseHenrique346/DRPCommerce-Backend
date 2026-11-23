@@ -10,7 +10,7 @@ using StoreCommerce.Application.Features.Commands;
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront")]
+[Route("api/storefront/{storeSlug}")]
 [EnableRateLimiting("api")]
 [Authorize(Policy = SecurityNames.Storefront)]
 public sealed class StorefrontOrderController(IMediator mediator) : ControllerBase

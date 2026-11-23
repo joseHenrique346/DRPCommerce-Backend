@@ -1,5 +1,4 @@
 using StoreCommerce.Application.Interfaces.Identity;
-using StoreCommerce.Application.Interfaces.StoreManagement;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -204,62 +203,63 @@ public sealed class AccessContractsApiTests(ContractsApiFixture fixture)
     }
 
     [PostgresFact]
-    public async Task Domain_loss_disables_custom_host_keeps_verification_and_uses_platform_host()
+    public async Task Domain_loss_disables_custom_host_and_keeps_the_storefront_path()
     {
         var owner = await fixture.CreateStoreAsync(planId: 2, activeProducts: 1);
         var buyer = await fixture.CreateCustomerAsync(owner.EnterpriseId);
-        var custom = await CustomDomainAsync(owner.EnterpriseId);
+        var domainId = await CreateCustomDomainAsync(owner.EnterpriseId);
         using var ownerClient = fixture.Client(owner.Token);
-        using var publish = await ownerClient.PutAsJsonAsync($"/api/enterprise-domains/{custom.Id}/publication", new { isPrimary = true, isActive = true });
+        using var publish = await ownerClient.PutAsJsonAsync($"/api/enterprise-domains/{domainId}/publication", new { isPrimary = true, isActive = true });
         Assert.Equal(HttpStatusCode.NoContent, publish.StatusCode);
         using var customer = fixture.Client(buyer.Token);
-        customer.BaseAddress = new Uri("https://" + custom.Host);
-        using var before = await customer.GetAsync("/api/storefront/cart");
+        customer.BaseAddress = buyer.Address;
+        using var before = await customer.GetAsync("cart");
         before.EnsureSuccessStatusCode();
         await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
-        using var denied = await customer.GetAsync("/api/storefront/cart");
-        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
-        using var platformCustomer = fixture.Client(buyer.Token);
-        platformCustomer.BaseAddress = buyer.Address;
-        using var fallback = await platformCustomer.GetAsync("/api/storefront/cart");
-        fallback.EnsureSuccessStatusCode();
+        using var after = await customer.GetAsync("cart");
+        after.EnsureSuccessStatusCode();
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
-        var domain = await db.EnterpriseDomains.IgnoreQueryFilters().SingleAsync(Domain => Domain.Id == custom.Id);
+        var domain = await db.EnterpriseDomains.IgnoreQueryFilters().SingleAsync(Domain => Domain.Id == domainId);
         Assert.True(domain.IsVerified && domain.IsContractBlocked);
         Assert.False(domain.IsActive || domain.IsPrimary);
-        Assert.True(await db.EnterpriseDomains.IgnoreQueryFilters().AnyAsync(Domain =>
-            Domain.EnterpriseId == owner.EnterpriseId && Domain.IsPrimary && Domain.NormalizedHost.EndsWith(".shops.example.invalid")));
+        Assert.False(await db.EnterpriseDomains.IgnoreQueryFilters().AnyAsync(Domain =>
+            Domain.EnterpriseId == owner.EnterpriseId && Domain.IsPrimary));
     }
 
     [PostgresFact]
     public async Task Upgrade_does_not_automatically_republish_custom_domain_and_owner_can_reactivate_it()
     {
         var owner = await fixture.CreateStoreAsync(planId: 2);
-        var custom = await CustomDomainAsync(owner.EnterpriseId);
+        var domainId = await CreateCustomDomainAsync(owner.EnterpriseId);
         await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
         await fixture.ChangeContractAsync(owner.EnterpriseId, 2, null);
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
-        Assert.False((await db.EnterpriseDomains.IgnoreQueryFilters().SingleAsync(Domain => Domain.Id == custom.Id)).IsActive);
+        Assert.False((await db.EnterpriseDomains.IgnoreQueryFilters().SingleAsync(Domain => Domain.Id == domainId)).IsActive);
         using var client = fixture.Client(await fixture.FreshTokenAsync(owner));
-        using var activated = await client.PutAsJsonAsync($"/api/enterprise-domains/{custom.Id}/publication", new { isPrimary = true, isActive = true });
+        using var activated = await client.PutAsJsonAsync($"/api/enterprise-domains/{domainId}/publication", new { isPrimary = true, isActive = true });
         Assert.Equal(HttpStatusCode.NoContent, activated.StatusCode);
-        var access = scope.ServiceProvider.GetRequiredService<IEnterpriseDomainAccess>();
-        Assert.Equal(owner.EnterpriseId, await access.ResolveAsync(custom.Host, null, default));
+        var published = await db.EnterpriseDomains.IgnoreQueryFilters().AsNoTracking().SingleAsync(Domain => Domain.Id == domainId);
+        Assert.True(published.IsActive && published.IsPrimary);
+        Assert.False(published.IsContractBlocked);
     }
 
     [PostgresFact]
-    public async Task Domain_resolution_rechecks_contract_even_without_a_persisted_block()
+    public async Task Domain_publication_rechecks_contract_even_without_a_persisted_block()
     {
         var owner = await fixture.CreateStoreAsync(planId: 2);
-        var custom = await CustomDomainAsync(owner.EnterpriseId);
+        var domainId = await CreateCustomDomainAsync(owner.EnterpriseId);
         using var scope = fixture.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
         await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE empresa SET plan_id = 1, contract_revision = contract_revision + 1 WHERE id = {owner.EnterpriseId}");
-        var access = scope.ServiceProvider.GetRequiredService<IEnterpriseDomainAccess>();
-        Assert.Null(await access.ResolveAsync(custom.Host, null, default));
-        Assert.True((await db.EnterpriseDomains.IgnoreQueryFilters().SingleAsync(Domain => Domain.Id == custom.Id)).IsActive);
+        using var client = fixture.Client(await fixture.FreshTokenAsync(owner));
+        using var response = await client.PutAsJsonAsync($"/api/enterprise-domains/{domainId}/publication", new { isPrimary = true, isActive = true });
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var problem = await JsonAsync(response);
+        Assert.Equal("Domain.PlanRequired", problem.RootElement.GetProperty("code").GetString());
+        var domain = await db.EnterpriseDomains.IgnoreQueryFilters().AsNoTracking().SingleAsync(Domain => Domain.Id == domainId);
+        Assert.False(domain.IsPrimary || domain.IsContractBlocked);
     }
 
     [PostgresFact]
@@ -332,25 +332,27 @@ public sealed class AccessContractsApiTests(ContractsApiFixture fixture)
     }
 
     [PostgresFact]
-    public async Task Internal_drop_resolution_and_customer_session_validation_reject_lost_custom_domain()
+    public async Task Internal_drop_resolves_slug_and_rejects_customer_session_for_another_store()
     {
         var owner = await fixture.CreateStoreAsync(planId: 2);
         var buyer = await fixture.CreateCustomerAsync(owner.EnterpriseId);
-        var custom = await CustomDomainAsync(owner.EnterpriseId);
+        var other = await fixture.CreateStoreAsync();
         using var scope = fixture.Services.CreateScope();
         var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions>>().Value;
         var sessions = scope.ServiceProvider.GetRequiredService<StoreCommerce.Security.Services.JwtSessionService>();
         var principal = sessions.ValidateSignature(buyer.Token);
-        Assert.True(await sessions.ValidateAsync(principal, custom.Host, default));
+        Assert.True(await sessions.ValidateAsync(principal, owner.EnterpriseId, default));
+        Assert.False(await sessions.ValidateAsync(principal, other.EnterpriseId, default));
+        Assert.False(await sessions.ValidateAsync(principal, null, default));
         using var client = fixture.Client();
         client.DefaultRequestHeaders.Add("X-Service-Key", options.InternalServiceKey);
-        using var before = await client.GetAsync("/api/internal/tenants/resolve?host=" + custom.Host);
+        var slug = buyer.Address.Segments[^1].TrimEnd('/');
+        using var before = await client.GetAsync("/api/internal/tenants/resolve?slug=" + slug);
         before.EnsureSuccessStatusCode();
-        await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
-        using var after = await client.GetAsync("/api/internal/tenants/resolve?host=" + custom.Host);
-        Assert.Equal(HttpStatusCode.NotFound, after.StatusCode);
-        Assert.False(await sessions.ValidateAsync(principal, custom.Host, default));
-        Assert.True(await sessions.ValidateAsync(principal, buyer.Address.Host, default));
+        using var json = await JsonAsync(before);
+        Assert.Equal(owner.EnterpriseId, json.RootElement.GetProperty("enterpriseId").GetInt64());
+        using var missing = await client.GetAsync("/api/internal/tenants/resolve?slug=loja-inexistente");
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
     }
 
     [PostgresFact]
@@ -388,7 +390,7 @@ public sealed class AccessContractsApiTests(ContractsApiFixture fixture)
             .Where(Membership => Membership.EnterpriseId == tenant).OrderBy(Membership => Membership.Id).ToListAsync();
     }
 
-    private async Task<(long Id, string Host)> CustomDomainAsync(long tenant)
+    private async Task<long> CreateCustomDomainAsync(long tenant)
     {
         using var scope = fixture.Services.CreateScope();
         using var identity = scope.ServiceProvider.GetRequiredService<IIdentityOperationScope>().Begin();
@@ -399,7 +401,7 @@ public sealed class AccessContractsApiTests(ContractsApiFixture fixture)
         db.EnterpriseDomains.Add(domain);
         await db.SaveChangesAsync();
 
-        return (domain.Id, host);
+        return domain.Id;
     }
 
     private static object Invite(string? email = null)

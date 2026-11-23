@@ -89,7 +89,6 @@ internal sealed class CommercialScenario : IAsyncDisposable
             ["Security:SigningKey"] = security.SigningKey,
             ["Security:Issuer"] = security.Issuer,
             ["Security:InternalServiceKey"] = security.InternalServiceKey,
-            ["Security:StorefrontBaseDomain"] = security.StorefrontBaseDomain,
             ["Security:BackofficeUrl"] = security.BackofficeUrl,
             ["Security:ApiRequestsPerMinute"] = "10000",
             ["DropQueue:PurchaseIdentityKey"] = "scenario-only-identity-key-not-for-production",

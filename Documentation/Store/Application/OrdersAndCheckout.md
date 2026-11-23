@@ -42,7 +42,7 @@ Os campos atuais de endereço ainda precisam ser complementados/estruturados par
 
 ## Checkout
 
-`POST /api/storefront/checkout` compra os itens selecionados do carrinho do cliente autenticado. O corpo não escolhe outro CustomerId nem informa itens/preços/desconto final como autoridade.
+`POST /api/storefront/{storeSlug}/checkout` compra os itens selecionados do carrinho do cliente autenticado. O corpo não escolhe outro CustomerId nem informa itens/preços/desconto final como autoridade.
 
 1. Normalizar a chave idempotente e procurar pedido da mesma loja/cliente/tentativa.
 2. Conferir loja, cliente, configurações e visibilidade; abrir transação e bloquear a linha da empresa.

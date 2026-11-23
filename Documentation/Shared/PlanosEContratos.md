@@ -317,27 +317,22 @@ escolhe quem permanece nem desativa usuários. Para redução automática por ve
 a Parte 5 aplica sete dias de carência e retorno ao Gratuito, com bloqueio de toda a
 equipe adicional e preservação do dono.
 
-### Domínio próprio e fallback
+### Domínio próprio
 
-Gratuito e Inicial mantêm o subdomínio da plataforma. Sem direito a domínio próprio,
+Gratuito e Inicial mantêm a página da loja na plataforma. Sem direito a domínio próprio,
 cadastro, verificação e ativação de host externo são recusados com `Domain.PlanRequired`.
 A verificação recusa o plano antes de consultar DNS e revalida a escrita após o lock.
 
 Perder esse direito desativa os domínios externos e marca bloqueio comercial, preservando
-host, cadastro e verificação. O subdomínio verificado da plataforma volta a ser o principal;
-se o cadastro legado não tiver um, a aplicação cria um fallback exclusivo a partir da loja
-e do domínio-base configurado. A troca respeita o índice de domínio primário na mesma
-transação. A administração continua acessível pelo backoffice.
+host, cadastro e verificação. A página pública da loja ativa continua acessível
+pelo slug.
 
 Upgrade não ativa domínio externo automaticamente. O dono pode reativá-lo pelo endpoint
 existente `PUT /api/enterprise-domains/{id}/publication`, com direito vigente e verificação
 preservada. O domínio bloqueado continua visível na listagem administrativa.
 
-`IEnterpriseDomainAccess` centraliza a resolução por host: domínio ativo/verificado,
-loja ativa e direito vigente. É usado pelo StoreTenantResolver, validação da sessão de
-comprador e `GET /api/internal/tenants/resolve`, consumido pelo DROP com autenticação de
-serviço. A verificação do contrato impede uso de host externo mesmo com dados legados
-que ainda indiquem domínio ativo sem flag de bloqueio.
+O Store e o DROP resolvem o storefront pelo slug da rota. O cadastro de domínio
+próprio é administrado pelas regras comerciais do plano.
 
 ### Respostas e histórico
 
@@ -405,7 +400,7 @@ Rotas Store adicionadas:
 | GET | /api/media-assets | Dono; últimos 100 metadados da própria loja |
 | GET | /api/media-assets/{id}/content | Dono; consulta privada do logo |
 | DELETE | /api/media-assets/{id} | Dono; exclui upload sem uso preservado |
-| GET | /api/storefront/media/{publicId} | Host da loja, GUID público e direito vigente |
+| GET | /api/storefront/{storeSlug}/media/{publicId} | Slug da loja, GUID público e direito vigente |
 | GET | /api/internal/media-assets/{id} | Referência para serviço autenticado |
 | POST | /api/internal/media-assets/{id}/retain-for-drop | Retenção idempotente para o DROP |
 | GET | /api/internal/enterprises/{id}/appearance-rights/{channel} | Direitos atuais para serviço autenticado da mesma loja |
@@ -485,7 +480,7 @@ Pedido criado antes do bloqueio é pago pelo gateway manual local e mantém snap
 reservas anteriores ainda podem ser efetivadas. A base das Partes 1 e 2 possui 56 testes.
 A Parte 3 acrescenta cenários de vagas, convites concorrentes, expiração/aceitação,
 escolha e idempotência, restauração, isolamento de outras lojas, transferência de dono,
-fallback de domínio e validação pública/interna/de sessão.
+bloqueio de domínio próprio e validação de sessão por loja.
 A Parte 4 acrescenta testes de modelos e versões, campos por plano, downgrade/ETag,
 histórico longo, concorrência, migração legada, PNG/upload/exclusão, isolamento de mídia
 e handlers DROP com PostgreSQL próprio e chamadas HTTP reais ao Store em TestServer.

@@ -9,7 +9,7 @@ namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [AllowAnonymous]
-[Route("api/storefront/categories")]
+[Route("api/storefront/{storeSlug}/categories")]
 [EnableRateLimiting("api")]
 public sealed class StorefrontCategoryController(IMediator mediator) : ControllerBase
 {

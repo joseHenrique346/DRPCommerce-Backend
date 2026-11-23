@@ -8,4 +8,5 @@ public interface IEnterpriseRepository : IRepository<Enterprise>
 {
     Task LockAsync(long id, CancellationToken cancellationToken);
     Task<EnterpriseContractState?> GetContractStateAsync(long id, CancellationToken cancellationToken);
+    Task<long?> FindActiveStorefrontIdAsync(string slug, CancellationToken ct);
 }

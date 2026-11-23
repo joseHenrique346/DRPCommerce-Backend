@@ -143,7 +143,7 @@ Erros adicionais: `Appearance.ThemeNotAllowed`, `Appearance.CustomizationNotAllo
 
 O dono principal autenticado da loja selecionada pode gerenciar aparência. Uma sessão só pode ser alterada por seu editor; o dono atual também pode liberá-la explicitamente, por exemplo após transferência de propriedade.
 
-As rotas públicas estão sob `/api/storefront`, reutilizando a resolução de domínio ativo/verificado. IDs recebidos no body não escolhem um tenant. Um token de outra loja continua incompatível com o domínio acessado.
+As rotas públicas estão sob `/api/storefront/{storeSlug}`, reutilizando a resolução de domínio ativo/verificado. IDs recebidos no body não escolhem um tenant. Um token de outra loja continua incompatível com o domínio acessado.
 
 A resolução de domínio e a validação de sessão do Drop continuam usando a integração de segurança preexistente com Store. A leitura pública de aparência usa o banco do próprio módulo e não busca configurações visuais ou referências de produto no outro serviço.
 
@@ -194,12 +194,12 @@ Os endereços abaixo são internos às APIs, seguindo os prefixos existentes do 
 
 | Módulo | Rota |
 |---|---|
-| Store | GET /api/storefront/appearance |
-| Store, revisão histórica | GET /api/storefront/appearance/revisions/{revisionId} |
-| Drop, padrão da loja | GET /api/storefront/drop/appearance |
-| Drop, revisão do padrão | GET /api/storefront/drop/appearance/revisions/{revisionId} |
-| Drop, evento | GET /api/storefront/drop/events/{slug}/appearance |
-| Drop, revisão histórica do alvo | GET /api/storefront/drop/events/{slug}/appearance/revisions/{revisionId} |
+| Store | GET /api/storefront/{storeSlug}/appearance |
+| Store, revisão histórica | GET /api/storefront/{storeSlug}/appearance/revisions/{revisionId} |
+| Drop, padrão da loja | GET /api/storefront/{storeSlug}/drop/appearance |
+| Drop, revisão do padrão | GET /api/storefront/{storeSlug}/drop/appearance/revisions/{revisionId} |
+| Drop, evento | GET /api/storefront/{storeSlug}/drop/events/{slug}/appearance |
+| Drop, revisão histórica do alvo | GET /api/storefront/{storeSlug}/drop/events/{slug}/appearance/revisions/{revisionId} |
 
 O manifesto contém manifestVersion, revisionId, channel, source, identificação da release, settings, assetBindings, resourceBindings, checksum e publishedAt. Ele não contém schema/editor/tenant interno ou cópia de trabalho. Revisões históricas ficam restritas à mesma loja e ao alvo ou seu padrão aplicável.
 
@@ -262,7 +262,7 @@ Não remover releases antigas do frontend apenas porque o padrão migrou: campan
 - Manifestos atuais: ETag e `public, max-age=0, must-revalidate` para visitantes anônimos. If-None-Match compatível retorna 304.
 - Rotas por revisão: também `must-revalidate` em Store e DROP. Plano e disponibilidade de recursos podem mudar sem outra revisão visual; não são URLs imutáveis de conteúdo público.
 - Administração e requisições autenticadas: no-store.
-- Qualquer cache adicional precisa preservar Host/tenant, alvo e revisão. Não compartilhar estado privado de fila/reserva/pedido.
+- Qualquer cache adicional precisa preservar slug da loja, alvo e revisão. O estado de fila, reserva e pedido permanece privado.
 
 Erros relevantes: 400 para configurações/referências inválidas; 401/403 para identidade/permissão; 404 para alvo/revisão indisponível; 409 para bloqueio/estado incompatível; 412 para versão antiga; 428 para ausência de If-Match. Respostas esperadas usam o tratamento de falhas existente das APIs.
 
@@ -293,7 +293,7 @@ possui adapters ativos nos dois módulos; URLs arbitrárias não substituem uma 
 | GET | /api/media-assets | Dono; últimos 100 ativos, sem binários, com URL e indicador de retenção DROP |
 | GET | /api/media-assets/{id}/content | Dono da loja; consulta privada do binário |
 | DELETE | /api/media-assets/{id} | Dono; remove upload sem referências preservadas |
-| GET | /api/storefront/media/{publicId} | Host verificado da loja, GUID público e direito de logo vigente |
+| GET | /api/storefront/{storeSlug}/media/{publicId} | Slug da loja, GUID público e direito de logo vigente |
 | GET | /api/internal/media-assets/{id} | Serviço autenticado da loja; referência do logo |
 | POST | /api/internal/media-assets/{id}/retain-for-drop | Serviço autenticado, módulo DROP vigente; retém o ativo e retorna a referência |
 | GET | /api/internal/enterprises/{id}/appearance-rights/{channel} | Serviço autenticado da mesma loja; direitos atuais do canal |
@@ -314,7 +314,7 @@ precisa compor o prefixo `/api/store`, conforme a configuração existente.
 
 O endereço público por GUID destina-se à exibição do logo, inclusive antes da publicação
 para prévia, por quem conhece essa URL. Não é armazenamento privado de documentos.
-Seu acesso revalida host/tenant e direito de logo, serve somente `image/png`, com `nosniff`
+Seu acesso revalida a loja resolvida pelo slug e o direito de logo, serve somente `image/png`, com `nosniff`
 e cache que exige revalidação. Ao perder o direito, a aparência pública remove o logo e a
 URL deixa de ser servida; o dono mantém consulta privada ao ativo preservado.
 

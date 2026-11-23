@@ -36,15 +36,13 @@ public sealed class PreviewAccessContractImpactQueryHandler(
         var domains = await reader.DomainsAsync(actor.EnterpriseId, ct);
         var rights = EnterpriseEntitlements.Resolve(request.PlanId, request.AddOnId);
         var requires = active.Count > rights.EmployeeLimit;
-        var platform = domains.FirstOrDefault(Domain => DomainHostPolicy.IsPlatformHost(Domain.NormalizedHost, Options.StorefrontBaseDomain));
         var result = new AccessContractImpactResponse(actor.EnterpriseId, state.Revision, request.PlanId, request.AddOnId,
             rights.EmployeeLimit, active.Count, members.Count(Membership => Membership.IsContractBlocked), requires,
             active.Select(Membership => Membership.Id).ToList(), selection,
             requires && selection is not null ? active.Where(Membership => !selection.Contains(Membership.Id))
                 .Select(Membership => Membership.Id).ToList() : [],
-            rights.AllowsCustomDomain, rights.AllowsCustomDomain ? [] : domains.Where(Domain =>
-                !Domain.IsContractBlocked && !DomainHostPolicy.IsPlatformHost(Domain.NormalizedHost, Options.StorefrontBaseDomain))
-                .Select(Domain => Domain.Id).ToList(), platform?.Host);
+            rights.AllowsCustomDomain, rights.AllowsCustomDomain ? [] : domains.Where(Domain => !Domain.IsContractBlocked)
+                .Select(Domain => Domain.Id).ToList());
         await transaction.CommitAsync(ct);
 
         return result;

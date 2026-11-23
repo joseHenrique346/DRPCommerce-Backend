@@ -11,20 +11,20 @@ sincronização durável de contrato, a transferência de estoque e a ponte de p
 Requisição ao Drop
   → valida assinatura, emissor, audience e validade do JWT
   → chama Store /api/internal/identity/validate com chave interna
-  → Store confere conta, família de sessão, versões, membership ou Customer e domínio
+  → Store confere conta, família de sessão e versões, além da membership ou da loja do cliente
   → Drop aplica tenant, propriedade do recurso e permissão operacional
 ```
 
 Não há cache de sessão nesta etapa. Revogações e alterações de acesso são observadas na próxima requisição protegida. Se o Store não puder ser consultado, o Drop falha fechado; a operação não é liberada.
 
-O storefront resolve o Host consultando `/api/internal/tenants/resolve`. Domínio deve estar verificado/ativo e a loja ativa. CustomerId vem do JWT e não é um identificador selecionável pelo comprador.
+O storefront lê o slug da rota e consulta `/api/internal/tenants/resolve`. O Store retorna o ID da loja ativa. O DROP passa esse ID ao validar a sessão do cliente. O JWT precisa pertencer à mesma loja.
 
 ## Endpoints internos do Store
 
 | Método | Endpoint | Contrato |
 |---|---|---|
-| POST | /api/internal/identity/validate | accessToken, host → isValid |
-| GET | /api/internal/tenants/resolve?host=... | enterpriseId |
+| POST | /api/internal/identity/validate | accessToken, storefrontEnterpriseId → isValid |
+| GET | /api/internal/tenants/resolve?slug=... | enterpriseId |
 | GET | /api/internal/products/get-by-id/{id} | Produto canônico |
 | GET | /api/internal/products/{id}/variants | SKUs, opções e dados administrativos do produto |
 | POST | /api/internal/products/get-list-by-list-id | Lista de IDs |

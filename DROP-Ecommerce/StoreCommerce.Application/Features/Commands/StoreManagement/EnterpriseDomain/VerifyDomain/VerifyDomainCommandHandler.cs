@@ -18,8 +18,7 @@ public sealed class VerifyDomainCommandHandler(IdentityHandlerContext context) :
             ignoreQueryFilters: true,
             tracking: false) ?? throw NotFound();
 
-        if (!StoreCommerce.Application.Contracts.DomainHostPolicy.IsPlatformHost(reference.NormalizedHost, Options.StorefrontBaseDomain) &&
-            !StoreCommerce.Domain.Contracts.EnterpriseEntitlements.Resolve(contract.PlanId, contract.AddOnId).AllowsCustomDomain)
+        if (!StoreCommerce.Domain.Contracts.EnterpriseEntitlements.Resolve(contract.PlanId, contract.AddOnId).AllowsCustomDomain)
             throw new SecurityFailure(409, "Domain.PlanRequired", "O contrato não permite verificar domínio próprio.");
 
         if (reference.IsVerified)

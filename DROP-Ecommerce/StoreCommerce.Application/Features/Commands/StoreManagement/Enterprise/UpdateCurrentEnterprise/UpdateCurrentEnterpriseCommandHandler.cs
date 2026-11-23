@@ -26,6 +26,7 @@ public sealed class UpdateCurrentEnterpriseCommandHandler(IdentityHandlerContext
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);
 
-        return new(enterprise.Id, enterprise.TradeName, enterprise.IsActive, enterprise.PlanId, enterprise.ContractRevision);
+        return new(enterprise.Id, enterprise.TradeName, enterprise.IsActive, enterprise.PlanId, enterprise.ContractRevision,
+            enterprise.StorefrontSlug, StorefrontUrls.Page(Options.StorefrontBaseUrl, enterprise.StorefrontSlug));
     }
 }

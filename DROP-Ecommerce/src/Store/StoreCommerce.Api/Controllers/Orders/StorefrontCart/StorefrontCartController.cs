@@ -13,7 +13,7 @@ namespace StoreCommerce.Api.Controllers;
 /// Carrinho do cliente autenticado. Todas as respostas trazem o carrinho atualizado, com estoque e totais dos itens selecionados.
 /// </summary>
 [ApiController]
-[Route("api/storefront/cart")]
+[Route("api/storefront/{storeSlug}/cart")]
 [EnableRateLimiting("api")]
 [Authorize(Policy = SecurityNames.Storefront)]
 public sealed class StorefrontCartController(IMediator mediator) : ControllerBase

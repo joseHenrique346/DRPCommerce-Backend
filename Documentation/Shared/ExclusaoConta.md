@@ -7,7 +7,7 @@ Implementado em 17/11/2026. O commit local `04c4de2` guarda a preparação anter
 | Conta | Prévia dos impedimentos | Exclusão |
 | --- | --- | --- |
 | Usuário global, lojista/funcionário | `GET /api/users/me/deletion` | `DELETE /api/users/me` |
-| Cliente autenticado em uma loja | `GET /api/storefront/me/deletion` | `DELETE /api/storefront/me` |
+| Cliente autenticado em uma loja | `GET /api/storefront/{storeSlug}/me/deletion` | `DELETE /api/storefront/{storeSlug}/me` |
 
 As rotas existentes de DELETE passam a exigir corpo JSON com a senha atual. A alteração de contrato é intencional: a sessão aberta, sozinha, não autoriza apagar a conta.
 

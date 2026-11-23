@@ -10,5 +10,5 @@ public interface ISessionValidator
     /// <summary>
     /// Define a verificação do estado da sessão para impedir o uso de tokens já revogados.
     /// </summary>
-    Task<bool> ValidateAsync(ClaimsPrincipal principal, string? host, CancellationToken cancellationToken);
+    Task<bool> ValidateAsync(ClaimsPrincipal principal, long? storefrontEnterpriseId, CancellationToken cancellationToken);
 }

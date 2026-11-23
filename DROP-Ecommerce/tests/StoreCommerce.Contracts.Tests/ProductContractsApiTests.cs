@@ -308,31 +308,31 @@ public sealed class ProductContractsApiTests(ContractsApiFixture fixture)
         var customer = await fixture.CreateCustomerAsync(actor.EnterpriseId);
         using var client = fixture.Client(customer.Token);
         client.BaseAddress = customer.Address;
-        using var cart = await client.PostAsJsonAsync("/api/storefront/cart/items", new { productId = product.Id, quantity = 1 });
+        using var cart = await client.PostAsJsonAsync("cart/items", new { productId = product.Id, quantity = 1 });
         cart.EnsureSuccessStatusCode();
         await fixture.ChangeContractAsync(actor.EnterpriseId, 1, null);
 
         using var publicClient = fixture.Client();
         publicClient.BaseAddress = customer.Address;
-        using var listing = await publicClient.GetAsync("/api/storefront/products?pageSize=100");
+        using var listing = await publicClient.GetAsync("products?pageSize=100");
         listing.EnsureSuccessStatusCode();
         Assert.DoesNotContain(product.Slug, await listing.Content.ReadAsStringAsync());
-        using var search = await publicClient.GetAsync("/api/storefront/products/search?term=" + Uri.EscapeDataString(product.SKU));
+        using var search = await publicClient.GetAsync("products/search?term=" + Uri.EscapeDataString(product.SKU));
         search.EnsureSuccessStatusCode();
         using var searchJson = await JsonAsync(search);
         Assert.Equal(0, searchJson.RootElement.GetProperty("content").GetProperty("totalCount").GetInt32());
-        using var slug = await publicClient.GetAsync("/api/storefront/products/by-slug/" + product.Slug);
+        using var slug = await publicClient.GetAsync("products/by-slug/" + product.Slug);
         Assert.Equal(HttpStatusCode.NotFound, slug.StatusCode);
-        using var maskedCart = await client.GetAsync("/api/storefront/cart");
+        using var maskedCart = await client.GetAsync("cart");
         maskedCart.EnsureSuccessStatusCode();
         var cartBody = await maskedCart.Content.ReadAsStringAsync();
         Assert.DoesNotContain(product.Name, cartBody);
         Assert.DoesNotContain(product.SKU, cartBody);
         using var maskedJson = JsonDocument.Parse(cartBody);
         Assert.False(maskedJson.RootElement.GetProperty("content").GetProperty("summary").GetProperty("canCheckout").GetBoolean());
-        using var newItem = await client.PostAsJsonAsync("/api/storefront/cart/items", new { productId = product.Id, quantity = 1 });
+        using var newItem = await client.PostAsJsonAsync("cart/items", new { productId = product.Id, quantity = 1 });
         Assert.Equal(HttpStatusCode.NotFound, newItem.StatusCode);
-        using var checkout = await client.PostAsJsonAsync("/api/storefront/checkout", Checkout());
+        using var checkout = await client.PostAsJsonAsync("checkout", Checkout());
         Assert.Equal(HttpStatusCode.Conflict, checkout.StatusCode);
     }
 
@@ -345,9 +345,9 @@ public sealed class ProductContractsApiTests(ContractsApiFixture fixture)
         var customer = await fixture.CreateCustomerAsync(actor.EnterpriseId);
         using var buyer = fixture.Client(customer.Token);
         buyer.BaseAddress = customer.Address;
-        using var cart = await buyer.PostAsJsonAsync("/api/storefront/cart/items", new { productId = product.Id, quantity = 1 });
+        using var cart = await buyer.PostAsJsonAsync("cart/items", new { productId = product.Id, quantity = 1 });
         cart.EnsureSuccessStatusCode();
-        using var checkout = await buyer.PostAsJsonAsync("/api/storefront/checkout", Checkout());
+        using var checkout = await buyer.PostAsJsonAsync("checkout", Checkout());
         checkout.EnsureSuccessStatusCode();
         using var json = await JsonAsync(checkout);
         var orderId = json.RootElement.GetProperty("content").GetProperty("id").GetInt64();

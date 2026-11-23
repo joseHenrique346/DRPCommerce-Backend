@@ -93,14 +93,14 @@ public sealed class AppearanceContractsApiTests(ContractsApiFixture fixture)
         await fixture.ChangeContractAsync(owner.EnterpriseId, 4, null);
         using var storefront = fixture.Client();
         storefront.BaseAddress = buyer.Address;
-        using var fallback = await storefront.GetAsync("/api/storefront/appearance");
+        using var fallback = await storefront.GetAsync("appearance");
         fallback.EnsureSuccessStatusCode();
         using var json = await JsonAsync(fallback);
         Assert.Equal("contract-02", json.RootElement.GetProperty("theme").GetProperty("key").GetString());
         Assert.Equal("contract-fallback", json.RootElement.GetProperty("source").GetString());
         Assert.Equal("Nome preservado", json.RootElement.GetProperty("settings").GetProperty("brand").GetProperty("name").GetString());
         Assert.Equal("#223344", json.RootElement.GetProperty("settings").GetProperty("accent").GetString());
-        using var historic = await storefront.GetAsync("/api/storefront/appearance/revisions/" + forbiddenRevision);
+        using var historic = await storefront.GetAsync("appearance/revisions/" + forbiddenRevision);
         Assert.Equal(HttpStatusCode.NotFound, historic.StatusCode);
         using var ownerClient = fixture.Client(await fixture.FreshTokenAsync(owner));
         using var history = await ownerClient.GetAsync(Path + "/revisions");
@@ -121,7 +121,7 @@ public sealed class AppearanceContractsApiTests(ContractsApiFixture fixture)
         await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
         using var storefront = fixture.Client();
         storefront.BaseAddress = buyer.Address;
-        using var fallback = await storefront.GetAsync("/api/storefront/appearance");
+        using var fallback = await storefront.GetAsync("appearance");
         fallback.EnsureSuccessStatusCode();
         using var json = await JsonAsync(fallback);
         Assert.Equal("contract-01", json.RootElement.GetProperty("theme").GetProperty("key").GetString());
@@ -170,11 +170,11 @@ public sealed class AppearanceContractsApiTests(ContractsApiFixture fixture)
         published.EnsureSuccessStatusCode();
         using var storefront = fixture.Client();
         storefront.BaseAddress = buyer.Address;
-        using var before = await storefront.GetAsync("/api/storefront/appearance");
+        using var before = await storefront.GetAsync("appearance");
         before.EnsureSuccessStatusCode();
         var etag = before.Headers.ETag!.Tag;
         await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/storefront/appearance");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "appearance");
         request.Headers.TryAddWithoutValidation("If-None-Match", etag);
         using var after = await storefront.SendAsync(request);
         Assert.Equal(HttpStatusCode.OK, after.StatusCode);
@@ -238,7 +238,7 @@ public sealed class AppearanceContractsApiTests(ContractsApiFixture fixture)
         Assert.Contains(saved.StatusCode, new[] { HttpStatusCode.OK, HttpStatusCode.Conflict, HttpStatusCode.Unauthorized });
         using var publicClient = fixture.Client();
         publicClient.BaseAddress = buyer.Address;
-        using var manifest = await publicClient.GetAsync("/api/storefront/appearance");
+        using var manifest = await publicClient.GetAsync("appearance");
         await EnsureAsync(manifest);
         using var json = await JsonAsync(manifest);
         Assert.Equal("#223344", json.RootElement.GetProperty("settings").GetProperty("accent").GetString());
@@ -282,7 +282,7 @@ public sealed class AppearanceContractsApiTests(ContractsApiFixture fixture)
         await fixture.ChangeContractAsync(owner.EnterpriseId, 4, null);
         using var storefront = fixture.Client();
         storefront.BaseAddress = buyer.Address;
-        using var response = await storefront.GetAsync("/api/storefront/appearance");
+        using var response = await storefront.GetAsync("appearance");
         await EnsureAsync(response);
         using var json = await JsonAsync(response);
         Assert.Equal("contract-02", json.RootElement.GetProperty("theme").GetProperty("key").GetString());

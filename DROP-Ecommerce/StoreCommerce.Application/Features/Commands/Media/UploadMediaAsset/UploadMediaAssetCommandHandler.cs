@@ -1,5 +1,7 @@
 using StoreCommerce.Application.Media;
 using MediatR;
+using Microsoft.Extensions.Options;
+using SharedCommerce.Application.Options;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Interfaces.Identity;
 using StoreCommerce.Application.Interfaces.Media;
@@ -15,7 +17,8 @@ public sealed class UploadMediaAssetCommandHandler(
     IIdentityOperationScope identities,
     MediaWriteScope writes,
     IMediaAssetStore assets,
-    MediaOwnerWriteAccess access)
+    MediaOwnerWriteAccess access,
+    IOptions<SecurityOptions> options)
     : IRequestHandler<UploadMediaAssetCommand, MediaAssetSummary>
 {
     public async Task<MediaAssetSummary> Handle(UploadMediaAssetCommand command, CancellationToken ct)
@@ -31,11 +34,14 @@ public sealed class UploadMediaAssetCommandHandler(
         if (!EnterpriseEntitlements.Resolve(contract.PlanId, contract.AddOnId).AllowsLogoCustomization)
             throw new SecurityFailure(409, "Media.PlanRequired", "O contrato não permite personalizar o logo.");
 
+        var slug = await identity.Enterprises.FindValueAsync(Enterprise => Enterprise.Id == actor.EnterpriseId,
+            Enterprise => Enterprise.StorefrontSlug, ct, ignoreQueryFilters: true);
+
         if (await assets.FindHashAsync(actor.EnterpriseId, png.Hash, ct) is { } existing)
         {
             await transaction.CommitAsync(ct);
 
-            return Summary(existing);
+            return Summary(existing, slug);
         }
 
         if (await assets.BytesAsync(actor.EnterpriseId, ct) + png.Content.Length > 25L * 1024 * 1024)
@@ -47,11 +53,12 @@ public sealed class UploadMediaAssetCommandHandler(
         await unitOfWork.CommitAsync(ct);
         await transaction.CommitAsync(ct);
 
-        return Summary(asset);
+        return Summary(asset, slug);
     }
 
-    private static MediaAssetSummary Summary(MediaAsset asset)
+    private MediaAssetSummary Summary(MediaAsset asset, string? slug)
     {
-        return new MediaAssetSummary(asset.Id, asset.PublicId, asset.Width, asset.Height, asset.ByteLength, asset.CreatedAt, asset.IsRetainedByDrop);
+        return new MediaAssetSummary(asset.Id, asset.PublicId, asset.Width, asset.Height, asset.ByteLength, asset.CreatedAt,
+            asset.IsRetainedByDrop, StorefrontUrls.Media(options.Value.StorefrontApiBaseUrl, slug, asset.PublicId));
     }
 }

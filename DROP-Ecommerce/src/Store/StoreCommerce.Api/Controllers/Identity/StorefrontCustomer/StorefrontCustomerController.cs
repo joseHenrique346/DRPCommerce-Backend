@@ -12,7 +12,7 @@ using StoreCommerce.Api.Security;
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront")]
+[Route("api/storefront/{storeSlug}")]
 [EnableRateLimiting("api")]
 public sealed class StorefrontCustomerController(IMediator mediator) : ControllerBase
 {
@@ -111,7 +111,7 @@ public sealed class StorefrontCustomerController(IMediator mediator) : Controlle
         if (result.IsFailure)
             return this.ToIdentityActionResult(result);
 
-        Response.ClearDeletedAccountCookie(true);
+        Response.ClearRefreshCookie(true);
 
         return NoContent();
     }

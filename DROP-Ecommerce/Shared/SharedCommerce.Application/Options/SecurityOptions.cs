@@ -17,7 +17,8 @@ public sealed class SecurityOptions
     public int InitialLockoutSeconds { get; set; } = 30;
     public int MaximumLockoutSeconds { get; set; } = 900;
     public int FailureResetMinutes { get; set; } = 30;
-    public string StorefrontBaseDomain { get; set; } = string.Empty;
+    public string StorefrontBaseUrl { get; set; } = string.Empty;
+    public string StorefrontApiBaseUrl { get; set; } = string.Empty;
     public string BackofficeUrl { get; set; } = string.Empty;
     public string InternalServiceKey { get; set; } = string.Empty;
     public string[] AllowedOrigins { get; set; } = [];

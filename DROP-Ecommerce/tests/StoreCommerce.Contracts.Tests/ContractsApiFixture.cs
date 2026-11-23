@@ -85,7 +85,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
                 ["ConnectionStrings:DefaultConnection"] = connectionString,
                 ["Security:SigningKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
                 ["Security:Issuer"] = "DRPCommerce.Contracts.Tests",
-                ["Security:StorefrontBaseDomain"] = "shops.example.invalid",
+                ["Security:StorefrontBaseUrl"] = "https://shops.example.invalid",
                 ["Security:BackofficeUrl"] = "https://backoffice.example.invalid",
                 ["Security:InternalServiceKey"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),
                 ["Security:ApiRequestsPerMinute"] = "10000",
@@ -227,6 +227,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         var enterprise = Enterprise.Create("Loja-" + suffix, "Loja Teste",
             EnterpriseEmail.Create("shop-" + suffix + "@example.invalid"),
             EnterprisePhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", true);
+        enterprise.AssignStorefrontSlug("shop-" + suffix);
         db.Users.Add(user);
         db.Enterprises.Add(enterprise);
         await db.SaveChangesAsync();
@@ -291,6 +292,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         var enterprise = Enterprise.Create("Outra Loja", "Outra Loja Teste",
             EnterpriseEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"),
             EnterprisePhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", true);
+        enterprise.AssignStorefrontSlug("shop-" + Guid.NewGuid().ToString("N"));
         db.Enterprises.Add(enterprise);
         await db.SaveChangesAsync();
         var membership = EnterpriseMembership.Create(enterprise.Id, user.Id, 1, true, DateTime.UtcNow);
@@ -321,16 +323,8 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         var services = scope.ServiceProvider;
         using var identity = services.GetRequiredService<IIdentityOperationScope>().Begin();
         var db = services.GetRequiredService<StoreCommerceDbContext>();
-        var domain = await db.EnterpriseDomains.IgnoreQueryFilters().FirstOrDefaultAsync(Domain =>
-            Domain.EnterpriseId == enterpriseId && Domain.NormalizedHost.EndsWith(".shops.example.invalid"));
+        var enterprise = await db.Enterprises.IgnoreQueryFilters().SingleAsync(Enterprise => Enterprise.Id == enterpriseId);
 
-        if (domain is null)
-        {
-            var host = "shop-" + Guid.NewGuid().ToString("N") + ".shops.example.invalid";
-            domain = EnterpriseDomain.Create(enterpriseId, host, true, true);
-            domain.Verify();
-            db.EnterpriseDomains.Add(domain);
-        }
         var customer = Customer.Create(enterpriseId, "Comprador de teste",
             CustomerEmail.Create(Guid.NewGuid().ToString("N") + "@example.invalid"),
             CustomerPhone.Create("11999999999"), "Rua Teste", "São Paulo", 1, "01001000", "BR", "",
@@ -343,7 +337,7 @@ public sealed class ContractsApiFixture : IAsyncLifetime
         await db.SaveChangesAsync();
         var token = services.GetRequiredService<JwtSessionService>().IssueCustomer(customer, family);
 
-        return (new Uri("https://" + domain.Host), token.Token);
+        return (new Uri($"https://shops.example.invalid/api/storefront/{enterprise.StorefrontSlug}/"), token.Token);
     }
 
     public async Task<string> FreshTokenAsync(StoreActor actor)

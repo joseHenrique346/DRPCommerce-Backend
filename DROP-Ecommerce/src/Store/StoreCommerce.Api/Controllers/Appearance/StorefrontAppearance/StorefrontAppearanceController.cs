@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront/appearance")]
+[Route("api/storefront/{storeSlug}/appearance")]
 [AllowAnonymous]
 [EnableRateLimiting("api")]
 public sealed class StorefrontAppearanceController(IMediator mediator) : AppearancePublicControllerBase(mediator)

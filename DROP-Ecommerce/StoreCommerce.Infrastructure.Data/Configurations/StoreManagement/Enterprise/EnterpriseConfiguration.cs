@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StoreCommerce.Domain.Entity;
+using SharedCommerce.Domain.Contracts.Storefront;
 
 namespace StoreCommerce.Infrastructure.Data.Configurations;
 
@@ -19,6 +20,8 @@ public class EnterpriseConfiguration : IEntityTypeConfiguration<Enterprise>
         builder.Property(e => e.City).HasMaxLength(100);
         builder.Property(e => e.ZipCode).HasMaxLength(20);
         builder.Property(e => e.Country).HasMaxLength(100);
+        builder.Property(Enterprise => Enterprise.StorefrontSlug).HasMaxLength(StorefrontSlug.MaxLength);
+        builder.HasIndex(Enterprise => Enterprise.StorefrontSlug).IsUnique();
 
         builder.Property(Enterprise => Enterprise.PlanId).HasDefaultValue(1L);
         builder.Property(Enterprise => Enterprise.ContractRevision).HasDefaultValue(1L).IsConcurrencyToken();

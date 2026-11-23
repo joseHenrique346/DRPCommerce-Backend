@@ -8,7 +8,7 @@ using StoreCommerce.Application.Features.Commands;
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront")]
+[Route("api/storefront/{storeSlug}")]
 [EnableRateLimiting("api")]
 public sealed class StorefrontEnterpriseController(IMediator mediator) : ControllerBase
 {

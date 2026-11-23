@@ -26,7 +26,6 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Contracts.EnterpriseContractWriteScope _contractWrites;
     private readonly StoreCommerce.Application.Contracts.ProductReactivationScope _productReactivation;
     private readonly StoreCommerce.Application.Contracts.OwnershipTransferWriteScope _ownershipTransfer;
-    private readonly SharedCommerce.Application.Options.SecurityOptions _securityOptions;
     private readonly StoreCommerce.Application.Media.MediaWriteScope _mediaWrites;
     private readonly StoreCommerce.Application.Billing.PlatformBillingWriteScope _billingWrites;
     private readonly StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope _dropAcknowledgments;
@@ -42,7 +41,6 @@ public partial class StoreCommerceDbContext : DbContext
         StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites,
         StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation,
         StoreCommerce.Application.Contracts.OwnershipTransferWriteScope ownershipTransfer,
-        Microsoft.Extensions.Options.IOptions<SharedCommerce.Application.Options.SecurityOptions> securityOptions,
         StoreCommerce.Application.Media.MediaWriteScope mediaWrites,
         StoreCommerce.Application.Billing.PlatformBillingWriteScope billingWrites,
         StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope dropAcknowledgments,
@@ -62,7 +60,6 @@ public partial class StoreCommerceDbContext : DbContext
         _contractWrites = contractWrites;
         _productReactivation = productReactivation;
         _ownershipTransfer = ownershipTransfer;
-        _securityOptions = securityOptions.Value;
         _mediaWrites = mediaWrites;
         _billingWrites = billingWrites;
         _dropAcknowledgments = dropAcknowledgments;

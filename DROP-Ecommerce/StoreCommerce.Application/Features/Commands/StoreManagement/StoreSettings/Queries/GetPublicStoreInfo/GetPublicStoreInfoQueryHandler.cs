@@ -1,4 +1,6 @@
 using SharedCommerce.Domain.Interfaces.Tenancy;
+using SharedCommerce.Application.Options;
+using Microsoft.Extensions.Options;
 using StoreCommerce.Domain.Interfaces.Persistence;
 using MediatR;
 using StoreCommerce.Application.Contracts.Store;
@@ -10,7 +12,8 @@ namespace StoreCommerce.Application.Features.Commands;
 public class GetPublicStoreInfoQueryHandler(
     IRepository<Enterprise> enterpriseRepository,
     StoreSettingsReader reader,
-    ITenantProvider tenantProvider)
+    ITenantProvider tenantProvider,
+    IOptions<SecurityOptions> options)
     : IRequestHandler<GetPublicStoreInfoQuery, Result<PublicStoreInfoResponse>>
 {
     public async Task<Result<PublicStoreInfoResponse>> Handle(GetPublicStoreInfoQuery request, CancellationToken cancellationToken)
@@ -20,7 +23,7 @@ public class GetPublicStoreInfoQueryHandler(
         // Loja inativa não é exibida na vitrine.
         var store = await enterpriseRepository.FindValueAsync(
             enterprise => enterprise.Id == enterpriseId && enterprise.IsActive,
-            enterprise => new { enterprise.TradeName, Email = enterprise.Email.Value, Phone = enterprise.Phone.Value },
+            enterprise => new { enterprise.TradeName, enterprise.StorefrontSlug, Email = enterprise.Email.Value, Phone = enterprise.Phone.Value },
             cancellationToken);
 
         if (store is null)
@@ -34,6 +37,8 @@ public class GetPublicStoreInfoQueryHandler(
             store.Phone,
             settings.CurrencyCode,
             settings.MinOrderValue,
-            settings.MaxItemsPerOrder));
+            settings.MaxItemsPerOrder,
+            store.StorefrontSlug,
+            StorefrontUrls.Page(options.Value.StorefrontBaseUrl, store.StorefrontSlug)));
     }
 }

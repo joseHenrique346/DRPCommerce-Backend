@@ -2,6 +2,7 @@ using SharedCommerce.Application.Interfaces.Tenancy;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using SharedCommerce.Application.Options;
+using SharedCommerce.Domain.Contracts.Storefront;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -10,22 +11,27 @@ using Microsoft.Extensions.Options;
 namespace DropCommerce.Security.Resolvers;
 
 /// <summary>
-/// Identifica a loja do storefront usando o Store como fonte confiável de domínios.
+/// Identifica a loja do storefront usando o Store como fonte confiável de slugs.
 /// </summary>
 public sealed class DropTenantResolver(HttpClient client, IOptions<SecurityOptions> options) : IRequestTenantResolver
 {
     /// <summary>
-    /// Consulta o Store para identificar a loja pelo domínio, impedindo acesso a um storefront desconhecido.
+    /// Consulta o Store para identificar a loja pelo slug da rota.
     /// </summary>
     public async Task ResolveAsync(HttpContext context)
     {
         if (!context.Request.Path.StartsWithSegments("/api/storefront"))
             return;
 
+        var slug = StorefrontSlug.Normalize(context.Request.RouteValues["storeSlug"] as string);
+
+        if (slug is null)
+            throw new SecurityFailure(404, "Enterprise.Unavailable", "Loja indisponível.");
+
         if (options.Value.InternalServiceKey.Length < 32)
             throw new SecurityFailure(503, "Security.ServiceNotConfigured", "Resolução de loja indisponível.");
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "api/internal/tenants/resolve?host=" + Uri.EscapeDataString(context.Request.Host.Host));
+        using var request = new HttpRequestMessage(HttpMethod.Get, "api/internal/tenants/resolve?slug=" + Uri.EscapeDataString(slug));
 
         request.Headers.Add("X-Service-Key", options.Value.InternalServiceKey);
 

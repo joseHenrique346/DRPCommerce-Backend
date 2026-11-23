@@ -28,6 +28,12 @@ public sealed class RequestActionCommandHandler(IdentityHandlerContext context) 
         if (customer)
         {
             var tenant = actor.EnterpriseId;
+
+            if (string.IsNullOrEmpty(Options.StorefrontBaseUrl))
+                throw new SecurityFailure(503, "Identity.StorefrontUrlRequired", "Configure a URL pública da vitrine.");
+
+            publicBaseUrl = StorefrontUrls.Page(Options.StorefrontBaseUrl, actor.StorefrontSlug)
+                ?? throw new SecurityFailure(404, "Enterprise.Unavailable", "Loja indisponível.");
             var reference = await data.Customers.FindAsync(x => x.EnterpriseId == tenant && x.NormalizedEmail == email, ct, ignoreQueryFilters: true, tracking: false);
 
             if (reference is null || !reference.IsActive || reference.IsDeleted)
@@ -44,7 +50,6 @@ public sealed class RequestActionCommandHandler(IdentityHandlerContext context) 
 
             data.CustomerActionTokens.Add(CustomerActionToken.Create(account, OpaqueToken.Hash(raw), purpose, expires));
             recipient = account.Email.Value;
-            publicBaseUrl = "https://" + HostName.Normalize(actor.Host);
         }
         else
         {

@@ -22,7 +22,7 @@ public abstract class AuthControllerBase(IMediator mediator, IAntiforgery antifo
     {
         get;
     }
-    private string CookieName => CustomerContext ? "__Host-DRP-StorefrontRefresh" : "__Host-DRP-BackofficeRefresh";
+    protected string CookieName => RefreshSessionCookie.Name(HttpContext, CustomerContext);
 
     /// <summary>
     /// Gera o token CSRF e seu cookie para proteger as próximas operações de autenticação.
@@ -48,15 +48,8 @@ public abstract class AuthControllerBase(IMediator mediator, IAntiforgery antifo
 
         var session = result.Content!;
 
-        Response.Cookies.Append(CookieName, session.RefreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/",
-            IsEssential = true,
-            Expires = new DateTimeOffset(session.RefreshTokenExpiresAt, TimeSpan.Zero)
-        });
+        Response.Cookies.Append(CookieName, session.RefreshToken,
+            RefreshSessionCookie.Options(new DateTimeOffset(session.RefreshTokenExpiresAt, TimeSpan.Zero)));
 
         return Ok(session);
     }
@@ -75,12 +68,6 @@ public abstract class AuthControllerBase(IMediator mediator, IAntiforgery antifo
     /// </summary>
     protected void ClearCookie()
     {
-        Response.Cookies.Delete(CookieName, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Path = "/"
-        });
+        Response.ClearRefreshCookie(CustomerContext);
     }
 }

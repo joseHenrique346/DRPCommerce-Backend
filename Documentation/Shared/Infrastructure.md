@@ -59,7 +59,7 @@ Fontes: [StoreCommerceDbContext](../../DROP-Ecommerce/StoreCommerce.Infrastructu
 
 ## Tenant e filtros de leitura
 
-`TenantProvider` não retorna zero para liberar uma consulta sem contexto. Ele exige loja resolvida/confiável ou token autenticado válido; ausência de contexto produz falha de segurança. No storefront, o host identifica a loja e precisa ser compatível com o token. No backoffice, a membership selecionada determina o tenant. No Store, chamadas internas autenticadas podem usar o tenant confiável de serviço.
+`TenantProvider` exige uma loja resolvida ou uma identidade autenticada válida. No storefront, o slug da rota identifica a loja e precisa corresponder ao tenant do token de cliente. No backoffice, a membership selecionada determina o tenant. No Store, chamadas internas autenticadas podem usar o contexto de serviço.
 
 No Store, entidades de tenant recebem filtro direto por EnterpriseId; entidades com exclusão lógica acrescentam a visibilidade correspondente. Dependentes como OrderItem, Shipment e Transaction também são filtrados pelos agregados da loja. ProductVariant considera a exclusão do SKU e do produto pai.
 

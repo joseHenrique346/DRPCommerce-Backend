@@ -1,6 +1,7 @@
-using SharedCommerce.Application.Security;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StoreCommerce.Application.Features.Commands;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -9,16 +10,15 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalTenantController(StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess domains) : ControllerBase
+public sealed class InternalTenantController(ISender sender) : ControllerBase
 {
     /// <summary>
-    /// Identifica a loja pelo domínio para integração interna.
+    /// Identifica a loja pelo slug para integração interna.
     /// </summary>
     [HttpGet("tenants/resolve")]
-    public async Task<IActionResult> Resolve([FromQuery] string host, CancellationToken ct)
+    public async Task<IActionResult> Resolve([FromQuery] string slug, CancellationToken ct)
     {
-        var normalized = HostName.Normalize(host);
-        var tenantId = await domains.ResolveAsync(normalized, null, ct);
+        var tenantId = await sender.Send(new ResolveStorefrontTenantQuery(slug), ct);
 
         return tenantId is null ? NotFound() : Ok(new { EnterpriseId = tenantId.Value });
     }

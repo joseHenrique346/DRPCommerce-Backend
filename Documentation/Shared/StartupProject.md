@@ -72,13 +72,14 @@ Configure nos arquivos privados, user-secrets ou ambiente de cada processo:
 | `Security__InternalServiceKey` | Segredo interno distinto, com pelo menos 32 caracteres; igual nos dois serviços para integração. |
 | `Security__Issuer` | Mesmo emissor nas APIs; padrão DRPCommerce. |
 | `STORECOMMERCE_API_BASE_URL` | URL do Store vista pelo Drop; perfil HTTPS define https://localhost:5001. |
-| `Security__StorefrontBaseDomain` | Base dos domínios das lojas; template usa stores.localhost. |
+| `Security__StorefrontBaseUrl` | Raiz HTTPS pública do front. |
+| `Security__StorefrontApiBaseUrl` | Prefixo externo para URLs de mídia, por exemplo `/api/store`. |
 | `Security__AllowedOrigins__0`, etc. | Origins exatas do frontend quando houver CORS. |
 | `Security__TrustedProxies__0`, etc. | IPs de proxies confiáveis para forwarding. |
 
 Variáveis de um terminal são herdadas pelos processos iniciados ali; terminais independentes precisam receber sua configuração. Não inserir segredos reais nos templates. Detalhes de JWT, cookies e CSRF: [Authentication](../Store/Api/Authentication.md).
 
-O cadastro da loja cria o registro de subdomínio, mas não configura DNS/hosts nem certificado HTTPS. A vitrine exige domínio ativo/verificado da loja. Envio de e-mail continua desabilitado; `RequireConfirmedEmail=false` permite o recorte de desenvolvimento sem comprovar titularidade do e-mail.
+O cadastro de loja cria o slug usado na página pública e nas rotas do storefront. Configure HTTPS no host da plataforma. `RequireConfirmedEmail=false` permite testar cadastro e login no desenvolvimento. [Storefront por loja](StorefrontPorLoja.md)
 
 ## Executando
 
@@ -128,7 +129,7 @@ O ponto de entrada para o frontend é o Gateway na porta **5000**. Chamadas inte
 | `http://localhost:5000/api/store/{endpoint}` | StoreCommerce.Api |
 | `http://localhost:5000/api/drop/{endpoint}` | DropCommerce.Api |
 
-O Gateway remove o prefixo antes de encaminhar. Exemplo real no perfil HTTPS: `GET https://localhost:5000/api/store/api/storefront/products/search` chega ao Store como `/api/storefront/products/search`.
+O Gateway remove o prefixo antes de encaminhar. Exemplo real no perfil HTTPS: `GET https://localhost:5000/api/store/api/storefront/{storeSlug}/products/search` chega ao Store como `/api/storefront/{storeSlug}/products/search`.
 
 No perfil HTTPS, troque somente o protocolo por `https`. Como o prefixo é removido, uma rota interna `/api/auth/csrf` do Store é acessada por `https://localhost:5000/api/store/api/auth/csrf`.
 

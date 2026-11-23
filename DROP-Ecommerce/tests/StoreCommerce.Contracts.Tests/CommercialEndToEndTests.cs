@@ -50,19 +50,19 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         output.WriteLine("3. Pagamento SaaS confirmado libera DROP; sessão antiga é recusada.");
         var buyer = await scenario.Store.CreateCustomerAsync(scenario.Owner.EnterpriseId);
         using var client = scenario.Client(buyer.Token, buyer.Address);
-        var detail = await CommercialScenario.JsonAsync(await client.GetAsync($"/api/storefront/drop/events/{item.EventId}"));
+        var detail = await CommercialScenario.JsonAsync(await client.GetAsync($"drop/events/{item.EventId}"));
         Assert.Equal(item.VariantId, detail.GetProperty("products")[0].GetProperty("variants")[0].GetProperty("id").GetInt64());
-        var joined = await CommercialScenario.JsonAsync(await client.PostAsJsonAsync($"/api/storefront/drop/events/{item.EventId}/queue", new { cpf = "52998224725" }));
+        var joined = await CommercialScenario.JsonAsync(await client.PostAsJsonAsync($"drop/events/{item.EventId}/queue", new { cpf = "52998224725" }));
         var session = joined.GetProperty("session");
         Assert.Equal(TimeSpan.FromMinutes(15), session.GetProperty("expiresAt").GetDateTime() - session.GetProperty("issuedAt").GetDateTime());
         var reserveBody = new { participationId = item.ParticipationId, sessionId = session.GetProperty("id").GetInt64(),
             idempotencyKey = "demo-purchase", lines = new[] { new { variantId = item.VariantId, quantity = 2 } } };
-        var reservation = await CommercialScenario.JsonAsync(await client.PostAsJsonAsync($"/api/storefront/drop/events/{item.EventId}/reservations", reserveBody));
+        var reservation = await CommercialScenario.JsonAsync(await client.PostAsJsonAsync($"drop/events/{item.EventId}/reservations", reserveBody));
         var reservationId = reservation.GetProperty("id").GetInt64();
         Assert.Equal(40m, reservation.GetProperty("totalAmount").GetDecimal());
-        var purchase = await CommercialScenario.JsonAsync(await client.PostAsync($"/api/storefront/drop/reservations/{reservationId}/checkout", null));
+        var purchase = await CommercialScenario.JsonAsync(await client.PostAsync($"drop/reservations/{reservationId}/checkout", null));
         var orderId = purchase.GetProperty("id").GetInt64();
-        await CommercialScenario.JsonAsync(await client.PostAsync($"/api/storefront/drop/reservations/{reservationId}/checkout", null));
+        await CommercialScenario.JsonAsync(await client.PostAsync($"drop/reservations/{reservationId}/checkout", null));
         Assert.Single(scenario.Sales.Requests);
         Assert.Equal(1, purchase.GetProperty("dropOrderPaymentStatusId").GetInt64());
         output.WriteLine("4. Cliente entra na fila, reserva duas unidades e inicia um único checkout da loja.");
@@ -75,7 +75,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
             await checkout.SendRequiredAsync(new ReconcileDropPurchaseCommand(scenario.Owner.EnterpriseId, orderId), default);
         }
 
-        var paid = await CommercialScenario.JsonAsync(await client.GetAsync($"/api/storefront/drop/purchases/{orderId}"));
+        var paid = await CommercialScenario.JsonAsync(await client.GetAsync($"drop/purchases/{orderId}"));
         Assert.Equal(2, paid.GetProperty("dropOrderPaymentStatusId").GetInt64());
         Assert.Equal("Comprador de teste", paid.GetProperty("buyerNameSnapshot").GetString());
         Assert.Equal(2, paid.GetProperty("items")[0].GetProperty("quantity").GetInt32());
@@ -98,7 +98,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         var secondBuyer = await scenario.Store.CreateCustomerAsync(scenario.Owner.EnterpriseId);
         using (var other = scenario.Client(secondBuyer.Token, secondBuyer.Address))
         {
-            using var denied = await other.GetAsync($"/api/storefront/drop/purchases/{orderId}");
+            using var denied = await other.GetAsync($"drop/purchases/{orderId}");
             Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
         }
 
@@ -141,7 +141,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         await scenario.ReconcileBillingAsync();
         using (var storefront = scenario.Client(address: buyer.Address))
         {
-            using var hidden = await storefront.GetAsync($"/api/storefront/drop/events/{item.EventId}");
+            using var hidden = await storefront.GetAsync($"drop/events/{item.EventId}");
             Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
         }
 
@@ -175,7 +175,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
         }
 
         using (var storefront = scenario.Client(address: buyer.Address))
-            await CommercialScenario.JsonAsync(await storefront.GetAsync($"/api/storefront/drop/events/{item.EventId}"));
+            await CommercialScenario.JsonAsync(await storefront.GetAsync($"drop/events/{item.EventId}"));
 
         output.WriteLine("3. Upgrade pago recupera o direito; apenas reativação confirmada republica o evento.");
     }
@@ -217,7 +217,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
 
         using (var storefront = scenario.Client(address: buyer.Address))
         {
-            var list = await CommercialScenario.JsonAsync(await storefront.GetAsync("/api/storefront/drop/events"));
+            var list = await CommercialScenario.JsonAsync(await storefront.GetAsync("drop/events"));
             Assert.Equal(0, list.GetArrayLength());
         }
 
@@ -234,7 +234,7 @@ public sealed class CommercialEndToEndTests(ITestOutputHelper output)
 
         using (var storefront = scenario.Client(address: buyer.Address))
         {
-            using var hidden = await storefront.GetAsync($"/api/storefront/drop/events/{item.EventId}");
+            using var hidden = await storefront.GetAsync($"drop/events/{item.EventId}");
             Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
         }
 

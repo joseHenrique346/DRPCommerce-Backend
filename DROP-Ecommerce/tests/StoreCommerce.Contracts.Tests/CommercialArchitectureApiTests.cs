@@ -26,27 +26,30 @@ public sealed class CommercialArchitectureApiTests
         var item = await CommercialEndToEndTests.CreateEventAsync(scenario, registrationOpen: true);
         var buyer = await scenario.Store.CreateCustomerAsync(scenario.Owner.EnterpriseId);
         using var client = scenario.Client(buyer.Token, buyer.Address);
-        var events = await CommercialScenario.JsonAsync(await client.GetAsync("/api/storefront/drop/events"));
+        var events = await CommercialScenario.JsonAsync(await client.GetAsync("drop/events"));
         Assert.Contains(events.EnumerateArray(), Event => Event.GetProperty("id").GetInt64() == item.EventId);
 
         var registration = await CommercialScenario.JsonAsync(await client.PostAsync(
-            $"/api/storefront/drop/events/{item.EventId}/register", null));
+            $"drop/events/{item.EventId}/register", null));
         var repeated = await CommercialScenario.JsonAsync(await client.PostAsync(
-            $"/api/storefront/drop/events/{item.EventId}/register", null));
+            $"drop/events/{item.EventId}/register", null));
         Assert.Equal(registration.GetProperty("id").GetInt64(), repeated.GetProperty("id").GetInt64());
         Assert.False(registration.GetProperty("isEligible").GetBoolean());
 
-        var registrations = await CommercialScenario.JsonAsync(await client.GetAsync("/api/storefront/drop/registrations"));
+        var registrations = await CommercialScenario.JsonAsync(await client.GetAsync("drop/registrations"));
         Assert.Single(registrations.EnumerateArray());
         var anotherBuyer = await scenario.Store.CreateCustomerAsync(scenario.Owner.EnterpriseId);
         using var other = scenario.Client(anotherBuyer.Token, anotherBuyer.Address);
-        var privateRegistrations = await CommercialScenario.JsonAsync(await other.GetAsync("/api/storefront/drop/registrations"));
+        var privateRegistrations = await CommercialScenario.JsonAsync(await other.GetAsync("drop/registrations"));
         Assert.Empty(privateRegistrations.EnumerateArray());
         var otherStore = await scenario.Store.CreateStoreAsync(planId: 3);
         var otherCustomer = await scenario.Store.CreateCustomerAsync(otherStore.EnterpriseId);
         using var otherTenant = scenario.Client(otherCustomer.Token, otherCustomer.Address);
-        using var denied = await otherTenant.PostAsync($"/api/storefront/drop/events/{item.EventId}/register", null);
+        using var denied = await otherTenant.PostAsync($"drop/events/{item.EventId}/register", null);
         Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+        using var foreignToken = scenario.Client(buyer.Token, otherCustomer.Address);
+        using var unauthorized = await foreignToken.GetAsync("drop/registrations");
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
     }
 
 }

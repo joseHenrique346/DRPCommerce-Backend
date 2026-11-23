@@ -12,10 +12,10 @@ public sealed class RegisterDomainCommandHandler(IdentityHandlerContext context)
         var request = command.Request;
 
         var host = HostName.Normalize(request.Host);
-        var platformDomain = HostName.Normalize(Options.StorefrontBaseDomain);
 
-        if (host == platformDomain || host.EndsWith("." + platformDomain, StringComparison.Ordinal))
-            throw new SecurityFailure(400, "Domain.PlatformDomainReserved", "Domínios da plataforma são gerenciados pelo cadastro de lojas.");
+        if (Uri.TryCreate(Options.StorefrontBaseUrl, UriKind.Absolute, out var root) &&
+            string.Equals(host, root.IdnHost.TrimEnd('.'), StringComparison.OrdinalIgnoreCase))
+            throw new SecurityFailure(400, "Domain.PlatformDomainReserved", "O domínio público da plataforma é reservado.");
 
         using var operation = scope.Begin();
         await using var tx = await BeginOwnerOperationAsync(ct);

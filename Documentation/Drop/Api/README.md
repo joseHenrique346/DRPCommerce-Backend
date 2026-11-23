@@ -5,10 +5,10 @@ O Drop possui API própria, banco separado e autenticação validada pelo Store.
 ## Superfície atual
 
 - Administração de eventos, produtos, cupons e recursos do Drop por controllers/CRUDs com permissões.
-- Storefront em `/api/storefront/drop`: eventos públicos, inscrição e entrada na fila; consultas privadas dos recursos do cliente.
+- Storefront em `/api/storefront/{storeSlug}/drop`: eventos públicos, inscrição e entrada na fila; consultas privadas dos recursos do cliente.
 - Aparência de padrão/evento, usando os controllers compartilhados e as regras próprias de resolução.
 
-`GET /api/storefront/drop/events` é público na loja resolvida. `POST /api/storefront/drop/events/{id}/queue` exige cliente, janela aberta e inscrição elegível quando configurada. `GET /api/storefront/drop/queue` retorna participações próprias.
+`GET /api/storefront/{storeSlug}/drop/events` é público na loja resolvida. `POST /api/storefront/{storeSlug}/drop/events/{id}/queue` exige cliente, janela aberta e inscrição elegível quando configurada. `GET /api/storefront/{storeSlug}/drop/queue` retorna participações próprias.
 
 O fluxo comercial controlado agora possui catálogo próprio, admissão FIFO, prazo de quinze minutos,
 reserva por variação/CPF e checkout pela conexão Mercado Pago da loja. CRUDs financeiros

@@ -22,7 +22,7 @@ public sealed class IdentityContext(IHttpContextAccessor accessor, ITenantProvid
     public long MembershipId => SecurityNames.Id(Principal, SecurityNames.Membership);
     public Guid FamilyId => Guid.TryParse(Principal.FindFirst(SecurityNames.Session)?.Value, out var value) ? value
         : throw new SecurityFailure(401, "Identity.InvalidSession", "Sessão inválida.");
-    public string Host => accessor.HttpContext?.Request.Host.Host ?? "";
+    public string? StorefrontSlug => accessor.HttpContext?.Items[SecurityNames.ResolvedStorefrontSlug] as string;
     /// <summary>
     /// Exige o vínculo de dono principal para impedir que sócios ou funcionários alterem operações reservadas ao proprietário.
     /// </summary>

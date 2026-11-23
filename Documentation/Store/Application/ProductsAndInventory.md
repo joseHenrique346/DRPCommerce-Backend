@@ -134,9 +134,9 @@ Produto e variante sempre recebem exclusão lógica. A exclusão exige saldo zer
 | PUT `/api/products/{productId}/variants/{id}/dimensions` | Overrides de dimensões; `products.edit` |
 | DELETE `/api/products/{productId}/variants/{id}` | Exclusão lógica protegida; `products.delete` |
 | GET `/api/products/search` | Busca administrativa; `products.view` |
-| GET `/api/storefront/products/search` | Busca pública paginada |
-| GET `/api/storefront/products/by-slug/{slug}` | Produto público e seus SKUs disponíveis |
-| GET `/api/storefront/products` | Listagem pública anterior, mantendo resposta em array e paginação limitada |
+| GET `/api/storefront/{storeSlug}/products/search` | Busca pública paginada |
+| GET `/api/storefront/{storeSlug}/products/by-slug/{slug}` | Produto público e seus SKUs disponíveis |
+| GET `/api/storefront/{storeSlug}/products` | Listagem pública anterior, mantendo resposta em array e paginação limitada |
 | GET `/api/inventory/variants/{id}` | Saldo do SKU; `inventory.manage` |
 | PUT `/api/inventory/variants/{id}/adjust` | Ajuste com motivo e idempotência; `inventory.manage` |
 | POST `/api/inventory/reservations` | Reserva de SKUs; `inventory.manage` |

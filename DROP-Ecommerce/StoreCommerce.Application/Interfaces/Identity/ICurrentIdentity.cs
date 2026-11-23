@@ -9,7 +9,7 @@ public interface ICurrentIdentity
     long EnterpriseId { get; }
     long MembershipId { get; }
     Guid FamilyId { get; }
-    string Host { get; }
+    string? StorefrontSlug { get; }
     void RequirePrimaryOwner();
     void RequirePermission(string permission);
 }

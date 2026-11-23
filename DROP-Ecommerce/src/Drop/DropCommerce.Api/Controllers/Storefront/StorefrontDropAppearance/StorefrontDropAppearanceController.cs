@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace DropCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront/drop/events/{slug}/appearance")]
+[Route("api/storefront/{storeSlug}/drop/events/{slug}/appearance")]
 [AllowAnonymous]
 [EnableRateLimiting("api")]
 public sealed class StorefrontDropAppearanceController(IMediator mediator) : AppearancePublicControllerBase(mediator)

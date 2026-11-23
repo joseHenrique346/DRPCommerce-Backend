@@ -8,6 +8,14 @@ namespace StoreCommerce.Infrastructure.Data.Repositories;
 
 public class EnterpriseRepository(StoreCommerceDbContext context) : Repository<Enterprise>(context), IEnterpriseRepository
 {
+    public Task<long?> FindActiveStorefrontIdAsync(string slug, CancellationToken ct)
+    {
+        return Context.Enterprises.IgnoreQueryFilters().AsNoTracking()
+            .Where(Enterprise => Enterprise.StorefrontSlug == slug && Enterprise.IsActive)
+            .Select(Enterprise => (long?)Enterprise.Id)
+            .SingleOrDefaultAsync(ct);
+    }
+
     public Task<EnterpriseContractState?> GetContractStateAsync(long id, CancellationToken cancellationToken)
     {
         return Context.Enterprises.IgnoreQueryFilters().AsNoTracking()

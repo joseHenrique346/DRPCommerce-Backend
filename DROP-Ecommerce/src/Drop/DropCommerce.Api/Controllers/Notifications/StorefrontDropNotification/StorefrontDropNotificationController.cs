@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace DropCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront/drop")]
+[Route("api/storefront/{storeSlug}/drop")]
 [Authorize(Policy = SecurityNames.Storefront)]
 [EnableRateLimiting("api")]
 public sealed class StorefrontDropNotificationController(IMediator mediator) : ControllerBase

@@ -120,7 +120,7 @@ aparência, logos, assinaturas, webhook assinado e exclusão de conta com revis�
 - [Integração interna Store/DROP](../Drop/Infrastructure/StoreIntegration.md).
 
 Os caminhos são dos serviços. O Gateway acrescenta `/api/store` ou `/api/drop`; por exemplo,
-`/api/drop/api/storefront/drop/events`. Tela/cliente deve apresentar `financialReviewCode`
+`/api/drop/api/storefront/{storeSlug}/drop/events`. Tela/cliente deve apresentar `financialReviewCode`
 como revisão pendente e impedir nova tentativa de pagamento naquele pedido. O retorno do
 Mercado Pago não concede plano nem confirma compra; consultar os endpoints do backend.
 

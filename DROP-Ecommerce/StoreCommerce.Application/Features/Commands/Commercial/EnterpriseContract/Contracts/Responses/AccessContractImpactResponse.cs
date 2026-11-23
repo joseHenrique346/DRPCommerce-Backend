@@ -5,4 +5,4 @@ public sealed record AccessContractImpactResponse(
     int AdditionalMemberLimit, int ActiveAdditionalMembers, int BlockedAdditionalMembers,
     bool RequiresMembershipSelection, IReadOnlyList<long> EligibleMembershipIds,
     IReadOnlyList<long>? RetainedMembershipIds, IReadOnlyList<long> MembershipIdsToBlock,
-    bool AllowsCustomDomain, IReadOnlyList<long> DomainIdsToBlock, string? PlatformHost);
+    bool AllowsCustomDomain, IReadOnlyList<long> DomainIdsToBlock);

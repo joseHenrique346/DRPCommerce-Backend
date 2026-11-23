@@ -3,7 +3,7 @@ using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using SharedCommerce.Application.Options;
-using StoreCommerce.Application.Identity;
+using SharedCommerce.Domain.Contracts.Storefront;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -13,11 +13,10 @@ namespace StoreCommerce.Security.Resolvers;
 /// Resolve a loja e autentica chamadas internas antes de permitir acesso aos dados do Store.
 /// </summary>
 public sealed class StoreTenantResolver(
-    IIdentityRepositories data, IOptions<SecurityOptions> settings,
-    StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess domains) : IRequestTenantResolver
+    IIdentityRepositories data, IOptions<SecurityOptions> settings) : IRequestTenantResolver
 {
     /// <summary>
-    /// Valida chamadas internas ou identifica a loja pelo domínio verificado, impedindo o uso de um tenant não confiável.
+    /// Valida chamadas internas ou identifica a loja pelo slug da rota do storefront.
     /// </summary>
     public async Task ResolveAsync(HttpContext context)
     {
@@ -42,12 +41,13 @@ public sealed class StoreTenantResolver(
         if (!context.Request.Path.StartsWithSegments("/api/storefront"))
             return;
 
-        var host = HostName.Normalize(context.Request.Host.Host);
-        var tenantId = await domains.ResolveAsync(host, null, context.RequestAborted);
+        var slug = StorefrontSlug.Normalize(context.Request.RouteValues["storeSlug"] as string);
+        var tenantId = slug is null ? null : await data.Enterprises.FindActiveStorefrontIdAsync(slug, context.RequestAborted);
 
         if (tenantId is null)
             throw new SecurityFailure(404, "Enterprise.Unavailable", "Loja indisponível.");
 
         context.Items[SecurityNames.ResolvedTenant] = tenantId.Value;
+        context.Items[SecurityNames.ResolvedStorefrontSlug] = slug;
     }
 }

@@ -1,4 +1,5 @@
 using StoreCommerce.Domain.Entity.Base;
+using SlugPolicy = SharedCommerce.Domain.Contracts.Storefront.StorefrontSlug;
 
 namespace StoreCommerce.Domain.Entity;
 
@@ -15,6 +16,7 @@ public class Enterprise : BaseEntity
     public string ZipCode { get; private set; }
     public string Country { get; private set; }
     public bool IsActive { get; private set; }
+    public string? StorefrontSlug { get; private set; }
     public long PlanId { get; private set; } = StaticEntity.EnterprisePlan.Default.Id;
     public long? AddOnId { get; private set; }
     public long ContractRevision { get; private set; } = 1;
@@ -76,6 +78,15 @@ public class Enterprise : BaseEntity
 
     #region Functions
     public void SetActive(bool active) => IsActive = active;
+
+    public void AssignStorefrontSlug(string value)
+    {
+        if (StorefrontSlug is not null)
+            throw new InvalidOperationException("A loja já possui um endereço público.");
+
+        StorefrontSlug = SlugPolicy.Normalize(value)
+            ?? throw new ArgumentException("Identificador público da loja inválido.", nameof(value));
+    }
 
     /// <summary>
     /// Mutação reservada a um fluxo confiável de concessão, nunca à solicitação HTTP do dono.

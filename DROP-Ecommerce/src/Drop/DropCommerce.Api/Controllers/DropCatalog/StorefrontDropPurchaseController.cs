@@ -9,7 +9,7 @@ using SharedCommerce.Application.Security;
 namespace DropCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront/drop")]
+[Route("api/storefront/{storeSlug}/drop")]
 [Authorize(Policy = SecurityNames.Storefront)]
 public sealed class StorefrontDropPurchaseController(IMediator mediator) : ControllerBase
 {

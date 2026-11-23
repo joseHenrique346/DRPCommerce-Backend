@@ -9,10 +9,13 @@ using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Integrations;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess access, IProviderConnectionStore connections,
+    IEnterpriseRepository enterprises,
     IOptions<MercadoPagoOptions> options, TimeProvider time) : IPaymentGateway, IMercadoPagoPaymentReader
 {
     public string Provider => IntegrationProviders.MercadoPago;
@@ -37,6 +40,7 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
     public async Task<PaymentSession> CreatePaymentAsync(PaymentRequest request, CancellationToken ct)
     {
         string token;
+        string returnUrl;
 
         try
         {
@@ -46,13 +50,28 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
                 throw new ArgumentException("Pagamento Mercado Pago exige valor positivo em BRL e prazo válido.");
 
             token = await access.AccessAsync(request.EnterpriseId, request.Context, ct);
+            var slug = await enterprises.FindValueAsync(Enterprise => Enterprise.Id == request.EnterpriseId,
+                Enterprise => Enterprise.StorefrontSlug, ct, ignoreQueryFilters: true);
+            var configuredReturnUrl = Settings.PaymentReturnUrl;
+
+            if (configuredReturnUrl.Contains("{storeSlug}", StringComparison.Ordinal))
+            {
+                if (slug is null)
+                    throw new SecurityFailure(409, "MercadoPago.StorefrontRequired", "Configure o endereço público da loja.");
+
+                configuredReturnUrl = configuredReturnUrl.Replace("{storeSlug}", Uri.EscapeDataString(slug), StringComparison.Ordinal);
+            }
+
+            returnUrl = QueryHelpers.AddQueryString(configuredReturnUrl, request.ReturnFlow == "drop" ? "dropOrderId" : "orderId",
+                request.OrderId.ToString(CultureInfo.InvariantCulture));
+
+            if (slug is not null)
+                returnUrl = QueryHelpers.AddQueryString(returnUrl, "storeSlug", slug);
         }
         catch (Exception)
         {
             throw new PaymentNotSubmittedException();
         }
-        var returnUrl = Settings.PaymentReturnUrl + (Settings.PaymentReturnUrl.Contains('?') ? "&" : "?") +
-            (request.ReturnFlow == "drop" ? "dropOrderId=" : "orderId=") + request.OrderId.ToString(CultureInfo.InvariantCulture);
         var body = new
         {
             items = new[]

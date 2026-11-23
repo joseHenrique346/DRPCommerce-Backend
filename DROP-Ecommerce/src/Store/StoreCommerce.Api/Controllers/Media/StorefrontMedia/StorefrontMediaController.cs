@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
-[Route("api/storefront/media")]
+[Route("api/storefront/{storeSlug}/media")]
 [AllowAnonymous]
 [EnableRateLimiting("api")]
 public sealed class StorefrontMediaController(IMediator mediator) : ControllerBase

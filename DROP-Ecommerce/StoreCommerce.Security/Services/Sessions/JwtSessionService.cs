@@ -18,8 +18,7 @@ namespace StoreCommerce.Security.Services;
 /// Emite JWTs e valida o estado das sessões para manter autenticação e revogação consistentes.
 /// </summary>
 public sealed class JwtSessionService(
-    IIdentityRepositories data, IOptions<SecurityOptions> settings, TimeProvider time,
-    StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess domains) : ISessionValidator, ISessionTokenIssuer
+    IIdentityRepositories data, IOptions<SecurityOptions> settings, TimeProvider time) : ISessionValidator, ISessionTokenIssuer
 {
     private SecurityOptions Options => settings.Value;
     private DateTime Now => time.GetUtcNow().UtcDateTime;
@@ -131,7 +130,7 @@ public sealed class JwtSessionService(
     /// <summary>
     /// Confere conta, sessão, vínculo e loja no banco para invalidar imediatamente acessos revogados ou alterados.
     /// </summary>
-    public async Task<bool> ValidateAsync(ClaimsPrincipal principal, string? host, CancellationToken ct)
+    public async Task<bool> ValidateAsync(ClaimsPrincipal principal, long? storefrontEnterpriseId, CancellationToken ct)
     {
         try
         {
@@ -191,15 +190,12 @@ public sealed class JwtSessionService(
 
             var tenant = SecurityNames.Id(principal, SecurityNames.Enterprise);
 
-            if (SecurityNames.Id(principal, SecurityNames.Customer) != id || string.IsNullOrWhiteSpace(host))
+            if (SecurityNames.Id(principal, SecurityNames.Customer) != id || storefrontEnterpriseId != tenant)
                 return false;
 
-            var normalizedHost = HostName.Normalize(host);
-
-            if (await domains.ResolveAsync(normalizedHost, tenant, ct) is null)
-                return false;
-
-            var customer = await data.Customers.FindAsync(x => x.Id == id && x.EnterpriseId == tenant, ct, ignoreQueryFilters: true, tracking: false);
+            var customer = await data.Customers.FindAsync(Customer =>
+                Customer.Id == id && Customer.EnterpriseId == tenant && Customer.Enterprise.IsActive,
+                ct, ignoreQueryFilters: true, tracking: false);
 
             if (customer is null || !customer.IsActive || customer.IsDeleted || customer.SecurityVersion != version || (Options.RequireConfirmedEmail && !customer.EmailConfirmed))
                 return false;

@@ -9,4 +9,6 @@ public sealed record PublicStoreInfoResponse(
     string Phone,
     string CurrencyCode,
     decimal MinOrderValue,
-    int? MaxItemsPerOrder);
+    int? MaxItemsPerOrder,
+    string? StorefrontSlug,
+    string? StorefrontUrl);

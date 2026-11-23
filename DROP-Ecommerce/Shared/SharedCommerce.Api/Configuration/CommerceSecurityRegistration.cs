@@ -35,6 +35,15 @@ public static class CommerceSecurityRegistration
             .Validate(options => options.FailedLoginThreshold > 0 && options.InitialLockoutSeconds > 0 && options.MaximumLockoutSeconds >= options.InitialLockoutSeconds && options.FailureResetMinutes > 0, "Bloqueio progressivo inválido.")
             .Validate(options => options.AuthRequestsPerMinute > 0 && options.RefreshRequestsPerMinute > 0 && options.ApiRequestsPerMinute > 0 && options.TokenRetentionDays >= 0, "Limites/retencão inválidos.")
             .Validate(options => options.InvitationHours > 0 && options.OwnershipTransferMinutes > 0 && options.ActionTokenMinutes > 0, "Prazos de ação inválidos.")
+            .Validate(options => string.IsNullOrEmpty(options.StorefrontBaseUrl) ||
+                IsHttpsBaseUrl(options.StorefrontBaseUrl),
+                "Security:StorefrontBaseUrl deve ser uma URL HTTPS sem credenciais, consulta ou fragmento.")
+            .Validate(options => string.IsNullOrEmpty(options.StorefrontApiBaseUrl) ||
+                IsHttpsBaseUrl(options.StorefrontApiBaseUrl) ||
+                options.StorefrontApiBaseUrl.StartsWith('/') &&
+                !options.StorefrontApiBaseUrl.StartsWith("//", StringComparison.Ordinal) &&
+                !options.StorefrontApiBaseUrl.Any(character => character is '?' or '#' or '\\' || char.IsWhiteSpace(character)),
+                "Security:StorefrontApiBaseUrl deve ser uma URL HTTPS ou um prefixo de rota.")
             .ValidateOnStart();
 
         services.AddSingleton(TimeProvider.System);
@@ -111,7 +120,10 @@ public static class CommerceSecurityRegistration
                     {
                         var validator = context.HttpContext.RequestServices.GetRequiredService<ISessionValidator>();
 
-                        if (context.Principal is null || !await validator.ValidateAsync(context.Principal, context.Request.Host.Host, context.HttpContext.RequestAborted))
+                        var storefrontEnterpriseId = context.HttpContext.Items[SecurityNames.ResolvedTenant] as long?;
+
+                        if (context.Principal is null || !await validator.ValidateAsync(context.Principal, storefrontEnterpriseId,
+                            context.HttpContext.RequestAborted))
                             context.Fail("Sessão inválida ou revogada.");
                     }
                 };
@@ -205,6 +217,12 @@ public static class CommerceSecurityRegistration
         });
 
         return services;
+    }
+
+    private static bool IsHttpsBaseUrl(string value)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps &&
+            uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0;
     }
 
     /// <summary>

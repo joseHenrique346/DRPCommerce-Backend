@@ -124,12 +124,12 @@ conforme o serviço, seguindo a composição já usada pelo projeto.
 | DROP | `DELETE /api/drop-catalog/products/{id}` | Exclusão lógica após verificar reservas, estoque e operações financeiras |
 | DROP | `POST /api/drop-catalog/products/{id}/return-to-store` | Inicia retorno coordenado, respondendo 202 |
 | DROP | `GET /api/drop-catalog/activity?beforeId=...` | Histórico comercial privado, até 100 registros |
-| DROP | `GET /api/storefront/drop/events` e `/events/{id}` | Eventos públicos elegíveis; detalhe inclui participações, SKUs, saldo e preços |
-| DROP | `POST /api/storefront/drop/events/{id}/queue` | Entrada autenticada com `{ "cpf": "..." }` |
-| DROP | `GET /api/storefront/drop/events/{id}/queue` | Posição/status e sessão própria com admissão/expiração |
-| DROP | `POST /api/storefront/drop/events/{id}/reservations` | Reserva `participationId`, `sessionId`, `idempotencyKey`, `lines[{variantId,quantity}]` |
-| DROP | `POST /api/storefront/drop/reservations/{id}/checkout` | Cria/recupera pedido e checkout da mesma reserva |
-| DROP | `GET /api/storefront/drop/purchases/{id}` | Pedido próprio, snapshots, URL e eventual revisão financeira |
+| DROP | `GET /api/storefront/{storeSlug}/drop/events` e `/events/{id}` | Eventos públicos elegíveis; detalhe inclui participações, SKUs, saldo e preços |
+| DROP | `POST /api/storefront/{storeSlug}/drop/events/{id}/queue` | Entrada autenticada com `{ "cpf": "..." }` |
+| DROP | `GET /api/storefront/{storeSlug}/drop/events/{id}/queue` | Posição/status e sessão própria com admissão/expiração |
+| DROP | `POST /api/storefront/{storeSlug}/drop/events/{id}/reservations` | Reserva `participationId`, `sessionId`, `idempotencyKey`, `lines[{variantId,quantity}]` |
+| DROP | `POST /api/storefront/{storeSlug}/drop/reservations/{id}/checkout` | Cria/recupera pedido e checkout da mesma reserva |
+| DROP | `GET /api/storefront/{storeSlug}/drop/purchases/{id}` | Pedido próprio, snapshots, URL e eventual revisão financeira |
 | DROP | `POST /api/drop-purchases/{id}/fulfillment` | Gestor com `orders.manage` avança `statusId` após pagamento confirmado |
 
 CRUDs legados de fila/sessão/reserva/pedido/transação não podem gravar estados financeiros

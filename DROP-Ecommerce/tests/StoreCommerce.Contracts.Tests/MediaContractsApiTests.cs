@@ -83,7 +83,7 @@ public sealed class MediaContractsApiTests(ContractsApiFixture fixture)
         await fixture.ChangeContractAsync(owner.EnterpriseId, 1, null);
         using var hiddenImage = await storefront.GetAsync(url);
         Assert.Equal(HttpStatusCode.NotFound, hiddenImage.StatusCode);
-        using var manifest = await storefront.GetAsync("/api/storefront/appearance");
+        using var manifest = await storefront.GetAsync("appearance");
         manifest.EnsureSuccessStatusCode();
         using var publicJson = await JsonAsync(manifest);
         Assert.Equal(JsonValueKind.Null, publicJson.RootElement.GetProperty("settings").GetProperty("brand").GetProperty("logoAssetId").ValueKind);

@@ -75,7 +75,6 @@ public static class DependencyInjection
         services.AddScoped<StoreCommerce.Application.Contracts.ProductReactivationScope>();
         services.AddScoped<StoreCommerce.Application.Interfaces.Commercial.IEnterpriseContractUsageReader, EnterpriseContractUsageReader>();
         services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IStoreActivityReader, StoreActivityReader>();
-        services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseDomainAccess, EnterpriseDomainAccess>();
         services.AddScoped<StoreCommerce.Application.Interfaces.StoreManagement.IEnterpriseAccessReader, EnterpriseAccessReader>();
         services.AddScoped<IAuthenticationSessionRepository, AuthenticationSessionRepository>();
         services.AddScoped<IAccountDeletionStore, AccountDeletionStore>();

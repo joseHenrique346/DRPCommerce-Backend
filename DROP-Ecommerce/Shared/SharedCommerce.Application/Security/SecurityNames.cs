@@ -26,6 +26,7 @@ public static class SecurityNames
     public const string Kind = "membership_kind";
     public const string Permission = "permission";
     public const string ResolvedTenant = "Commerce.ResolvedTenant";
+    public const string ResolvedStorefrontSlug = "Commerce.StorefrontSlug";
     public const string TrustedServiceTenant = "Commerce.ServiceTenant";
 
     /// <summary>
