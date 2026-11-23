@@ -11,7 +11,8 @@ public sealed class ProviderAuthorizationAccessPolicy(
     {
         var membership = await authorizations.FindMembershipAsync(enterpriseId, userId, membershipId, ct);
 
-        if (membership is null || !membership.User.IsActive || !membership.Enterprise.IsActive ||
+        if (membership is null || membership.IsContractBlocked ||
+            !membership.User.IsActive || !membership.Enterprise.IsActive ||
             expectedVersion.HasValue && membership.User.SecurityVersion != expectedVersion)
             throw new SecurityFailure(403, "MercadoPago.AuthorizationRevoked", "O acesso à loja mudou. Inicie uma nova autorização.");
 

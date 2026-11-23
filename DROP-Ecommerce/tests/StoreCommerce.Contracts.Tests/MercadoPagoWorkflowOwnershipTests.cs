@@ -10,8 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Application.Interfaces.Integrations;
+using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Enums.Integrations;
 using StoreCommerce.Domain.Integrations;
+using StoreCommerce.Domain.StaticEntity;
 using StoreCommerce.Infrastructure.Data.Context;
 using Xunit;
 
@@ -105,6 +107,38 @@ public sealed class MercadoPagoWorkflowOwnershipTests(MercadoPagoWorkflowFixture
     }
 
     [PostgresFact]
+    public async Task Contract_block_before_callback_rejects_oauth_without_exchanging_the_code()
+    {
+        fixture.Client.Reset();
+        var staff = await StaffWithSettingsPermissionAsync();
+        var start = await BeginAsync(staff);
+        await fixture.Store.ChangeContractAsync(staff.EnterpriseId, 1, null, []);
+
+        using var response = await CallbackAsync(start.State, start.Cookie);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("MercadoPago.AuthorizationRevoked", problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal(0, fixture.Client.ExchangeCalls);
+        await AssertContractBlockDidNotCreateConnectionAsync(staff);
+    }
+
+    [PostgresFact]
+    public async Task Contract_block_during_the_provider_call_prevents_persisting_a_connection()
+    {
+        fixture.Client.Reset();
+        var staff = await StaffWithSettingsPermissionAsync();
+        var start = await BeginAsync(staff);
+        fixture.Client.DuringExchange = () => fixture.Store.ChangeContractAsync(staff.EnterpriseId, 1, null, []);
+
+        using var response = await CallbackAsync(start.State, start.Cookie);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("MercadoPago.AuthorizationRevoked", problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal(1, fixture.Client.ExchangeCalls);
+        await AssertContractBlockDidNotCreateConnectionAsync(staff);
+    }
+
+    [PostgresFact]
     public async Task A_token_for_another_account_cannot_connect_the_store()
     {
         fixture.Client.Reset();
@@ -151,9 +185,53 @@ public sealed class MercadoPagoWorkflowOwnershipTests(MercadoPagoWorkflowFixture
         Assert.Single(json.RootElement.EnumerateArray());
     }
 
-    private async Task<(string State, string Cookie)> BeginAsync(StoreActor owner)
+    private async Task<StoreActor> StaffWithSettingsPermissionAsync()
     {
+        var owner = await fixture.Store.CreateStoreAsync(planId: 2);
+        var staff = await fixture.Store.CreateStaffAsync(owner.EnterpriseId);
+        using var scope = fixture.Store.Services.CreateScope();
+        var permissionId = await scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>().Set<Permission>()
+            .Where(Permission => Permission.Code == PermissionCodes.SettingsManage)
+            .Select(Permission => Permission.Id).SingleAsync();
         using var client = fixture.Store.Client(owner.Token);
+        using var role = await client.PostAsJsonAsync("/api/access-roles/add", new
+        {
+            name = "Gerir integração",
+            description = "Permissão de integração para regressão do OAuth",
+            isActive = true,
+            permissionIds = new[] { permissionId }
+        });
+        role.EnsureSuccessStatusCode();
+        using var roleJson = JsonDocument.Parse(await role.Content.ReadAsStringAsync());
+        var roleId = roleJson.RootElement.GetProperty("id").GetInt64();
+        using var assignment = await client.PutAsJsonAsync($"/api/enterprise-memberships/{staff.MembershipId}/access-roles",
+            new { accessRoleIds = new[] { roleId } });
+        Assert.Equal(HttpStatusCode.NoContent, assignment.StatusCode);
+
+        return staff with { Token = await fixture.Store.FreshTokenAsync(staff) };
+    }
+
+    private async Task AssertContractBlockDidNotCreateConnectionAsync(StoreActor staff)
+    {
+        using var scope = fixture.Store.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StoreCommerceDbContext>();
+        var membership = await db.EnterpriseMemberships.IgnoreQueryFilters().AsNoTracking()
+            .SingleAsync(Membership => Membership.Id == staff.MembershipId);
+        Assert.True(membership.IsActive);
+        Assert.True(membership.IsContractBlocked);
+        Assert.True(await scope.ServiceProvider.GetRequiredService<IProviderAuthorizationStore>()
+            .HasSettingsPermissionAsync(staff.EnterpriseId, staff.MembershipId, default));
+        Assert.False(await db.ProviderConnections.IgnoreQueryFilters().AnyAsync(Connection => Connection.EnterpriseId == staff.EnterpriseId));
+        Assert.False(await db.Set<PaymentProviderSelection>().IgnoreQueryFilters().AnyAsync(Selection => Selection.EnterpriseId == staff.EnterpriseId));
+        var authorization = await db.Set<ProviderAuthorization>().IgnoreQueryFilters()
+            .SingleAsync(Authorization => Authorization.EnterpriseId == staff.EnterpriseId);
+        Assert.NotNull(authorization.ConsumedAt);
+        Assert.Empty(authorization.ProtectedVerifier);
+    }
+
+    private async Task<(string State, string Cookie)> BeginAsync(StoreActor actor)
+    {
+        using var client = fixture.Store.Client(actor.Token);
         using var response = await client.PostAsJsonAsync("/api/integrations/mercado-pago/oauth/start", new { environment = IntegrationEnvironment.Sandbox });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
