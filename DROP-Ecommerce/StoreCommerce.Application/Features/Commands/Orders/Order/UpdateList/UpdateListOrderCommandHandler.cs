@@ -11,7 +11,7 @@ public class UpdateListOrderCommandHandler(
     IRepository<Coupon> couponRepository,
     IUnitOfWork unitOfWork,
     StoreSettingsReader storeSettings,
-    CouponEligibilityService eligibility,
+    CouponCustomerHistoryReader eligibility,
     TimeProvider time)
     : IRequestHandler<UpdateListOrderCommand, Result<List<Order>>>
 {

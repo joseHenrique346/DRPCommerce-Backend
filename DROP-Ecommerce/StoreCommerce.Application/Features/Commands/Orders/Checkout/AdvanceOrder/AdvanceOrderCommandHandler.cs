@@ -1,24 +1,70 @@
-using SharedCommerce.Domain.Interfaces.Tenancy;
-using StoreCommerce.Application.Interfaces.Identity;
-using StoreCommerce.Domain.Enums.Orders;
-using StoreCommerce.Domain.Interfaces.Orders;
-using MediatR;
 using SharedCommerce.Domain.Exceptions;
-using StoreCommerce.Application.Contracts.Common;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using StoreCommerce.Application.Contracts.Order;
-using StoreCommerce.Application.Identity;
+using StoreCommerce.Application.Enums.Orders;
+using StoreCommerce.Application.Interfaces.Identity;
 using StoreCommerce.Application.Orders;
-using SharedCommerce.Application.Result;
-using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Enums.Orders;
+using StoreCommerce.Domain.Interfaces.Catalog;
+using StoreCommerce.Domain.Interfaces.Orders;
+using StoreCommerce.Domain.Interfaces.Persistence;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class AdvanceOrderCommandHandler(OrderLifecycleService lifecycle, IOrderRepository orders, ICurrentIdentity actor, ITenantProvider tenant)    : WorkflowRequestHandler<AdvanceOrderCommand, OrderDetailResponse>
+public sealed class AdvanceOrderCommandHandler(
+    IOrderRepository orders,
+    IProductRepository products,
+    IUnitOfWork unitOfWork,
+    OrderWorkflowScope scope,
+    ICurrentIdentity actor,
+    TimeProvider time,
+    ITenantProvider tenant)
+    : WorkflowRequestHandler<AdvanceOrderCommand, OrderDetailResponse>
 {
-    protected override async Task<OrderDetailResponse> ExecuteAsync(AdvanceOrderCommand request, CancellationToken ct)
-    {
-        await lifecycle.AdvanceAsync(tenant.GetEnterpriseId(), request.Id, request.Step, OrderChangeSource.Backoffice, actor.UserId, request.Note, ct);
+    private DateTime Now => time.GetUtcNow().UtcDateTime;
 
-        return OrderDetailResponse.FromEntity((await orders.GetDetailAsync(request.Id, null, ct))!, backoffice: true);
+    protected override async Task<OrderDetailResponse> ExecuteAsync(AdvanceOrderCommand command, CancellationToken ct)
+    {
+        var enterpriseId = tenant.GetEnterpriseId();
+        var orderId = command.Id;
+        long? customerId = null;
+        var source = OrderChangeSource.Backoffice;
+        long? actorId = actor.UserId;
+        var step = command.Step;
+
+        await using var transaction = await unitOfWork.BeginTransactionAsync(ct);
+        await products.LockCatalogAsync(enterpriseId, ct);
+
+        var order = await orders.GetForWorkflowAsync(enterpriseId, orderId, ct);
+
+        if (order is null || (customerId.HasValue && order.CustomerId != customerId))
+            throw new SecurityFailure(404, "Order.NotFound", "Pedido não encontrado.");
+
+        using (scope.Begin(enterpriseId, customerId))
+        {
+            await ApplyAsync();
+            await unitOfWork.CommitAsync(ct);
+        }
+
+        await transaction.CommitAsync(ct);
+
+        return OrderDetailResponse.FromEntity((await orders.GetDetailAsync(command.Id, null, ct))!, backoffice: true);
+
+        Task ApplyAsync()
+        {
+            var now = Now;
+
+            switch (step)
+            {
+                case OrderStep.StartProcessing:
+                    order.StartProcessing(source, actorId, now);
+                    break;
+                default:
+                    order.MarkDelivered(source, actorId, now);
+                    break;
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

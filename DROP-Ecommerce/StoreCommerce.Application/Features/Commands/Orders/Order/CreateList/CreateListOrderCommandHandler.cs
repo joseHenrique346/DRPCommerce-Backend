@@ -5,7 +5,6 @@ using StoreCommerce.Domain.Interfaces.Catalog;
 using StoreCommerce.Domain.Interfaces.Orders;
 using StoreCommerce.Domain.Interfaces.Persistence;
 using MediatR;
-using StoreCommerce.Application.Identity;
 using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
 
@@ -18,7 +17,7 @@ public class CreateListOrderCommandHandler(
     IUnitOfWork unitOfWork,
     ITenantProvider tenantProvider,
     StoreSettingsReader storeSettings,
-    CouponEligibilityService eligibility,
+    CouponCustomerHistoryReader eligibility,
     ICurrentIdentity actor,
     TimeProvider time)
     : IRequestHandler<CreateListOrderCommand, Result<List<Order>>>

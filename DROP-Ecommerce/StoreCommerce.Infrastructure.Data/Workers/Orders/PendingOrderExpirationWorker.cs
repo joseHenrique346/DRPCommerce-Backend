@@ -1,8 +1,9 @@
+using StoreCommerce.Application.Features.Commands;
+using MediatR;
 using StoreCommerce.Domain.Interfaces.Orders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using StoreCommerce.Application.Orders;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 
@@ -31,7 +32,7 @@ public sealed class PendingOrderExpirationWorker(IServiceScopeFactory scopes, Ti
                     try
                     {
                         using var operation = scopes.CreateScope();
-                        await operation.ServiceProvider.GetRequiredService<OrderLifecycleService>().ExpirePendingAsync(tenant, stoppingToken);
+                        await operation.ServiceProvider.GetRequiredService<ISender>().Send(new ExpirePendingOrdersCommand(tenant), stoppingToken);
                     }
                     catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {

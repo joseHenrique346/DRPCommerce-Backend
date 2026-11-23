@@ -1,3 +1,5 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,12 +13,12 @@ namespace StoreCommerce.Api.Controllers;
 [Authorize(Policy = SecurityNames.PrimaryOwner)]
 [EnableRateLimiting("api")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class MediaAssetController(MediaAssetService media) : ControllerBase
+public sealed class MediaAssetController(ISender sender) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct)
     {
-        return Ok(await media.ListAsync(ct));
+        return Ok(await sender.Send(new ListMediaAssetsQuery(), ct));
     }
 
     [HttpPost]
@@ -29,7 +31,7 @@ public sealed class MediaAssetController(MediaAssetService media) : ControllerBa
 
         using var buffer = new MemoryStream();
         await file.CopyToAsync(buffer, ct);
-        var asset = await media.UploadAsync(buffer.ToArray(), ct);
+        var asset = await sender.Send(new UploadMediaAssetCommand(buffer.ToArray()), ct);
 
         return CreatedAtAction(nameof(GetContent), new { id = asset.Id }, asset);
     }
@@ -37,7 +39,7 @@ public sealed class MediaAssetController(MediaAssetService media) : ControllerBa
     [HttpGet("{id:long}/content")]
     public async Task<IActionResult> GetContent(long id, CancellationToken ct)
     {
-        var asset = await media.FindAsync(id, ct);
+        var asset = await sender.Send(new FindMediaAssetQuery(id), ct);
 
         if (asset is null)
             return NotFound();
@@ -51,7 +53,7 @@ public sealed class MediaAssetController(MediaAssetService media) : ControllerBa
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken ct)
     {
-        await media.DeleteAsync(id, ct);
+        await sender.Send(new DeleteMediaAssetCommand(id), ct);
 
         return NoContent();
     }

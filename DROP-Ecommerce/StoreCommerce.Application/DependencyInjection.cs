@@ -1,6 +1,3 @@
-using SharedCommerce.Application.Result;
-using StoreCommerce.Application.Payments;
-using StoreCommerce.Application.Contracts;
 using SharedCommerce.Application;
 using FluentValidation;
 using MediatR;
@@ -8,8 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using StoreCommerce.Application.Features;
 using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Application.Inventory;
-using StoreCommerce.Application.Carts;
 
 namespace StoreCommerce.Application;
 
@@ -22,24 +17,24 @@ public static class DependencyInjection
         services.AddSharedApplication(assembly);
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
-        services.AddScoped<Media.MediaAssetService>();
-        services.AddScoped<Media.MediaRetentionService>();
         services.AddScoped<StoreSettingsReader>();
-        services.AddScoped<CouponEligibilityService>();
-        services.AddScoped<CartService>();
-        services.AddScoped<CustomerAddressService>();
-        services.AddScoped<Orders.OrderLifecycleService>();
-        services.AddScoped<Orders.CheckoutService>();
-        services.AddScoped<Payments.PaymentAttemptService>();
-        services.AddScoped<Payments.PaymentOperationService>();
+        services.AddScoped<CouponCustomerHistoryReader>();
+        services.AddScoped<CartPurchaseContextReader>();
+        services.AddScoped<CartResponseBuilder>();
         services.AddScoped<Integrations.ProviderConnectionService>();
         services.AddScoped<CategoryCatalogReader>();
         services.AddScoped<CatalogWriteContext>();
         services.AddScoped<ProductCatalogWriter>();
-        services.AddScoped<ProductContractService>();
         services.AddScoped<ProductVariantWriter>();
         services.AddScoped<ProductSearchReader>();
-        services.AddScoped<InventoryService>();
+        services.AddScoped<ProductContractStateReader>();
+        services.AddScoped<ProductReactivationSelector>();
+        services.AddScoped<StockReservationExpirationWriter>();
+        services.AddScoped<StockReservationCompletionWriter>();
+        services.AddScoped<MediaOwnerWriteAccess>();
+        services.AddScoped<OrderStockWriter>();
+        services.AddScoped<OrderCouponRedemptionWriter>();
+        services.AddScoped<OrderPaymentOperationWriter>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;

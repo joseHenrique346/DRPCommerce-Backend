@@ -2,8 +2,32 @@
 
 As pastas de Store, DROP e Shared são agrupadas por contexto em inglês. A organização
 física não altera rotas, JSON, entidades persistidas, regras, transações ou ordem de
-execução. A revisão dos Services e das responsabilidades de negócio é uma tarefa
-separada desta organização.
+execução. A responsabilidade dos casos de uso segue as regras abaixo.
+
+## Responsabilidade dos handlers e reutilização
+
+Cada Handler representa um caso de uso com objetivo único, identificável pelo nome.
+As decisões e a sequência principal ficam no próprio Handler. Verificações e efeitos
+necessários ao mesmo objetivo pertencem ao mesmo caso de uso.
+
+Services não agrupam operações completas por contexto nem recebem a execução inteira
+encaminhada por um Handler. Mudar o nome de um Service para Writer não corrige essa
+responsabilidade.
+
+Writers executam fragmentos específicos e compartilhados da alteração, como efeitos
+de estoque ou registros de uso de cupons. Recebem os dados necessários ao fragmento,
+sem controlar o caso de uso inteiro ou confirmar sua transação. Consultas, seleções,
+projeções e políticas comuns usam auxiliares com nomes correspondentes à finalidade.
+
+O Handler utiliza Repository/UnitOfWork e adapters técnicos. Os bases existentes de
+CRUD e Identity continuam sendo usados quando adequados, sem novos hooks para
+acomodar a refatoração. Locks, idempotência, escopos e limites transacionais são
+preservados na transferência de regras.
+
+As etapas 1 a 3 da correção transferem os casos de uso dos Services de Application
+e extraem os fragmentos compartilhados necessários. A revisão geral dos Writers
+de catálogo e das composições entre handlers permanece para a etapa 4. A presença
+de código anterior fora dessas regras não autoriza reproduzir o desvio.
 
 ## Application
 
@@ -26,7 +50,7 @@ StoreCommerce.Application/
       Contracts/Responses/
       Support/
     Orders/Checkout/PlaceOrder/
-    Orders/Order/Services/
+    Orders/Order/Writers/
     Identity/Authentication/
     StoreManagement/Enterprise/
     Commercial/EnterpriseContract/
@@ -42,7 +66,7 @@ Cada Command, Query, Handler, Validator, DTO, interface e enum tem seu próprio
 arquivo. Partes de um mesmo tipo `partial` podem continuar em arquivos próprios,
 como `UserResponse.cs` e `UserResponse.Mapping.cs`.
 
-Contratos de entrada e saída, Services existentes, policies, mappers, validadores
+Contratos de entrada e saída, Writers específicos, policies, mappers, validadores
 auxiliares, opções e escopos ficam junto de sua feature em subpastas específicas.
 Interfaces ficam em `Interfaces/<Context>`; enums ficam em `Enums/<Context>` da
 Application ou do Domain, conforme a camada em que já eram definidos.

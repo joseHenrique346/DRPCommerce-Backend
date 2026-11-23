@@ -7,7 +7,7 @@ using StoreCommerce.Domain.Entity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class ValidateCouponQueryHandler(ICouponRepository couponRepository, IRepository<Customer> customerRepository, CouponEligibilityService eligibility, TimeProvider time) : IRequestHandler<ValidateCouponQuery, Result<CouponValidationResponse>>
+public sealed class ValidateCouponQueryHandler(ICouponRepository couponRepository, IRepository<Customer> customerRepository, CouponCustomerHistoryReader eligibility, TimeProvider time) : IRequestHandler<ValidateCouponQuery, Result<CouponValidationResponse>>
 {
     public async Task<Result<CouponValidationResponse>> Handle(ValidateCouponQuery request, CancellationToken cancellationToken)
     {

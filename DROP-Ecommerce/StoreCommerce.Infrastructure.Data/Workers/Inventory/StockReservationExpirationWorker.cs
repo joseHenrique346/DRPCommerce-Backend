@@ -1,8 +1,9 @@
+using StoreCommerce.Application.Features.Commands;
+using MediatR;
 using StoreCommerce.Domain.Interfaces.Inventory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using StoreCommerce.Application.Inventory;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 
@@ -26,8 +27,8 @@ public sealed class StockReservationExpirationWorker(IServiceScopeFactory scopes
                     try
                     {
                         using var operation = scopes.CreateScope();
-                        var inventory = operation.ServiceProvider.GetRequiredService<InventoryService>();
-                        await inventory.ExpireAsync(tenant, stoppingToken);
+                        var sender = operation.ServiceProvider.GetRequiredService<ISender>();
+                        await sender.Send(new ExpireStockReservationsCommand(tenant), stoppingToken);
                     }
                     catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {

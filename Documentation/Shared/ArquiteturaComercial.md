@@ -36,9 +36,38 @@ A estrutura de pastas atual está descrita em
 tipos e contextos; ela não encerra os desvios de responsabilidade dos Services
 existentes nem amplia o alcance das afirmações sobre as Partes 5 e 6 acima.
 
+## Transferência dos Services para handlers — etapas 1 a 3
+
+Após a organização, as operações de carrinho, endereços, contratos de produtos,
+estoque, mídia, checkout, ciclo do pedido e processamento de pagamentos foram
+transferidas dos Services de Application para seus respectivos handlers.
+As permissões, verificações, sequência de gravações, locks e transações foram
+preservados. A confirmação de um pedido sem cobrança continua acontecendo depois
+da gravação inicial, e chamadas ao provedor continuam fora dessa transação inicial.
+
+Os fragmentos compartilhados de baixa/devolução de estoque, uso de cupons,
+enfileiramento de operações financeiras e conclusão/expiração de reservas usam
+Writers específicos. Esses Writers não recebem o caso de uso inteiro, não
+despacham outros handlers e não confirmam a transação do chamador. Seleção de
+reativação, leitura de histórico e projeção do carrinho usam auxiliares próprios.
+
+Controllers e workers que chamavam diretamente um Service removido passaram a
+acionar o handler correspondente. Essa adaptação preserva as rotas e os formatos
+de resposta; não representa uma revisão geral dos controllers ou workers.
+
+O adapter de credenciais `ProviderConnectionService` permanece em Integrations,
+com proteção, persistência técnica e renovação de tokens. Os fluxos de OAuth e
+webhook existentes na infraestrutura ainda precisam da revisão arquitetural já
+registrada anteriormente.
+
+A revisão geral de `ProductCatalogWriter`, `ProductVariantWriter` e das composições
+entre handlers pertence à etapa 4 e permanece pendente. Os bases existentes de
+CRUD e Identity não foram alterados nesta transferência. Regras comerciais
+anteriores em repositórios e DbContexts também não foram redistribuídas aqui.
+
 Workers e reconciliação acionam Commands/Queries pelo MediatR. Operações compartilhadas,
 como reconciliar uma assinatura, expirar reservas e aplicar um recibo de pagamento,
-têm handlers próprios. A prévia e a confirmação de reativação são implementadas pelo
+têm handlers próprios. A prévia e a confirmação de reativação do DROP são implementadas pelo
 mesmo handler, com a seleção calculada sob lock. Não há um Service intermediário
 recebendo a execução encaminhada pelo handler.
 

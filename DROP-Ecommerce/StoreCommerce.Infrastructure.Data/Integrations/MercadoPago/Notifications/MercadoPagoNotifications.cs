@@ -5,15 +5,11 @@ using StoreCommerce.Domain.Enums.Payments;
 using SharedCommerce.Application.Result;
 using StoreCommerce.Application.Features.Commands;
 using MediatR;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Integrations;
-using StoreCommerce.Application.Orders;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Integrations;
@@ -24,7 +20,7 @@ namespace StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, IntegrationWriteScope scope,
     MercadoPagoSignature signature, MercadoPagoGateway gateway, IPaymentAttemptStore attempts,
-    OrderLifecycleService lifecycle, IOptions<MercadoPagoOptions> options, TimeProvider time,
+    IOptions<MercadoPagoOptions> options, TimeProvider time,
     ILogger<MercadoPagoNotifications> logger, IMediator mediator)
 {
     public async Task ReceiveAsync(long connectionId, string paymentId, string requestId, string signatureHeader, CancellationToken ct)
@@ -181,8 +177,8 @@ public sealed class MercadoPagoNotifications(StoreCommerceDbContext context, Int
         if (methodId is null && status is VerifiedPaymentStatus.Approved or VerifiedPaymentStatus.Authorized or VerifiedPaymentStatus.Refunded)
             throw new SecurityFailure(409, "MercadoPago.StatusNeedsReview", "Meio de pagamento ainda não suportado pelo domínio.");
 
-        await lifecycle.ApplyVerifiedPaymentAsync(new VerifiedPaymentUpdate(owner, verified, connection.Id, status,
-            payment.RefundedAmount, payment.UpdatedAt, methodId), ct);
+        await mediator.Send(new ApplyVerifiedPaymentCommand(new VerifiedPaymentUpdate(owner, verified, connection.Id, status,
+            payment.RefundedAmount, payment.UpdatedAt, methodId)), ct);
         await context.Set<ProviderNotification>().IgnoreQueryFilters()
             .Where(Notification => Notification.EnterpriseId == connection.EnterpriseId && Notification.ProviderConnectionId == connection.Id &&
                 Notification.PaymentId == payment.Id && Notification.Status == ProviderNotificationStatus.ReviewRequired)

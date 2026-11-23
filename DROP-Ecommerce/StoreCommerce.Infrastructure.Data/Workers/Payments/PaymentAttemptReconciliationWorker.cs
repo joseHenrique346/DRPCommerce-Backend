@@ -1,8 +1,9 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using StoreCommerce.Application.Interfaces.Payments;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using StoreCommerce.Application.Payments;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 
@@ -26,8 +27,7 @@ public sealed class PaymentAttemptReconciliationWorker(IServiceScopeFactory scop
                     try
                     {
                         using var operation = scopes.CreateScope();
-                        await operation.ServiceProvider.GetRequiredService<PaymentAttemptService>()
-                            .ProcessAsync(key.EnterpriseId, key.AttemptId, stoppingToken);
+                        await operation.ServiceProvider.GetRequiredService<ISender>().Send(new ProcessPaymentAttemptCommand(key.EnterpriseId, key.AttemptId), stoppingToken);
                     }
                     catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {
