@@ -1,8 +1,6 @@
-using StoreCommerce.Application.Enums.Orders;
 using StoreCommerce.Api.Controllers.Base;
 using StoreCommerce.Api.Extensions;
 using StoreCommerce.Application.Contracts.Order;
-using StoreCommerce.Application.Orders;
 using StoreCommerce.Application.Features.Commands;
 using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
@@ -52,7 +50,7 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
     [HttpPost("{id:long}/start-processing")]
     public async Task<IActionResult> StartProcessingAsync(long id, CancellationToken ct)
     {
-        return this.ToActionResult(await _mediator.Send(new AdvanceOrderCommand(id, OrderStep.StartProcessing, null), ct));
+        return this.ToActionResult(await _mediator.Send(new StartOrderProcessingCommand(id), ct));
     }
 
     /// <summary>
@@ -71,7 +69,7 @@ public class OrderController : BaseController<Order, CreateOrderCommand, CreateL
     [HttpPost("{id:long}/deliver")]
     public async Task<IActionResult> DeliverAsync(long id, CancellationToken ct)
     {
-        return this.ToActionResult(await _mediator.Send(new AdvanceOrderCommand(id, OrderStep.Deliver, null), ct));
+        return this.ToActionResult(await _mediator.Send(new DeliverOrderCommand(id), ct));
     }
 
     /// <summary>

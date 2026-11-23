@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Domain.Enums.Integrations;
 using System.Net;
 using System.Security.Cryptography;
@@ -6,7 +7,6 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Billing;
-using StoreCommerce.Domain.Integrations;
 using StoreCommerce.Infrastructure.Data.Billing;
 using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 using Xunit;

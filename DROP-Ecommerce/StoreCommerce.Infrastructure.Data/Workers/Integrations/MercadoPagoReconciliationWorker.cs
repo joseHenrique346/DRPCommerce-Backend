@@ -1,8 +1,10 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
+using StoreCommerce.Application.Integrations.MercadoPago;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 
@@ -21,14 +23,14 @@ public sealed class MercadoPagoReconciliationWorker(IServiceScopeFactory scopes,
             try
             {
                 using var discovery = scopes.CreateScope();
-                var service = discovery.ServiceProvider.GetRequiredService<MercadoPagoNotifications>();
-                await service.ClearExpiredAuthorizationsAsync(stoppingToken);
-                var notifications = await service.DueAsync(stoppingToken);
+                var service = discovery.ServiceProvider.GetRequiredService<ISender>();
+                await service.Send(new ClearExpiredMercadoPagoAuthorizationsCommand(), stoppingToken);
+                var notifications = await service.Send(new ListDueMercadoPagoNotificationsQuery(), stoppingToken);
 
                 foreach (var key in notifications)
                     await RunAsync(key, false, stoppingToken);
 
-                var payments = await service.DuePaymentsAsync(stoppingToken);
+                var payments = await service.Send(new ListDueMercadoPagoPaymentsQuery(), stoppingToken);
 
                 foreach (var key in payments)
                     await RunAsync(key, true, stoppingToken);
@@ -51,12 +53,12 @@ public sealed class MercadoPagoReconciliationWorker(IServiceScopeFactory scopes,
             using var operation = scopes.CreateScope();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeout.CancelAfter(TimeSpan.FromSeconds(60));
-            var service = operation.ServiceProvider.GetRequiredService<MercadoPagoNotifications>();
+            var service = operation.ServiceProvider.GetRequiredService<ISender>();
 
             if (reconcilePayment)
-                await service.ReconcilePaymentAsync(key.EnterpriseId, key.Id, timeout.Token);
+                await service.Send(new ReconcileMercadoPagoPaymentCommand(key.EnterpriseId, key.Id), timeout.Token);
             else
-                await service.ProcessAsync(key.EnterpriseId, key.Id, timeout.Token);
+                await service.Send(new ProcessMercadoPagoNotificationCommand(key.EnterpriseId, key.Id), timeout.Token);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {

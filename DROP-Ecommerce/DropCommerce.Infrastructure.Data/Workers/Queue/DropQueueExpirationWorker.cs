@@ -1,9 +1,6 @@
 using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using MediatR;
-using DropCommerce.Application.Contracts;
-using DropCommerce.Infrastructure.Data.Context;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,14 +20,8 @@ public sealed class DropQueueExpirationWorker(IServiceScopeFactory scopes, ILogg
             try
             {
                 using var discovery = scopes.CreateScope();
-                var now = DateTime.UtcNow;
-                var db = discovery.ServiceProvider.GetRequiredService<DropCommerceDbContext>();
-                var events = await db.DropEvents.IgnoreQueryFilters().Where(Event => Event.Id > cursor &&
-                    (Event.DropEndsAt > now && db.QueueEntries.IgnoreQueryFilters().Any(Entry => Entry.DropEventId == Event.Id &&
-                        (Entry.QueueEntryStatusId == 1 || Entry.QueueEntryStatusId == 2 || Entry.QueueEntryStatusId == 5)) ||
-                    db.QueueSessions.IgnoreQueryFilters().Any(Session => Session.QueueEntry.DropEventId == Event.Id && Session.QueueSessionStatusId == 1) ||
-                    db.DropReservations.IgnoreQueryFilters().Any(Reservation => Reservation.DropEventId == Event.Id && Reservation.DropReservationStatusId == 1)))
-                    .OrderBy(Event => Event.Id).Take(100).Select(Event => new { Event.EnterpriseId, DropEventId = Event.Id }).ToListAsync(stoppingToken);
+                var events = await discovery.ServiceProvider.GetRequiredService<IMediator>()
+                    .Send(new ListDropQueueWorkQuery(cursor), stoppingToken);
                 cursor = events.Count == 0 ? 0 : events[^1].DropEventId;
 
                 foreach (var drop in events)

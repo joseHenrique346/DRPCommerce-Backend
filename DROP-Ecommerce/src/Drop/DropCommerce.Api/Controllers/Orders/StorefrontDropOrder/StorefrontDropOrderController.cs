@@ -1,9 +1,9 @@
+using MediatR;
+using DropCommerce.Application.Features.Commands;
 using SharedCommerce.Application.Security;
-using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 
 namespace DropCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace DropCommerce.Api.Controllers;
 [Route("api/storefront/drop")]
 [Authorize(Policy = SecurityNames.Storefront)]
 [EnableRateLimiting("api")]
-public sealed class StorefrontDropOrderController(DropCommerceDbContext db) : ControllerBase
+public sealed class StorefrontDropOrderController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Lista os pedidos de drop do cliente.
@@ -19,17 +19,7 @@ public sealed class StorefrontDropOrderController(DropCommerceDbContext db) : Co
     [HttpGet("orders")]
     public async Task<IActionResult> Orders(CancellationToken ct)
     {
-        return Ok(await db.DropOrders
-            .AsNoTracking()
-            .Select(x => new
-            {
-                x.Id,
-                x.DropEventId,
-                x.TotalAmount,
-                x.DropOrderStatusId,
-                x.DropOrderPaymentStatusId
-            })
-            .ToListAsync(ct));
+        return Ok(await mediator.Send(new ListMyDropOrdersQuery(), ct));
     }
 
     /// <summary>
@@ -38,24 +28,7 @@ public sealed class StorefrontDropOrderController(DropCommerceDbContext db) : Co
     [HttpGet("orders/{id:long}")]
     public async Task<IActionResult> Order(long id, CancellationToken ct)
     {
-        var value = await db.DropOrders
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                x.Id,
-                x.TotalAmount,
-                x.DropOrderStatusId,
-                x.DropOrderPaymentStatusId,
-                Items = x.ListDropOrderItem.Select(i => new
-                {
-                    i.ItemName,
-                    i.Quantity,
-                    i.UnitPrice,
-                    i.TotalPrice
-                })
-            })
-            .SingleOrDefaultAsync(ct);
+        var value = await mediator.Send(new GetMyDropOrderQuery(id), ct);
 
         return value is null ? NotFound() : Ok(value);
     }

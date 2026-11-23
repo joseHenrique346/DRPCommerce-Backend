@@ -1,8 +1,8 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SharedCommerce.Application.Result;
-using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalEnterpriseController(StoreCommerceDbContext db) : ControllerBase
+public sealed class InternalEnterpriseController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Consulta uma loja para integração interna.
@@ -19,17 +19,7 @@ public sealed class InternalEnterpriseController(StoreCommerceDbContext db) : Co
     [HttpGet("enterprises/get-by-id/{id:long}")]
     public async Task<IActionResult> Enterprise(long id, CancellationToken ct)
     {
-        var value = await db.Enterprises
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                EnterpriseId = x.Id,
-                x.TradeName,
-                x.LegalName,
-                x.IsActive
-            })
-            .SingleOrDefaultAsync(ct);
+        var value = await mediator.Send(new GetInternalEnterpriseQuery(id), ct);
 
         return value is null ? NotFound() : Ok(Result<object>.Success(value));
     }
@@ -43,7 +33,7 @@ public sealed class InternalEnterpriseController(StoreCommerceDbContext db) : Co
         if (HttpContext.Items[SharedCommerce.Application.Security.SecurityNames.TrustedServiceTenant] is not long tenant || tenant != id)
             return NotFound();
 
-        var rights = await db.ReadAppearanceCapabilitiesAsync(id, channel, ct);
+        var rights = await mediator.Send(new GetInternalAppearanceRightsQuery(id, channel), ct);
 
         return Ok(Result<SharedCommerce.Application.Contracts.Appearance.AppearanceCapabilities>.Success(rights));
     }

@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Integrations.MercadoPago;
 using SharedCommerce.Application.Interfaces.Appearance;
 using SharedCommerce.Application.Interfaces.Media;
 using SharedCommerce.Domain.Interfaces.Tenancy;
@@ -19,7 +20,6 @@ using SharedCommerce.Infrastructure.Data.Context;
 using SharedCommerce.Domain.StaticEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using StoreCommerce.Application.Identity;
 using StoreCommerce.Infrastructure.Data.Context;
 using StoreCommerce.Infrastructure.Data.Providers;
 using StoreCommerce.Infrastructure.Data.Repositories;
@@ -44,6 +44,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantProvider, TenantProvider>();
         services.AddSharedInfrastructure();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Appearance.IEnterpriseAppearanceReader, EnterpriseAppearanceReader>();
         services.AddScoped<IAppearanceContext, StoreAppearanceContext>();
         services.AddScoped<IAppearanceEntitlements, StoreAppearanceEntitlements>();
         services.AddScoped<IMediaAssetReader, StoreMediaAssetReader>();
@@ -141,9 +142,11 @@ public static class DependencyInjection
         services.AddScoped<StoreCommerce.Application.Interfaces.Payments.IPaymentGateway, Payments.ManualPaymentGateway>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
         services.AddScoped<IProviderTokenRefresher, MercadoPagoTokenRefresher>();
-        services.AddScoped<MercadoPagoAuthorizationService>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Integrations.IMercadoPagoAuthorizationClient, MercadoPagoAuthorizationClient>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Integrations.IProviderAuthorizationStore, ProviderAuthorizationStore>();
         services.AddScoped<MercadoPagoSignature>();
-        services.AddScoped<MercadoPagoNotifications>();
+        services.AddScoped<StoreCommerce.Application.Interfaces.Integrations.IProviderNotificationStore, ProviderNotificationStore>();
+        services.AddScoped<IMercadoPagoPaymentReader>(Provider => Provider.GetRequiredService<MercadoPagoGateway>());
         services.AddHostedService<Workers.MercadoPagoReconciliationWorker>();
         services.AddHostedService<Workers.PendingOrderExpirationWorker>();
         services.AddScoped<ICartRepository, CartRepository>();

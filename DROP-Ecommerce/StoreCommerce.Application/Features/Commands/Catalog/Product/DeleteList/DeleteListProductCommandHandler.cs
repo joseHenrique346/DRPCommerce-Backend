@@ -1,9 +1,40 @@
+using SharedCommerce.Domain.Exceptions;
+using StoreCommerce.Domain.Entity;
+
 namespace StoreCommerce.Application.Features.Commands;
 
-public sealed class DeleteListProductCommandHandler(ProductCatalogWriter writer) : CatalogRequestHandler<DeleteListProductCommand, bool>
+public sealed class DeleteListProductCommandHandler(
+    CatalogWriteContext context)
+    : CatalogRequestHandler<DeleteListProductCommand, bool>
 {
-    protected override Task<bool> ExecuteAsync(DeleteListProductCommand request, CancellationToken ct)
+    protected override async Task<bool> ExecuteAsync(DeleteListProductCommand request, CancellationToken ct)
     {
-        return writer.DeleteAsync(request.ids, ct);
+        var ids = request.ids;
+
+        ProductBatchIdentityPolicy.EnsureDistinct(ids);
+        await using var transaction = await context.BeginAsync(ct);
+        var products = await context.Products.GetWithVariantsAsync(ids, ct);
+
+        if (products.Count != ids.Count)
+            throw new SecurityFailure(404, "Product.NotFound", "Produto não encontrado na loja atual.");
+
+        CatalogWriteContext.EnsureEmptyStock(products.Where(Product => !Product.IsContractBlocked)
+            .SelectMany(Product => Product.ListProductVariant));
+
+        if (products.SelectMany(Product => Product.ListProductVariant).Any(Variant => Variant.ReservedQuantity != 0))
+            throw new SecurityFailure(409, "Inventory.StockInUse", "Libere as reservas ativas antes de excluir o produto.");
+
+        foreach (var product in products)
+        {
+            foreach (var variant in product.ListProductVariant)
+                variant.SoftDelete(preserveAvailableStock: product.IsContractBlocked);
+
+            product.SoftDelete();
+        }
+
+        await context.UnitOfWork.CommitAsync(ct);
+        await transaction.CommitAsync(ct);
+
+        return true;
     }
 }

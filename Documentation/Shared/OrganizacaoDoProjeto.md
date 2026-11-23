@@ -24,10 +24,11 @@ CRUD e Identity continuam sendo usados quando adequados, sem novos hooks para
 acomodar a refatoração. Locks, idempotência, escopos e limites transacionais são
 preservados na transferência de regras.
 
-As etapas 1 a 3 da correção transferem os casos de uso dos Services de Application
-e extraem os fragmentos compartilhados necessários. A revisão geral dos Writers
-de catálogo e das composições entre handlers permanece para a etapa 4. A presença
-de código anterior fora dessas regras não autoriza reproduzir o desvio.
+As etapas 1 a 3 transferiram os casos de uso dos Services de Application e
+extraíram os fragmentos compartilhados necessários. As etapas 4 a 6 revisaram
+os Writers de catálogo, as composições, os controllers e os workers. A decisão
+sobre as composições preservadas e os limites dessa revisão está registrada em
+[Responsabilidades dos handlers](ResponsabilidadesDosHandlers.md).
 
 ## Application
 

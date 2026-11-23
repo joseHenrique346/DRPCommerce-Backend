@@ -1,16 +1,24 @@
 using MediatR;
 using SharedCommerce.Application.Result;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Interfaces.AccessControl;
+using StoreCommerce.Domain.Interfaces.Persistence;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateAccessRoleCommandHandler(IMediator mediator) : IRequestHandler<CreateAccessRoleCommand, Result<AccessRole>>
+public sealed class CreateAccessRoleCommandHandler(
+    IAccessRoleRepository repository,
+    IUnitOfWork unitOfWork,
+    ITenantProvider tenantProvider)
+    : IRequestHandler<CreateAccessRoleCommand, Result<AccessRole>>
 {
-    public async Task<Result<AccessRole>> Handle(CreateAccessRoleCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AccessRole>> Handle(CreateAccessRoleCommand request, CancellationToken ct)
     {
-        var result = await mediator.Send(new CreateListAccessRoleCommand([request]), cancellationToken);
-        return result.IsSuccess
-            ? Result<AccessRole>.Success(result.Content![0])
-            : Result<AccessRole>.Failure(result.Errors);
+        var entity = AccessRole.Create(tenantProvider.GetEnterpriseId(), request.name, request.description, request.isActive);
+        await repository.AddRangeAsync([entity], ct);
+        await unitOfWork.CommitAsync(ct);
+
+        return Result<AccessRole>.Success(entity);
     }
 }

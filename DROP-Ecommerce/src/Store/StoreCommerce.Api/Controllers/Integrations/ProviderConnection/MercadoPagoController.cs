@@ -1,58 +1,33 @@
-using StoreCommerce.Application.Integrations.Providers.Interfaces;
-using StoreCommerce.Application.Interfaces.Identity;
-using StoreCommerce.Application.Interfaces.Payments;
-using StoreCommerce.Domain.Enums.Integrations;
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
+using StoreCommerce.Application.Integrations.MercadoPago;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
-using StoreCommerce.Application.Identity;
-using StoreCommerce.Application.Integrations;
-using StoreCommerce.Application.Payments;
-using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Integrations;
-using StoreCommerce.Domain.StaticEntity;
-using StoreCommerce.Infrastructure.Data.Context;
-using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 namespace StoreCommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/integrations/mercado-pago")]
-public sealed class MercadoPagoController(MercadoPagoAuthorizationService authorization, MercadoPagoNotifications notifications,
-    IOptions<MercadoPagoOptions> options, ICurrentIdentity actor, IProviderConnectionStore connections,
-    IPaymentGatewayRegistry gateways, StoreCommerceDbContext context) : ControllerBase
+public sealed class MercadoPagoController(IMediator mediator, IOptions<MercadoPagoOptions> options) : ControllerBase
 {
     private const string BindingCookie = "__Host-mp-oauth";
 
     [HttpGet]
     public async Task<IActionResult> GetAsync(CancellationToken ct)
     {
-        actor.RequirePermission(PermissionCodes.SettingsManage);
         Response.Headers.CacheControl = "no-store";
-        var selected = await context.Set<PaymentProviderSelection>().IgnoreQueryFilters().AsNoTracking()
-            .SingleOrDefaultAsync(Selection => Selection.EnterpriseId == actor.EnterpriseId, ct);
-        var available = (await connections.ListAsync(actor.EnterpriseId, ct))
-            .Where(Connection => Connection.Provider == IntegrationProviders.MercadoPago)
-            .Select(Connection => new
-            {
-                Connection.Id, Connection.Environment, Connection.ExternalAccountId, Connection.IsConnected,
-                Connection.AccessTokenExpiresAt, Connection.ConnectedAt, Connection.DisconnectedAt,
-                webhookUrl = options.Value.WebhookUrl(Connection.Id)
-            }).ToList();
 
-        return Ok(new { enabled = options.Value.Enabled, productionAllowed = options.Value.AllowProduction,
-            applicationId = options.Value.ClientId, selectedProvider = selected?.Provider ?? IntegrationProviders.Manual,
-            selectedEnvironment = selected?.Environment, connections = available });
+        return Ok(await mediator.Send(new GetMercadoPagoIntegrationQuery(), ct));
     }
 
     [HttpPost("oauth/start")]
     public async Task<IActionResult> StartAsync([FromBody] MercadoPagoConnectRequest request, CancellationToken ct)
     {
-        var result = await authorization.BeginAsync(request.Environment, ct);
+        var result = await mediator.Send(new BeginMercadoPagoAuthorizationCommand(request.Environment), ct);
         Response.Headers.CacheControl = "no-store";
         Response.Cookies.Append(BindingCookie, result.BrowserBinding, new CookieOptions
         {
@@ -70,15 +45,9 @@ public sealed class MercadoPagoController(MercadoPagoAuthorizationService author
     [HttpGet("notifications")]
     public async Task<IActionResult> GetNotificationsAsync(CancellationToken ct)
     {
-        actor.RequirePermission(PermissionCodes.SettingsManage);
         Response.Headers.CacheControl = "no-store";
-        var notifications = await context.Set<ProviderNotification>().IgnoreQueryFilters().AsNoTracking()
-            .Where(Notification => Notification.EnterpriseId == actor.EnterpriseId && Notification.Status != ProviderNotificationStatus.Completed)
-            .OrderByDescending(Notification => Notification.Id).Take(100)
-            .Select(Notification => new { Notification.Id, Notification.ProviderConnectionId, Notification.PaymentAttemptId,
-                Notification.PaymentId, Notification.Status, Notification.ResolutionCode, Notification.CreatedAt }).ToListAsync(ct);
 
-        return Ok(notifications);
+        return Ok(await mediator.Send(new ListPendingProviderNotificationsQuery(), ct));
     }
 
     [AllowAnonymous]
@@ -90,7 +59,7 @@ public sealed class MercadoPagoController(MercadoPagoAuthorizationService author
         Response.Headers["Referrer-Policy"] = "no-referrer";
         var binding = Request.Cookies[BindingCookie] ?? string.Empty;
         Response.Cookies.Delete(BindingCookie, new CookieOptions { Secure = true, HttpOnly = true, SameSite = SameSiteMode.Lax, Path = "/" });
-        await authorization.CompleteAsync(state ?? string.Empty, binding, code, error, ct);
+        await mediator.Send(new CompleteMercadoPagoAuthorizationCommand(state ?? string.Empty, binding, code, error), ct);
 
         return Redirect(QueryHelpers.AddQueryString(options.Value.BackofficeReturnUrl, "mercadoPago", "connected"));
     }
@@ -101,7 +70,7 @@ public sealed class MercadoPagoController(MercadoPagoAuthorizationService author
     [HttpPost("sandbox/connect")]
     public async Task<IActionResult> ConnectSandboxAsync(CancellationToken ct)
     {
-        await authorization.ConnectSandboxAsync(ct);
+        await mediator.Send(new ConnectMercadoPagoSandboxCommand(), ct);
 
         return NoContent();
     }
@@ -109,8 +78,7 @@ public sealed class MercadoPagoController(MercadoPagoAuthorizationService author
     [HttpPut("selection")]
     public async Task<IActionResult> SelectAsync([FromBody] PaymentProviderSelectionRequest request, CancellationToken ct)
     {
-        actor.RequirePermission(PermissionCodes.SettingsManage);
-        await gateways.SelectAsync(actor.EnterpriseId, request.Provider, request.Environment, ct);
+        await mediator.Send(new SelectPaymentProviderCommand(request.Provider, request.Environment), ct);
 
         return NoContent();
     }
@@ -134,8 +102,8 @@ public sealed class MercadoPagoController(MercadoPagoAuthorizationService author
         if (body.Type != "payment")
             throw new SecurityFailure(400, "MercadoPago.InvalidTopic", "Este endpoint recebe somente notificações de pagamento.");
 
-        await notifications.ReceiveAsync(connectionId, id, Request.Headers["x-request-id"].ToString(),
-            Request.Headers["x-signature"].ToString(), ct);
+        await mediator.Send(new ReceiveMercadoPagoNotificationCommand(connectionId, id, Request.Headers["x-request-id"].ToString(),
+            Request.Headers["x-signature"].ToString()), ct);
 
         return Ok();
     }

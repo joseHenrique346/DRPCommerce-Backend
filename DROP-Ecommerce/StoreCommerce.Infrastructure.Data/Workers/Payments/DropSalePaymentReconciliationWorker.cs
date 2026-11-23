@@ -1,13 +1,11 @@
+using StoreCommerce.Application.Integrations.MercadoPago;
 using SharedCommerce.Application.Result;
 using StoreCommerce.Application.Features.Commands;
 using MediatR;
-using StoreCommerce.Application.Payments;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
-using StoreCommerce.Infrastructure.Data.Payments;
 
 namespace StoreCommerce.Infrastructure.Data.Workers;
 

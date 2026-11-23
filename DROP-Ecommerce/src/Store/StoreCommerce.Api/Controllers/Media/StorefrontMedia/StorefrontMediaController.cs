@@ -1,10 +1,8 @@
-using SharedCommerce.Domain.Interfaces.Tenancy;
-using StoreCommerce.Application.Interfaces.Media;
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using StoreCommerce.Application.Media;
-using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -12,18 +10,12 @@ namespace StoreCommerce.Api.Controllers;
 [Route("api/storefront/media")]
 [AllowAnonymous]
 [EnableRateLimiting("api")]
-public sealed class StorefrontMediaController(IMediaAssetStore assets, ITenantProvider tenant, StoreCommerceDbContext db) : ControllerBase
+public sealed class StorefrontMediaController(IMediator mediator) : ControllerBase
 {
     [HttpGet("{publicId:guid}")]
     public async Task<IActionResult> Get(Guid publicId, CancellationToken ct)
     {
-        var enterpriseId = tenant.GetEnterpriseId();
-        var rights = await db.ReadAppearanceCapabilitiesAsync(enterpriseId, "store", ct);
-
-        if (!rights.AllowsLogo)
-            return NotFound();
-
-        var asset = await assets.FindAsync(enterpriseId, publicId, ct);
+        var asset = await mediator.Send(new FindStorefrontMediaAssetQuery(publicId), ct);
 
         if (asset is null)
             return NotFound();

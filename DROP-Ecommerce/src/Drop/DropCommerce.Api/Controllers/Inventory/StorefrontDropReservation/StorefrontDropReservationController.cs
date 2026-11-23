@@ -1,9 +1,9 @@
+using MediatR;
+using DropCommerce.Application.Features.Commands;
 using SharedCommerce.Application.Security;
-using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 
 namespace DropCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace DropCommerce.Api.Controllers;
 [Route("api/storefront/drop")]
 [Authorize(Policy = SecurityNames.Storefront)]
 [EnableRateLimiting("api")]
-public sealed class StorefrontDropReservationController(DropCommerceDbContext db) : ControllerBase
+public sealed class StorefrontDropReservationController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Lista as reservas de drop do cliente.
@@ -19,19 +19,7 @@ public sealed class StorefrontDropReservationController(DropCommerceDbContext db
     [HttpGet("reservations")]
     public async Task<IActionResult> Reservations(CancellationToken ct)
     {
-        return Ok(await db.DropReservations
-            .AsNoTracking()
-            .Select(x => new
-            {
-                x.Id,
-                x.DropEventId,
-                x.DropProductId,
-                x.Quantity,
-                x.TotalAmount,
-                x.DropReservationStatusId,
-                x.ExpiresAt
-            })
-            .ToListAsync(ct));
+        return Ok(await mediator.Send(new ListMyDropReservationsQuery(), ct));
     }
 
     /// <summary>
@@ -40,20 +28,7 @@ public sealed class StorefrontDropReservationController(DropCommerceDbContext db
     [HttpGet("reservations/{id:long}")]
     public async Task<IActionResult> Reservation(long id, CancellationToken ct)
     {
-        var value = await db.DropReservations
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                x.Id,
-                x.DropEventId,
-                x.DropProductId,
-                x.Quantity,
-                x.TotalAmount,
-                x.DropReservationStatusId,
-                x.ExpiresAt
-            })
-            .SingleOrDefaultAsync(ct);
+        var value = await mediator.Send(new GetMyDropReservationQuery(id), ct);
 
         return value is null ? NotFound() : Ok(value);
     }

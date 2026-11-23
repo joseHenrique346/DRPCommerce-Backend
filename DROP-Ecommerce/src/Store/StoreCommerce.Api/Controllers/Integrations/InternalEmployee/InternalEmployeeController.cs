@@ -1,8 +1,8 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SharedCommerce.Application.Result;
-using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalEmployeeController(StoreCommerceDbContext db) : ControllerBase
+public sealed class InternalEmployeeController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Consulta um funcionário para integração interna.
@@ -19,17 +19,7 @@ public sealed class InternalEmployeeController(StoreCommerceDbContext db) : Cont
     [HttpGet("employees/get-by-id/{id:long}")]
     public async Task<IActionResult> Employee(long id, CancellationToken ct)
     {
-        var value = await db.Employees
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                EmployeeId = x.Id,
-                x.EnterpriseId,
-                x.FullName,
-                x.IsActive
-            })
-            .SingleOrDefaultAsync(ct);
+        var value = await mediator.Send(new GetInternalEmployeeQuery(id), ct);
 
         return value is null ? NotFound() : Ok(Result<object>.Success(value));
     }
@@ -40,16 +30,6 @@ public sealed class InternalEmployeeController(StoreCommerceDbContext db) : Cont
     [HttpPost("employees/get-list-by-list-id")]
     public async Task<IActionResult> Employees(List<long> ids, CancellationToken ct)
     {
-        return Ok(Result<object>.Success(await db.Employees
-            .AsNoTracking()
-            .Where(x => ids.Contains(x.Id))
-            .Select(x => new
-            {
-                EmployeeId = x.Id,
-                x.EnterpriseId,
-                x.FullName,
-                x.IsActive
-            })
-            .ToListAsync(ct)));
+        return Ok(Result<object>.Success(await mediator.Send(new ListInternalEmployeesQuery(ids), ct)));
     }
 }

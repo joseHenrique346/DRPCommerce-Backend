@@ -56,20 +56,37 @@ acionar o handler correspondente. Essa adaptação preserva as rotas e os format
 de resposta; não representa uma revisão geral dos controllers ou workers.
 
 O adapter de credenciais `ProviderConnectionService` permanece em Integrations,
-com proteção, persistência técnica e renovação de tokens. Os fluxos de OAuth e
-webhook existentes na infraestrutura ainda precisam da revisão arquitetural já
-registrada anteriormente.
+com proteção, persistência técnica e renovação de tokens. Sua interface técnica
+é `IProviderConnectionCredentials`.
 
-A revisão geral de `ProductCatalogWriter`, `ProductVariantWriter` e das composições
-entre handlers pertence à etapa 4 e permanece pendente. Os bases existentes de
-CRUD e Identity não foram alterados nesta transferência. Regras comerciais
-anteriores em repositórios e DbContexts também não foram redistribuídas aqui.
+Na etapa 4, `ProductCatalogWriter` e `ProductVariantWriter` foram removidos:
+as operações de catálogo ficam nos handlers, que possuem suas transações.
+A sincronização compartilhada do SKU padrão usa `ProductDefaultVariantWriter`;
+validações de identidade do lote e do esquema de opções usam políticas próprias.
+Os bases de CRUD e Identity não foram alterados. Regras anteriores nos guards de
+repositórios e DbContexts também não foram redistribuídas nesta revisão.
 
 Workers e reconciliação acionam Commands/Queries pelo MediatR. Operações compartilhadas,
 como reconciliar uma assinatura, expirar reservas e aplicar um recibo de pagamento,
-têm handlers próprios. A prévia e a confirmação de reativação do DROP são implementadas pelo
-mesmo handler, com a seleção calculada sob lock. Não há um Service intermediário
-recebendo a execução encaminhada pelo handler.
+têm handlers próprios. A prévia e a confirmação de reativação do DROP possuem
+handlers separados e compartilham apenas a seleção calculada sob lock.
+Processamento e entrega do pedido Store também têm Commands e handlers próprios.
+
+Nas etapas 5 e 6, as consultas diretas dos controllers foram transferidas para
+Queries. Os DTOs de integração utilizados por Store e DROP ficam em Shared.
+Controllers mantêm rotas, envelopes, cookies, redirecionamentos e cabeçalhos HTTP.
+Workers mantêm o agendamento, a descoberta e os escopos de execução.
+
+OAuth, consumo do state, aplicação de pagamentos do Mercado Pago e classificação
+das notificações são coordenados por handlers em Payments/ProviderAuthorization,
+Payments/ProviderNotification e Payments/Payment.
+Clientes HTTP, proteção do verificador PKCE e repositórios de autorizações/inbox
+mantêm as operações técnicas. O consumo único do state, a revalidação do acesso
+depois da rede, o isolamento serializável, leases e deduplicação foram preservados.
+
+As composições necessárias à recuperação de pagamentos, expiração, validação
+compartilhada e migração estão descritas em
+[Responsabilidades dos handlers](ResponsabilidadesDosHandlers.md).
 
 Validators verificam formato e estrutura de entrada: catálogo/variações, opções JSON,
 linhas da reserva, chave idempotente, valor/moeda, CPF, modo de reativação, tópico de

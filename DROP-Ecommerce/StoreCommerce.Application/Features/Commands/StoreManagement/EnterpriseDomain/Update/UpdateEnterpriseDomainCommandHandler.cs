@@ -1,16 +1,27 @@
 using MediatR;
 using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class UpdateEnterpriseDomainCommandHandler(IMediator mediator) : IRequestHandler<UpdateEnterpriseDomainCommand, Result<EnterpriseDomain>>
+public sealed class UpdateEnterpriseDomainCommandHandler(
+    IEnterpriseDomainRepository repository,
+    IUnitOfWork unitOfWork)
+    : IRequestHandler<UpdateEnterpriseDomainCommand, Result<EnterpriseDomain>>
 {
-    public async Task<Result<EnterpriseDomain>> Handle(UpdateEnterpriseDomainCommand request, CancellationToken cancellationToken)
+    public async Task<Result<EnterpriseDomain>> Handle(UpdateEnterpriseDomainCommand request, CancellationToken ct)
     {
-        var result = await mediator.Send(new UpdateListEnterpriseDomainCommand([request]), cancellationToken);
-        return result.IsSuccess
-            ? Result<EnterpriseDomain>.Success(result.Content![0])
-            : Result<EnterpriseDomain>.Failure(result.Errors);
+        var entity = (await repository.GetListByListIdAsync([request.id], ct)).SingleOrDefault();
+
+        if (entity is null)
+            return Result<EnterpriseDomain>.NotFound("EnterpriseDomain.NotFound", $"EnterpriseDomain com id {request.id} não encontrado.");
+
+        entity.UpdateDetails(request.host, request.isPrimary, request.isActive);
+        repository.UpdateRange([entity]);
+        await unitOfWork.CommitAsync(ct);
+
+        return Result<EnterpriseDomain>.Success(entity);
     }
 }

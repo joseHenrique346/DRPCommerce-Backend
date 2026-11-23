@@ -28,6 +28,8 @@ Quando o pedido for apenas organização, preserve condições, operadores, orde
 # Responsabilidades dos casos de uso
 
 - Cada Handler representa um caso de uso com um objetivo principal identificável pelo nome. As decisões e a sequência de execução desse caso de uso devem ficar compreensíveis no próprio Handler.
+- Cada Handler concreto atende um único contrato de request. Separe prévia de confirmação e operações distintas que tenham rotas próprias, preservando seus contratos HTTP.
+- Operações CRUD singulares não devem encaminhar toda a execução para o Handler de lote. Preserve os bases existentes dos lotes e mantenha a operação singular explícita no seu Handler.
 - Um caso de uso pode exigir várias verificações e efeitos relacionados ao mesmo objetivo. Não crie um Handler para cada condição ou operação interna.
 - Commands e Queries representam os contratos; Validators verificam formato e estrutura de entrada; Handlers coordenam regras, repositórios, adapters e gravações.
 - Não concentre casos de uso completos em Services por contexto e não crie um Service para cada Handler. Não renomeie um Service de negócio para Writer, Manager, Processor ou outro nome mantendo a mesma concentração de operações.
@@ -36,4 +38,6 @@ Quando o pedido for apenas organização, preserve condições, operadores, orde
 - Quantidade de chamadas, isoladamente, não justifica uma abstração. Distingua reutilização de um fragmento da delegação de um caso de uso completo.
 - Reutilize os bases de CRUD e Identity existentes quando forem adequados. Não acrescente hooks ou novos bases para acomodar outra arquitetura.
 - Preserve a ordem dos locks, os limites transacionais, os escopos de gravação, a idempotência, a recuperação de resultados desconhecidos e os contratos públicos durante a transferência de regras.
+- Composições pelo MediatR devem nomear etapas independentes necessárias ao mesmo objetivo, como expiração antes da reserva e reconciliação após o commit. Não use outro Handler como substituto da implementação principal nem injete implementações concretas de Handlers.
+- Controllers cuidam do protocolo HTTP e entram pelo MediatR; workers cuidam de agendamento e descoberta e acionam os casos de uso. SQL, leases e gravações atômicas ficam em repositórios, sem deslocar a decisão comercial do Handler.
 - Integrações técnicas podem manter adapters de credenciais, criptografia e comunicação externa. Isso não autoriza concentrar decisões comerciais nesses adapters.

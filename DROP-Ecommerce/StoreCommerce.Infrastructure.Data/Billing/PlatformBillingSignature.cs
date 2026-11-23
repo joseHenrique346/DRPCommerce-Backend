@@ -1,7 +1,7 @@
+using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Application.Interfaces.Billing;
 using StoreCommerce.Application.Billing;
 using Microsoft.Extensions.Options;
-using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 namespace StoreCommerce.Infrastructure.Data.Billing;
 

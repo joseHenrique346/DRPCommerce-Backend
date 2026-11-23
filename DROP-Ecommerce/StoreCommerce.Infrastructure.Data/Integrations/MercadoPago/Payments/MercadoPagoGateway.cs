@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Application.Integrations.Providers.Interfaces;
 using StoreCommerce.Application.Interfaces.Payments;
 using StoreCommerce.Domain.Enums.Integrations;
@@ -6,15 +7,13 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
-using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Payments;
-using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Integrations;
 
 namespace StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
 
 public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess access, IProviderConnectionStore connections,
-    IOptions<MercadoPagoOptions> options, TimeProvider time) : IPaymentGateway
+    IOptions<MercadoPagoOptions> options, TimeProvider time) : IPaymentGateway, IMercadoPagoPaymentReader
 {
     public string Provider => IntegrationProviders.MercadoPago;
     private MercadoPagoOptions Settings => options.Value;
@@ -258,15 +257,9 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
             throw new SecurityFailure(409, "MercadoPago.PaymentIdRequired", "Estorno exige um PaymentId verificado.");
 
         var payment = await GetPaymentAsync(request.EnterpriseId, request.Context, request.PaymentId, ct);
-        ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
+        MercadoPagoPaymentPolicy.ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
 
         return payment;
-    }
-
-    public static void ValidatePayment(MercadoPagoPayment payment, string? externalReference, decimal amount, string? currency)
-    {
-        if (payment.ExternalReference != externalReference || payment.Amount != amount || payment.CurrencyCode != currency)
-            throw new SecurityFailure(409, "MercadoPago.PaymentMismatch", "Valor, moeda ou correlação do pagamento não correspondem ao pedido.");
     }
 
     private async Task<PaymentOperationResult> CancelAsync(PaymentOperationRequest request, bool recoverOnly, CancellationToken ct)
@@ -308,7 +301,7 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
 
         foreach (var payment in payments)
         {
-            ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
+            MercadoPagoPaymentPolicy.ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
 
             if (payment.Status == "approved")
                 return new PaymentOperationResult(PaymentOperationStatus.Pending);
@@ -324,7 +317,7 @@ public sealed class MercadoPagoGateway(MercadoPagoApi api, MercadoPagoAccess acc
                 using var cancelled = await api.SendAsync(HttpMethod.Put, "/v1/payments/" + Uri.EscapeDataString(payment.Id),
                     token, new { status = "cancelled" }, request.IdempotencyKey + "-" + payment.Id, ct);
                 var result = ReadPayment(cancelled.RootElement, request.Context);
-                ValidatePayment(result, request.ExternalReference, request.Amount, request.CurrencyCode);
+                MercadoPagoPaymentPolicy.ValidatePayment(result, request.ExternalReference, request.Amount, request.CurrencyCode);
                 pending |= result.Id != payment.Id || result.Status != "cancelled";
             }
         }

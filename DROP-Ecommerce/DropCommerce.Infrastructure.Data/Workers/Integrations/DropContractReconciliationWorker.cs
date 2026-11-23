@@ -1,11 +1,7 @@
 using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
 using MediatR;
-using DropCommerce.Application.Contracts;
 using System.Net.Http.Json;
-using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Domain.Entity;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Contracts;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +53,7 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             try
             {
                 using var scope = scopes.CreateScope();
-                await scope.ServiceProvider.GetRequiredService<DropCommerceDbContext>().ApplyCommercialRightsAsync(rights, ct);
+                await scope.ServiceProvider.GetRequiredService<IMediator>().Send(new ApplyDropCommercialRightsCommand(rights), ct);
                 using var acknowledgment = new HttpRequestMessage(HttpMethod.Post,
                     $"/api/internal/enterprises/{rights.EnterpriseId}/drop-contract/ack");
                 acknowledgment.Headers.Add("X-Enterprise-Id", rights.EnterpriseId.ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -102,9 +98,8 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
         }
 
         using var discovery = scopes.CreateScope();
-        var returns = await discovery.ServiceProvider.GetRequiredService<DropCommerceDbContext>().Set<DropStockReturnIntent>()
-            .IgnoreQueryFilters().AsNoTracking().Where(Return => Return.CompletedAt == null)
-            .OrderBy(Return => Return.Id).Take(50).Select(Return => Return.SnapshotJson).ToListAsync(ct);
+        var returns = await discovery.ServiceProvider.GetRequiredService<IMediator>()
+            .Send(new ListPendingDropStockReturnSnapshotsQuery(), ct);
 
         foreach (var snapshot in returns)
         {
@@ -142,10 +137,8 @@ public sealed class DropContractReconciliationWorker(IServiceScopeFactory scopes
             }
         }
 
-        var unfinished = await discovery.ServiceProvider.GetRequiredService<DropCommerceDbContext>().DropOrders.IgnoreQueryFilters().AsNoTracking()
-            .Where(Order => Order.Id > orderCursor && Order.PaymentOperationId != null && (!Order.PaymentIntentAccepted ||
-                Order.DropOrderStatusId >= 5 && !Order.FulfillmentAcknowledged))
-            .OrderBy(Order => Order.Id).Take(50).Select(Order => new { Order.Id, Order.DropEvent.EnterpriseId, Order.PaymentIntentAccepted }).ToListAsync(ct);
+        var unfinished = await discovery.ServiceProvider.GetRequiredService<IMediator>()
+            .Send(new ListUnfinishedDropOrdersQuery(orderCursor), ct);
         orderCursor = unfinished.Count == 0 ? 0 : unfinished[^1].Id;
 
         foreach (var order in unfinished)

@@ -17,15 +17,18 @@ public static class DependencyInjection
         services.AddSharedApplication(assembly);
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
+        services.AddScoped<ProviderAuthorizationAccessPolicy>();
+        services.AddScoped<StoreCommerce.Application.Integrations.MercadoPago.MercadoPagoAuthorizationCryptography>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponCustomerHistoryReader>();
         services.AddScoped<CartPurchaseContextReader>();
         services.AddScoped<CartResponseBuilder>();
         services.AddScoped<Integrations.ProviderConnectionService>();
+        services.AddScoped<Integrations.Providers.Interfaces.IProviderConnectionCredentials>(
+            Provider => Provider.GetRequiredService<Integrations.ProviderConnectionService>());
         services.AddScoped<CategoryCatalogReader>();
         services.AddScoped<CatalogWriteContext>();
-        services.AddScoped<ProductCatalogWriter>();
-        services.AddScoped<ProductVariantWriter>();
+        services.AddScoped<ProductDefaultVariantWriter>();
         services.AddScoped<ProductSearchReader>();
         services.AddScoped<ProductContractStateReader>();
         services.AddScoped<ProductReactivationSelector>();

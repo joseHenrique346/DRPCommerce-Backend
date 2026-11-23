@@ -1,6 +1,5 @@
 using StoreCommerce.Application.Integrations.Providers.Interfaces;
 using StoreCommerce.Domain.Enums.Integrations;
-using System.Text.Json.Serialization;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Domain.Entity;
 using StoreCommerce.Domain.Integrations;
@@ -8,7 +7,7 @@ using StoreCommerce.Domain.Integrations;
 namespace StoreCommerce.Application.Integrations;
 
 public sealed class ProviderConnectionService(IProviderConnectionStore store, IProviderTokenProtector protector,
-    IEnumerable<IProviderTokenRefresher> refreshers, TimeProvider time)
+    IEnumerable<IProviderTokenRefresher> refreshers, TimeProvider time) : IProviderConnectionCredentials
 {
     /// <summary>
     /// Ponto de entrada do callback OAuth futuro, após validar state/PKCE e consultar a identidade da conta no provedor.

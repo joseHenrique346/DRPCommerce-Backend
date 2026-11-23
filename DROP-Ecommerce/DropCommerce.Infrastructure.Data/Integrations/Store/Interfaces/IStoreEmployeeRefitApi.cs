@@ -1,4 +1,4 @@
-using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
+using SharedCommerce.Application.Contracts.Drop;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Contracts;
 using Refit;
 

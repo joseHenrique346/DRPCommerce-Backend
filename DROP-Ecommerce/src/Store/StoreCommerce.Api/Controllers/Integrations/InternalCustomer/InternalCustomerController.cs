@@ -1,8 +1,8 @@
+using MediatR;
+using StoreCommerce.Application.Features.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SharedCommerce.Application.Result;
-using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace StoreCommerce.Api.Controllers;
 [ApiController]
 [Route("api/internal")]
 [AllowAnonymous]
-public sealed class InternalCustomerController(StoreCommerceDbContext db) : ControllerBase
+public sealed class InternalCustomerController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Consulta um cliente para integração interna.
@@ -19,17 +19,7 @@ public sealed class InternalCustomerController(StoreCommerceDbContext db) : Cont
     [HttpGet("customers/get-by-id/{id:long}")]
     public async Task<IActionResult> Customer(long id, CancellationToken ct)
     {
-        var value = await db.Customers
-            .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                CustomerId = x.Id,
-                x.EnterpriseId,
-                x.FullName,
-                x.IsActive
-            })
-            .SingleOrDefaultAsync(ct);
+        var value = await mediator.Send(new GetInternalCustomerQuery(id), ct);
 
         return value is null ? NotFound() : Ok(Result<object>.Success(value));
     }
@@ -40,16 +30,6 @@ public sealed class InternalCustomerController(StoreCommerceDbContext db) : Cont
     [HttpPost("customers/get-list-by-list-id")]
     public async Task<IActionResult> Customers(List<long> ids, CancellationToken ct)
     {
-        return Ok(Result<object>.Success(await db.Customers
-            .AsNoTracking()
-            .Where(x => ids.Contains(x.Id))
-            .Select(x => new
-            {
-                CustomerId = x.Id,
-                x.EnterpriseId,
-                x.FullName,
-                x.IsActive
-            })
-            .ToListAsync(ct)));
+        return Ok(Result<object>.Success(await mediator.Send(new ListInternalCustomersQuery(ids), ct)));
     }
 }

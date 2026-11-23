@@ -1,16 +1,24 @@
 using MediatR;
 using SharedCommerce.Application.Result;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
 
 namespace StoreCommerce.Application.Features.Commands;
 
-public class CreateEmployeePositionCommandHandler(IMediator mediator) : IRequestHandler<CreateEmployeePositionCommand, Result<EmployeePosition>>
+public sealed class CreateEmployeePositionCommandHandler(
+    IEmployeePositionRepository repository,
+    IUnitOfWork unitOfWork,
+    ITenantProvider tenantProvider)
+    : IRequestHandler<CreateEmployeePositionCommand, Result<EmployeePosition>>
 {
-    public async Task<Result<EmployeePosition>> Handle(CreateEmployeePositionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<EmployeePosition>> Handle(CreateEmployeePositionCommand request, CancellationToken ct)
     {
-        var result = await mediator.Send(new CreateListEmployeePositionCommand([request]), cancellationToken);
-        return result.IsSuccess
-            ? Result<EmployeePosition>.Success(result.Content![0])
-            : Result<EmployeePosition>.Failure(result.Errors);
+        var entity = EmployeePosition.Create(tenantProvider.GetEnterpriseId(), request.name, request.description, request.isActive);
+        await repository.AddRangeAsync([entity], ct);
+        await unitOfWork.CommitAsync(ct);
+
+        return Result<EmployeePosition>.Success(entity);
     }
 }

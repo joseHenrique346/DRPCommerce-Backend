@@ -1,9 +1,9 @@
+using MediatR;
+using DropCommerce.Application.Features.Commands;
 using SharedCommerce.Application.Security;
-using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 
 namespace DropCommerce.Api.Controllers;
 
@@ -11,7 +11,7 @@ namespace DropCommerce.Api.Controllers;
 [Route("api/storefront/drop")]
 [Authorize(Policy = SecurityNames.Storefront)]
 [EnableRateLimiting("api")]
-public sealed class StorefrontDropNotificationController(DropCommerceDbContext db) : ControllerBase
+public sealed class StorefrontDropNotificationController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Lista as notificações de drop do cliente.
@@ -19,15 +19,6 @@ public sealed class StorefrontDropNotificationController(DropCommerceDbContext d
     [HttpGet("notifications")]
     public async Task<IActionResult> Notifications(CancellationToken ct)
     {
-        return Ok(await db.DropNotifications
-            .AsNoTracking()
-            .Select(x => new
-            {
-                x.Id,
-                x.Subject,
-                x.Body,
-                x.ScheduledAt
-            })
-            .ToListAsync(ct));
+        return Ok(await mediator.Send(new ListMyDropNotificationsQuery(), ct));
     }
 }

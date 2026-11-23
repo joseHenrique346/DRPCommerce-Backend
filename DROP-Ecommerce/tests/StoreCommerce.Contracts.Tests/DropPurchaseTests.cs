@@ -71,11 +71,15 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
         var repeat = await queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, request), default);
         Assert.Equal(reservation.Id, repeat.Id);
         Assert.Equal(3, await db.Set<DropCatalogVariant>().SumAsync(Variant => Variant.QuantityReserved));
+        Assert.Equal(reservation.Id, Assert.Single(await queue.Send(new ListMyDropReservationsQuery())).Id);
+        Assert.Equal(reservation.Id, (await queue.Send(new GetMyDropReservationQuery(reservation.Id)))!.Id);
         var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "one-more", [new(variants[0].Id, 1)])), default));
         Assert.Equal("DropPurchase.PurchaseLimit", failure.Code);
         db.ChangeTracker.Clear();
         var second = await store.CreateCustomerAsync(owner.EnterpriseId);
         SetBuyer(store, drop, second.Token);
+        Assert.Empty(await queue.Send(new ListMyDropReservationsQuery()));
+        Assert.Null(await queue.Send(new GetMyDropReservationQuery(reservation.Id)));
         await queue.SendRequiredAsync(new JoinDropQueueCommand(dropEvent.Id, new() { CPF = "52998224725" }), default);
         var secondSession = await db.QueueSessions.IgnoreQueryFilters().OrderByDescending(Session => Session.Id).FirstAsync();
         failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, secondSession.Id, "another-account", [new(variants[1].Id, 1)])), default));
@@ -238,6 +242,14 @@ public sealed class DropPurchaseTests(ContractsApiFixture store)
             Assert.Equal(1, gateway.Creates);
             var failure = await Assert.ThrowsAsync<SecurityFailure>(() => queue.SendRequiredAsync(new ReserveDropPurchaseCommand(dropEvent.Id, new(participation.Id, session.Id, "blocked", [new(product.Variants.First().Id, 1)])), default));
             Assert.Equal("DropPurchase.InvalidReservation", failure.Code);
+            Assert.Equal(order.Id, Assert.Single(await queue.Send(new ListMyDropOrdersQuery())).Id);
+            var details = await queue.Send(new GetMyDropOrderQuery(order.Id));
+            Assert.NotNull(details);
+            Assert.Equal(2, details.Items.Sum(Item => Item.Quantity));
+            var anotherBuyer = await source.CreateCustomerAsync(owner.EnterpriseId);
+            SetBuyer(source, drop, anotherBuyer.Token);
+            Assert.Empty(await queue.Send(new ListMyDropOrdersQuery()));
+            Assert.Null(await queue.Send(new GetMyDropOrderQuery(order.Id)));
         }
         finally
         {

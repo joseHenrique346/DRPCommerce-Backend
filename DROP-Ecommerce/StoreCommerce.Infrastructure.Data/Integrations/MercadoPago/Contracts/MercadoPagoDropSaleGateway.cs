@@ -1,4 +1,5 @@
 using StoreCommerce.Application.Interfaces.Payments;
+using StoreCommerce.Application.Integrations.MercadoPago;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Domain.Integrations;
@@ -33,7 +34,7 @@ public sealed class MercadoPagoDropSaleGateway(IPaymentGatewayRegistry gateways,
 
         foreach (var payment in results)
         {
-            MercadoPagoGateway.ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
+            MercadoPagoPaymentPolicy.ValidatePayment(payment, request.ExternalReference, request.Amount, request.CurrencyCode);
 
             if (payment.RefundedAmount != 0 || payment.Status is "refunded" or "charged_back")
                 return new DropSaleGatewayResult("review_required", payment.Id);

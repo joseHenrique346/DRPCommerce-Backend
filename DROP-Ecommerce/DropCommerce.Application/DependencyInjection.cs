@@ -1,6 +1,4 @@
-using SharedCommerce.Application.Result;
 using DropCommerce.Application.Features.Commands;
-using DropCommerce.Application.Contracts;
 using SharedCommerce.Application;
 using SharedCommerce.Application.Features.Commands;
 using DropCommerce.Application.Features;
@@ -22,6 +20,7 @@ public static class DependencyInjection
         services.AddTransient<IRequestHandler<ResolvePublishedAppearanceQuery, OutputResolvedAppearance?>,
             ResolveDropPublishedAppearanceQueryHandler>();
         services.AddValidatorsFromAssembly(assembly);
+        services.AddScoped<DropReactivationSelector>();
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
         return services;
