@@ -51,7 +51,7 @@ public static class MercadoPagoWebhookSignature
         if (!CryptographicOperations.FixedTimeEquals(expected, Convert.FromHexString(digest)))
             throw Invalid();
 
-        return MercadoPagoAuthorizationCryptography.Hash(requestId + "\n" + paymentId + "\n" + timestamp);
+        return ProviderAuthorizationSecurity.Hash(requestId + "\n" + paymentId + "\n" + timestamp);
     }
 
     private static SecurityFailure Invalid()

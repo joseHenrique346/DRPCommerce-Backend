@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Interfaces.Identity;
 using StoreCommerce.Application.Interfaces.Integrations;
 using StoreCommerce.Domain.Entity;
+using StoreCommerce.Domain.Enums.Integrations;
 using StoreCommerce.Domain.StaticEntity;
 using StoreCommerce.Infrastructure.Data.Context;
 using System.Data;
@@ -26,10 +27,13 @@ public sealed class ProviderAuthorizationStore(StoreCommerceDbContext context) :
                 Grant.Permission.Code == PermissionCodes.SettingsManage), ct);
     }
 
-    public Task<ProviderAuthorization?> FindAuthorizationAsync(string hash, string browserHash, DateTime now, CancellationToken ct)
+    public Task<ProviderAuthorization?> FindAuthorizationAsync(string provider, IntegrationEnvironment? environment,
+        string hash, string browserHash, DateTime now, CancellationToken ct)
     {
         return context.Set<ProviderAuthorization>().IgnoreQueryFilters().AsNoTracking()
-            .SingleOrDefaultAsync(Authorization => Authorization.StateHash == hash && Authorization.BrowserHash == browserHash &&
+            .SingleOrDefaultAsync(Authorization => Authorization.Provider == provider &&
+                (!environment.HasValue || Authorization.Environment == environment.Value) &&
+                Authorization.StateHash == hash && Authorization.BrowserHash == browserHash &&
                 Authorization.ConsumedAt == null && Authorization.ExpiresAt > now, ct);
     }
 

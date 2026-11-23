@@ -1,5 +1,6 @@
 using MediatR;
 using SharedCommerce.Domain.Exceptions;
+using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Application.Interfaces.Integrations;
 using StoreCommerce.Application.Interfaces.Payments;
@@ -45,7 +46,7 @@ public sealed class ReconcileMercadoPagoPaymentCommandHandler(
                 "MercadoPago.StatusNeedsReview" or "MercadoPago.EnvironmentMismatch")
             {
                 store.ClearTracking();
-                var delivery = MercadoPagoAuthorizationCryptography.Hash("reconciliation:" + payment.Id + ":" + payment.UpdatedAt.Ticks);
+                var delivery = ProviderAuthorizationSecurity.Hash("reconciliation:" + payment.Id + ":" + payment.UpdatedAt.Ticks);
                 var notification = ProviderNotification.Create(connection, payment.Id, delivery, now, attempt.Id);
                 await store.InsertNotificationAsync(notification, detachAfterInsert: false, ct);
 

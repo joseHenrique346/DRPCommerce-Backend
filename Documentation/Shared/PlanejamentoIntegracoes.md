@@ -6,6 +6,11 @@ O [roteiro do TCC](ValidacaoComercialTcc.md) valida as APIs com provedores simul
 isso não conclui homologação externa. Melhor Envio é a próxima integração, após essas partes.
 As atualizações datadas abaixo preservam o histórico do planejamento.
 
+Atualização de 23/11/2026. O OAuth do Melhor Envio foi implementado no Store,
+com conexões por loja e ambiente e renovação de tokens. A próxima validação é
+conectar uma conta de sandbox. Cotação, checkout e etiquetas seguem como etapas
+próprias. [OAuth do Melhor Envio](MelhorEnvio.md)
+
 Atualização de 18/11/2026: [backend Mercado Pago](MercadoPago.md) implementado com OAuth, Checkout Pro, webhook assinado e reconciliação. Desabilitado por padrão; faltam URLs/segredos, frontend e homologação real em sandbox. Os registros anteriores abaixo devem ser lidos como histórico.
 
 Atualização de 16/11/2026 na #93: implementada a [fundação de conexões e tentativas de pagamento](PreparacaoPagamentos.md), com tokens protegidos, snapshot financeiro, IDs separados e recuperação de criação interrompida. O adapter ativo continua manual; OAuth, webhooks e adapters reais permanecem pendentes. As tabelas abaixo descrevem a base anterior e devem ser lidas junto dessa atualização.

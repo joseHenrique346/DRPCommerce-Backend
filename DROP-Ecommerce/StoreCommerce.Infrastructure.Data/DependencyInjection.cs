@@ -1,4 +1,5 @@
 using StoreCommerce.Application.Integrations.MercadoPago;
+using StoreCommerce.Application.Integrations.MelhorEnvio;
 using SharedCommerce.Application.Interfaces.Appearance;
 using SharedCommerce.Application.Interfaces.Media;
 using SharedCommerce.Domain.Interfaces.Tenancy;
@@ -32,6 +33,7 @@ using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Payments;
 using StoreCommerce.Infrastructure.Data.Integrations;
 using StoreCommerce.Infrastructure.Data.Integrations.MercadoPago;
+using StoreCommerce.Infrastructure.Data.Integrations.MelhorEnvio;
 
 namespace StoreCommerce.Infrastructure.Data;
 
@@ -124,6 +126,23 @@ public static class DependencyInjection
             Client.Timeout = TimeSpan.FromSeconds(30);
         });
         services.AddScoped<MercadoPagoApi>();
+        services.AddOptions<MelhorEnvioOptions>();
+
+        if (configuration is not null)
+            services.Configure<MelhorEnvioOptions>(configuration.GetSection("MelhorEnvio"));
+
+        services.AddHttpClient<MelhorEnvioAuthorizationClient>(Client =>
+        {
+            Client.Timeout = TimeSpan.FromSeconds(25);
+            Client.MaxResponseContentBufferSize = 256 * 1024;
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false
+        });
+        services.AddScoped<IMelhorEnvioAuthorizationClient>(Provider => Provider.GetRequiredService<MelhorEnvioAuthorizationClient>());
+        services.AddScoped<IProviderTokenRefresher>(Provider => Provider.GetRequiredService<MelhorEnvioAuthorizationClient>());
+
         services.AddOptions<PlatformBillingOptions>();
 
         if (configuration is not null)

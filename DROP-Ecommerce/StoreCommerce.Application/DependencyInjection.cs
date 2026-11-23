@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         services.AddScoped<IdentityHandlerContext>();
         services.AddScoped<ProviderAuthorizationAccessPolicy>();
+        services.AddScoped<Integrations.ProviderAuthorizationSecurity>();
         services.AddScoped<StoreCommerce.Application.Integrations.MercadoPago.MercadoPagoAuthorizationCryptography>();
         services.AddScoped<StoreSettingsReader>();
         services.AddScoped<CouponCustomerHistoryReader>();

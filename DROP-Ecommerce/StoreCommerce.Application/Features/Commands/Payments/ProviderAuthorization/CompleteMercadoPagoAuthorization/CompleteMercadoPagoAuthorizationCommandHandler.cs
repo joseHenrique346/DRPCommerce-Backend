@@ -2,6 +2,7 @@ using StoreCommerce.Application.Integrations.Providers.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
+using StoreCommerce.Application.Integrations;
 using StoreCommerce.Application.Integrations.MercadoPago;
 using StoreCommerce.Application.Interfaces.Integrations;
 using StoreCommerce.Application.Interfaces.Payments;
@@ -13,6 +14,7 @@ public sealed class CompleteMercadoPagoAuthorizationCommandHandler(
     IProviderAuthorizationStore authorizations,
     IMercadoPagoAuthorizationClient client,
     MercadoPagoAuthorizationCryptography secrets,
+    ProviderAuthorizationSecurity security,
     ProviderAuthorizationAccessPolicy access,
     IProviderConnectionCredentials connections,
     IPaymentGatewayRegistry gateways,
@@ -32,12 +34,13 @@ public sealed class CompleteMercadoPagoAuthorizationCommandHandler(
         if (state.Length is < 20 or > 200 || browserBinding.Length is < 20 or > 200)
             throw InvalidState();
 
-        var hash = MercadoPagoAuthorizationCryptography.Hash(state);
-        var browserHash = MercadoPagoAuthorizationCryptography.Hash(browserBinding);
+        var hash = ProviderAuthorizationSecurity.Hash(state);
+        var browserHash = ProviderAuthorizationSecurity.Hash(browserBinding);
         var now = time.GetUtcNow().UtcDateTime;
-        var authorization = await authorizations.FindAuthorizationAsync(hash, browserHash, now, ct) ?? throw InvalidState();
+        var authorization = await authorizations.FindAuthorizationAsync(IntegrationProviders.MercadoPago, null, hash, browserHash, now, ct)
+            ?? throw InvalidState();
         Settings.RequireOAuth(authorization.Environment);
-        secrets.RequireKeyRing();
+        security.RequireKeyRing();
         var consumed = await authorizations.ConsumeAuthorizationAsync(authorization.Id, now, ct);
 
         if (consumed != 1)
@@ -46,7 +49,8 @@ public sealed class CompleteMercadoPagoAuthorizationCommandHandler(
         if (!string.IsNullOrWhiteSpace(error) || string.IsNullOrWhiteSpace(code) || code.Length > 2000)
             throw new SecurityFailure(400, "MercadoPago.AuthorizationDenied", "A autorização não foi concluída. Inicie uma nova conexão.");
 
-        await access.RequireAsync(authorization.EnterpriseId, authorization.UserId, authorization.MembershipId, authorization.UserVersion, ct);
+        await access.RequireAsync(authorization.EnterpriseId, authorization.UserId, authorization.MembershipId, authorization.UserVersion,
+            "MercadoPago.AuthorizationRevoked", ct);
         var account = await client.ExchangeAsync(code, secrets.UnprotectVerifier(authorization.ProtectedVerifier), authorization.Environment, now, ct);
         var tokens = account.Tokens;
 
@@ -55,7 +59,8 @@ public sealed class CompleteMercadoPagoAuthorizationCommandHandler(
 
         // A rede ficou fora desta transação. Revalida o acesso atual, inclusive exclusão/revogação ocorrida no provedor.
         await using var transaction = await authorizations.BeginSerializableTransactionAsync(ct);
-        await access.RequireAsync(authorization.EnterpriseId, authorization.UserId, authorization.MembershipId, authorization.UserVersion, ct);
+        await access.RequireAsync(authorization.EnterpriseId, authorization.UserId, authorization.MembershipId, authorization.UserVersion,
+            "MercadoPago.AuthorizationRevoked", ct);
         await connections.SaveAuthorizedAsync(authorization.EnterpriseId, IntegrationProviders.MercadoPago, authorization.Environment,
             account.AccountId, account.Scope, tokens, authorization.UserId, ct);
         await gateways.SelectAsync(authorization.EnterpriseId, IntegrationProviders.MercadoPago, authorization.Environment, ct);

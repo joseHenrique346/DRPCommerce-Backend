@@ -13,6 +13,7 @@ public sealed class ProviderAuthorization : BaseEntity, ITenantEntity
     public string StateHash { get; private set; } = string.Empty;
     public string BrowserHash { get; private set; } = string.Empty;
     public string ProtectedVerifier { get; private set; } = string.Empty;
+    public string Provider { get; private set; } = string.Empty;
     public IntegrationEnvironment Environment { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime? ConsumedAt { get; private set; }
@@ -22,12 +23,16 @@ public sealed class ProviderAuthorization : BaseEntity, ITenantEntity
     }
 
     public static ProviderAuthorization Create(long enterpriseId, long userId, long membershipId, long userVersion,
-        string stateHash, string browserHash, string protectedVerifier, IntegrationEnvironment environment, DateTime now)
+        string stateHash, string browserHash, string protectedVerifier, string provider,
+        IntegrationEnvironment environment, DateTime now)
     {
         if (enterpriseId <= 0 || userId <= 0 || membershipId <= 0 || stateHash.Length != 64 || browserHash.Length != 64)
             throw new ArgumentException("Autorização inválida.");
 
-        IntegrationProviders.Validate(IntegrationProviders.MercadoPago, environment);
+        IntegrationProviders.Validate(provider, environment);
+
+        if (provider == IntegrationProviders.Manual)
+            throw new ArgumentException("O provedor manual não utiliza OAuth.", nameof(provider));
 
         return new ProviderAuthorization
         {
@@ -38,6 +43,7 @@ public sealed class ProviderAuthorization : BaseEntity, ITenantEntity
             StateHash = stateHash,
             BrowserHash = browserHash,
             ProtectedVerifier = protectedVerifier,
+            Provider = provider,
             Environment = environment,
             ExpiresAt = now.AddMinutes(10)
         };

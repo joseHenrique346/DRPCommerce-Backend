@@ -13,6 +13,7 @@ public sealed class ProviderAuthorizationConfiguration : IEntityTypeConfiguratio
         builder.Property(Authorization => Authorization.StateHash).HasMaxLength(64);
         builder.Property(Authorization => Authorization.BrowserHash).HasMaxLength(64);
         builder.Property(Authorization => Authorization.ProtectedVerifier).HasMaxLength(4000);
+        builder.Property(Authorization => Authorization.Provider).HasMaxLength(40);
         builder.HasIndex(Authorization => Authorization.StateHash).IsUnique();
         builder.HasIndex(Authorization => Authorization.ExpiresAt);
         builder.HasOne<Enterprise>().WithMany().HasForeignKey(Authorization => Authorization.EnterpriseId).OnDelete(DeleteBehavior.Restrict);

@@ -91,7 +91,7 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "Order" or "OrderItem" => read ? PermissionCodes.OrdersView : PermissionCodes.OrdersManage,
             "Customer" => read ? PermissionCodes.CustomersView : PermissionCodes.CustomersManage,
             "Employee" or "EmployeePosition" or "Department" => PermissionCodes.EmployeesManage,
-            "StoreSettings" or "ProviderConnection" or "MercadoPago" => PermissionCodes.SettingsManage,
+            "StoreSettings" or "ProviderConnection" or "MercadoPago" or "MelhorEnvio" => PermissionCodes.SettingsManage,
             _ => null
         };
         var allowed = permission is null ? user.FindFirst(SecurityNames.Kind)?.Value == "primary_owner" : SecurityNames.HasPermission(user, permission);

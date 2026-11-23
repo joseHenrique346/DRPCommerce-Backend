@@ -4458,6 +4458,12 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("protected_verifier");
 
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provider");
+
                     b.Property<string>("StateHash")
                         .IsRequired()
                         .HasMaxLength(64)

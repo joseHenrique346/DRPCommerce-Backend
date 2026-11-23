@@ -17,7 +17,7 @@ public sealed class ConnectMercadoPagoSandboxCommandHandler(
     ICurrentIdentity actor,
     IProviderAuthorizationStore authorizations,
     IMercadoPagoAuthorizationClient client,
-    MercadoPagoAuthorizationCryptography secrets,
+    ProviderAuthorizationSecurity security,
     ProviderAuthorizationAccessPolicy access,
     IProviderConnectionCredentials connections,
     IPaymentGatewayRegistry gateways,
@@ -31,14 +31,14 @@ public sealed class ConnectMercadoPagoSandboxCommandHandler(
     {
         actor.RequirePermission(PermissionCodes.SettingsManage);
         Settings.RequireCheckout(IntegrationEnvironment.Sandbox);
-        secrets.RequireKeyRing();
+        security.RequireKeyRing();
 
         if (string.IsNullOrWhiteSpace(Settings.SandboxAccessToken))
             throw new SecurityFailure(409, "MercadoPago.SandboxTokenRequired", "Configure o token do vendedor de teste no servidor.");
 
         var accountId = await client.SandboxAccountAsync(ct);
         await using var transaction = await authorizations.BeginSerializableTransactionAsync(ct);
-        await access.RequireAsync(actor.EnterpriseId, actor.UserId, actor.MembershipId, null, ct);
+        await access.RequireAsync(actor.EnterpriseId, actor.UserId, actor.MembershipId, null, "MercadoPago.AuthorizationRevoked", ct);
         // Prazo local curto para uma chave de teste estática; não inventa validade remota nem refresh token.
         await connections.SaveAuthorizedAsync(actor.EnterpriseId, IntegrationProviders.MercadoPago, IntegrationEnvironment.Sandbox,
             accountId, "sandbox-static", new ProviderTokens(Settings.SandboxAccessToken, null,
