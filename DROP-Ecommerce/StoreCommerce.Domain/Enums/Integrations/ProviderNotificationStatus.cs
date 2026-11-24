@@ -1,5 +1,3 @@
-using StoreCommerce.Domain.Entity;
-
 namespace StoreCommerce.Domain.Enums.Integrations;
 
 public enum ProviderNotificationStatus

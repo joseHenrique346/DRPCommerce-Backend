@@ -1,6 +1,3 @@
-using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Entity.Base;
-
 namespace StoreCommerce.Domain.Enums.Inventory;
 
 public enum StockReservationStatus

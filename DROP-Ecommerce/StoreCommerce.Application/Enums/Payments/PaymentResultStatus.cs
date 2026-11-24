@@ -1,6 +1,3 @@
-using StoreCommerce.Application.Payments;
-using StoreCommerce.Domain.Integrations;
-
 namespace StoreCommerce.Application.Enums.Payments;
 
 /// <summary>

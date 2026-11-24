@@ -1,5 +1,3 @@
-using StoreCommerce.Application.Payments;
-
 namespace StoreCommerce.Application.Enums.Payments;
 
 public enum VerifiedPaymentStatus
