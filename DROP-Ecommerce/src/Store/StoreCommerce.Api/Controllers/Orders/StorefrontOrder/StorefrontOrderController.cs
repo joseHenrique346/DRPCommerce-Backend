@@ -15,6 +15,12 @@ namespace StoreCommerce.Api.Controllers;
 [Authorize(Policy = SecurityNames.Storefront)]
 public sealed class StorefrontOrderController(IMediator mediator) : ControllerBase
 {
+    [HttpPost("checkout/shipping-quotes")]
+    public async Task<IActionResult> ShippingQuotesAsync([FromBody] ShippingAddressRequest request, CancellationToken ct)
+    {
+        return this.ToActionResult(await mediator.Send(new GetShippingQuotesQuery(request), ct));
+    }
+
     /// <summary>
     /// Finaliza a compra dos itens selecionados do carrinho. Repetir a mesma idempotencyKey devolve o mesmo pedido.
     /// A resposta traz a cobrança (link, código Pix ou instruções) e o prazo para pagamento.

@@ -39,6 +39,7 @@ public class GetPublicStoreInfoQueryHandler(
             settings.MinOrderValue,
             settings.MaxItemsPerOrder,
             store.StorefrontSlug,
-            StorefrontUrls.Page(options.Value.StorefrontBaseUrl, store.StorefrontSlug)));
+            StorefrontUrls.Page(options.Value.StorefrontBaseUrl, store.StorefrontSlug),
+            settings.AllowPickup));
     }
 }

@@ -1,10 +1,14 @@
 # Carrinho, checkout, pedidos e clientes
 
-Revisado em 03/11/2026. Estes fluxos estão implementados no Store. Pagamento e estorno usam o adaptador manual; frete calculado continua zerado e não há emissão fiscal por provedor. O fluxo de venda do Drop ainda precisa ser conectado a essas regras.
+Estes fluxos descrevem o Store. Lojas conectadas no ambiente configurado
+podem cotar frete com o Melhor Envio e incluir o custo no pagamento do pedido.
+[Configuração do Melhor Envio](../../Shared/MelhorEnvio.md)
 
 ## Componentes
 
-Controllers enviam Commands/Queries pelo MediatR. `CartService`, `CustomerAddressService`, `CheckoutService` e `OrderLifecycleService` coordenam os fluxos com repositórios, UnitOfWork e escopos de escrita. Entidades protegem seus estados; o DbContext impede mudanças comerciais fora dos fluxos autorizados.
+Controllers enviam Commands e Queries pelo MediatR. Os handlers coordenam os
+fluxos com repositórios, UnitOfWork e escopos de escrita. As entidades
+protegem seus estados, e o DbContext protege os limites de gravação.
 
 Contratos e rotas: [referência HTTP](../Api/Endpoints.md). Segurança: [autenticação e permissões](../Api/Authentication.md).
 
@@ -48,9 +52,9 @@ Os campos atuais de endereço ainda precisam ser complementados/estruturados par
 2. Conferir loja, cliente, configurações e visibilidade; abrir transação e bloquear a linha da empresa.
 3. Repetir a consulta da chave após o bloqueio, evitando duas criações concorrentes.
 4. Carregar selecionados, validar catálogo/SKU/quantidades/estoque, resolver endereço e calcular preços/totais no servidor.
-5. Aplicar cupom, mínimo e limite de unidades; comprometer uso do cupom e reserva de estoque.
+5. Validar e registrar o frete escolhido quando aplicável. Aplicar cupom e pedido mínimo, comprometer o uso do cupom e reservar o estoque.
 6. Criar pedido numerado e cobrança pendente, congelar itens/snapshots, remover do carrinho os itens comprados e confirmar a transação.
-7. Preparar a sessão de pagamento depois da transação inicial. Hoje o resultado são instruções de pagamento manual.
+7. Preparar a sessão de pagamento selecionada pela loja depois da transação inicial.
 
 Repetir a chave devolve o mesmo pedido e pode completar a preparação da cobrança que faltou. Uma nova compra usa nova chave. Falha antes do commit desfaz o lote; falha na criação da cobrança depois do commit mantém pedido/compromissos até retomada, cancelamento ou expiração. Consultar o pedido antes de repetir uma operação que ficou sem resposta.
 
@@ -97,7 +101,10 @@ Quando continua vencido, cancela e libera estoque/cupom na mesma transação. O 
 
 `ApplyPaymentResultCommand` é uma entrada interna preparada para resultado de gateway; sua existência não representa webhook público do Mercado Pago implementado. Antes de integrar um provedor real, implementar identificação da conta por loja, validação/consulta do pagamento, idempotência/reconciliação e estorno externo fora da transação com lock.
 
-Frete permanece zero no cálculo atual; Invoice não transmite NF-e. Veja [integrações pendentes](../../Shared/PlanejamentoIntegracoes.md).
+A cotação escolhida fica no pedido junto ao custo cobrado. O endereço fica
+vinculado à cotação ou à retirada selecionada no checkout. Emissão de
+etiquetas e transmissão fiscal seguem em etapas próprias.
+[Integrações pendentes](../../Shared/PlanejamentoIntegracoes.md)
 
 ## Persistência
 

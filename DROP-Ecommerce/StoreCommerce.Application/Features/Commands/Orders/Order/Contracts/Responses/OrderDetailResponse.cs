@@ -6,7 +6,8 @@ using OrderEntity = StoreCommerce.Domain.Entity.Order;
 
 namespace StoreCommerce.Application.Contracts.Order;
 
-public sealed record OrderDetailResponse(long Id, long Number, long CustomerId, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal SubTotal, decimal DiscountAmount, decimal ShippingCost, decimal TaxAmount, decimal TotalAmount, long? CouponId, string ShippingAddressLine, string ShippingCity, long ShippingStateId, string ShippingZipCode, string Notes, DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt, IReadOnlyList<OrderItemDetailResponse> Items, PaymentInfoResponse? Payment, IReadOnlyList<ShipmentInfoResponse> Shipments, IReadOnlyList<OrderHistoryResponse> History, BuyerSnapshotResponse? Buyer = null, IReadOnlyList<PaymentOperationInfoResponse>? PaymentOperations = null)
+public sealed record OrderDetailResponse(long Id, long Number, long CustomerId, long StatusId, string Status, long PaymentStatusId, string PaymentStatus, decimal SubTotal, decimal DiscountAmount, decimal ShippingCost, decimal TaxAmount, decimal TotalAmount, long? CouponId, string ShippingAddressLine, string ShippingCity, long ShippingStateId, string ShippingZipCode, string Notes, DateTime? PaymentExpiresAt, bool CanCustomerCancel, DateTime CreatedAt, IReadOnlyList<OrderItemDetailResponse> Items, PaymentInfoResponse? Payment, IReadOnlyList<ShipmentInfoResponse> Shipments, IReadOnlyList<OrderHistoryResponse> History, BuyerSnapshotResponse? Buyer = null, IReadOnlyList<PaymentOperationInfoResponse>? PaymentOperations = null,
+    bool PickupAtStore = false, OrderShippingQuoteResponse? ShippingQuote = null)
 {
     public static OrderDetailResponse FromEntity(OrderEntity order, bool backoffice)
     {
@@ -14,6 +15,8 @@ public sealed record OrderDetailResponse(long Id, long Number, long CustomerId, 
             .Where(transaction => transaction.TransactionTypeId == TransactionType.Payment.Id)
             .OrderByDescending(transaction => transaction.Id)
             .FirstOrDefault();
+
+        var quote = order.ShippingQuote;
 
         return new(
             order.Id, order.OrderNumber, order.CustomerId, order.OrderStatusId, OrderLabels.Status(order.OrderStatusId),
@@ -32,7 +35,10 @@ public sealed record OrderDetailResponse(long Id, long Number, long CustomerId, 
                 order.BuyerSnapshotCapturedAt, order.BuyerSnapshotSource),
             order.ListPaymentOperation.OrderBy(Operation => Operation.Id)
                 .Select(Operation => new PaymentOperationInfoResponse(Operation.Id, Operation.Kind, Operation.Status,
-                    Operation.Amount, Operation.CurrencyCode, Operation.ResultReference, Operation.ResolutionCode, Operation.CompletedAt)).ToList());
+                    Operation.Amount, Operation.CurrencyCode, Operation.ResultReference, Operation.ResolutionCode, Operation.CompletedAt)).ToList(),
+            order.PickupAtStore,
+            quote is null ? null : new OrderShippingQuoteResponse(quote.Provider, quote.Service.ServiceId, quote.Service.ServiceName,
+                quote.Service.CarrierName, quote.Service.DeliveryDays, quote.Service.Volumes.Count));
     }
 
     private static PaymentInfoResponse PaymentFromEntity(Transaction payment, PaymentAttempt? attempt)

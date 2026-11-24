@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StoreCommerce.Domain.Entity;
+using System.Text.Json;
 
 namespace StoreCommerce.Infrastructure.Data.Configurations;
 
@@ -16,6 +17,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(e => e.SubTotal).HasPrecision(18, 2);
         builder.Property(e => e.DiscountAmount).HasPrecision(18, 2);
         builder.Property(e => e.ShippingCost).HasPrecision(18, 2);
+        builder.Property(Order => Order.ShippingQuote)
+            .HasConversion(Snapshot => JsonSerializer.Serialize(Snapshot, (JsonSerializerOptions?)null),
+                Json => JsonSerializer.Deserialize<OrderShippingSnapshot>(Json, (JsonSerializerOptions?)null))
+            .HasColumnType("jsonb");
         builder.Property(e => e.TaxAmount).HasPrecision(18, 2);
         builder.Property(e => e.TotalAmount).HasPrecision(18, 2);
 

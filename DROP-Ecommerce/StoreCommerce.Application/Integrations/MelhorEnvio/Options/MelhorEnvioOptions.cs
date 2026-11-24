@@ -14,6 +14,7 @@ public sealed class MelhorEnvioOptions
     public string ContactEmail { get; set; } = string.Empty;
     public MelhorEnvioEnvironmentOptions Sandbox { get; set; } = new();
     public MelhorEnvioEnvironmentOptions Production { get; set; } = new();
+    public IntegrationEnvironment? ShippingEnvironment { get; set; }
 
     public MelhorEnvioEnvironmentOptions RequireOAuth(IntegrationEnvironment environment)
     {

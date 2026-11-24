@@ -28,6 +28,9 @@ public class UpdateStoreSettingsCommandHandler(IRepository<StoreSettings> reposi
             settings.UpdateDetails(request.currencyCode, request.minOrderValue, request.maxItemsPerOrder, request.allowBackorder, request.pendingOrderExpirationMinutes);
         }
 
+        if (request.allowPickup.HasValue)
+            settings.SetPickupAvailability(request.allowPickup.Value);
+
         await unitOfWork.CommitAsync(cancellationToken);
 
         return Result<StoreSettings>.Success(settings);

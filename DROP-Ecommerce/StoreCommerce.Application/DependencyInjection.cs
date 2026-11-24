@@ -21,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<Integrations.ProviderAuthorizationSecurity>();
         services.AddScoped<StoreCommerce.Application.Integrations.MercadoPago.MercadoPagoAuthorizationCryptography>();
         services.AddScoped<StoreSettingsReader>();
+        services.AddScoped<CheckoutAddressReader>();
+        services.AddScoped<CheckoutShippingConnectionReader>();
+        services.AddScoped<CheckoutShippingQuoteProtector>();
         services.AddScoped<CouponCustomerHistoryReader>();
         services.AddScoped<CartPurchaseContextReader>();
         services.AddScoped<CartResponseBuilder>();

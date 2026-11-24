@@ -57,16 +57,35 @@ tokens rotacionados.
 [Troca e renovação do token](https://docs.melhorenvio.com.br/reference/solicitacao-do-token)
 [Identidade da conta](https://docs.melhorenvio.com.br/reference/listar-informacoes-do-usuario)
 
-## Próxima etapa
+## Cotação no checkout
 
-A próxima validação externa é autorizar uma loja com o aplicativo de sandbox.
+Aplique a migração do Store `AddCheckoutShippingQuotes`. Para usar uma conta
+de Sandbox já conectada, habilite a configuração do ambiente OAuth e defina
+`MelhorEnvio__ShippingEnvironment=Sandbox`. A entrega pelo Melhor Envio pede
+uma cotação quando a loja tem conexão ativa no ambiente selecionado. Lojas
+sem essa conexão continuam com o fluxo de entrega acordado com a loja.
 
-- A cotação precisa de origem e destino estruturados, peso em kg e dimensões
-  em cm por SKU. No checkout, confira a escolha contra a loja, o carrinho,
-  o endereço e a validade da cotação. [Documentação de cotação](https://docs.melhorenvio.com.br/docs/cotacao-de-fretes)
-- Grave o serviço, o preço e os volumes no pedido antes de decidir se haverá
-  tentativa de pagamento. Inclua nos testes pedidos com desconto integral nos
-  produtos e os fluxos de retirada e de produtos digitais.
+1. O cliente autenticado envia `POST /api/storefront/{storeSlug}/checkout/shipping-quotes`.
+   O corpo usa `addressId`, `useProfileAddress: true` ou os campos de entrega
+   do checkout. O Store lê os itens selecionados, usa o CEP cadastrado da
+   loja e envia peso em kg, dimensões em cm, valor unitário e quantidade
+   dos SKUs físicos. [Documentação de cotação](https://docs.melhorenvio.com.br/docs/cotacao-de-fretes)
+2. Cada opção retorna serviço, transportadora, preço, prazo e `quoteToken`.
+   A cotação é válida por 15 minutos. No checkout, envie o token escolhido
+   em `shippingQuoteToken` com o mesmo destino. O Store valida loja, cliente,
+   conexão, carrinho e endereço sem consultar o provedor durante o checkout.
+3. O pedido grava serviço, volumes, CEPs, prazo e valor do frete antes de
+   criar a tentativa de pagamento. O valor permanece devido quando o cupom
+   cobre todos os produtos. A loja pode oferecer retirada com
+   `allowPickup: true` em `PUT /api/store-settings`. O cliente seleciona
+   `pickupAtStore: true` no checkout. Carrinhos só de digitais dispensam
+   cotação de entrega.
+
+## Próximas etapas
+
+- Validar a autorização e a cotação no Sandbox com a API publicada.
+- Estruturar os dados de remetente e destinatário exigidos para contratar
+  o envio.
 - Separe compra e geração da etiqueta de postagem e entrega. O vínculo por
   volume precisa preservar os IDs externos para reconciliar falhas de
   comunicação. [Dados exigidos para etiquetas](https://docs.melhorenvio.com.br/reference/inserir-fretes-no-carrinho)

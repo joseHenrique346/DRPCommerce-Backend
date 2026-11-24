@@ -280,6 +280,7 @@ Corpo de criação/atualização: `label`, `recipientName`, `addressLine`, `city
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
 | `POST /api/storefront/{storeSlug}/checkout` | `Cliente autenticado` | Finaliza a compra dos itens selecionados do carrinho. Repetir a mesma idempotencyKey devolve o mesmo pedido. A resposta traz a cobrança (link, código Pix ou instruções) e o prazo para pagamento. CheckoutRequest; pedido e instruções de pagamento. |
+| `POST /api/storefront/{storeSlug}/checkout/shipping-quotes` | `Cliente autenticado` | Cota a entrega dos SKUs físicos selecionados. O checkout recebe a opção escolhida por `shippingQuoteToken`. |
 | `POST /api/storefront/{storeSlug}/orders/{id:long}/cancel` | `Cliente autenticado` | Cancela um pedido que ainda aguarda pagamento. O estoque reservado é liberado. CancelOrderRequest (ver diferença cliente/backoffice). |
 
 O checkout compra os itens **selecionados do carrinho**. Não recebe lista de itens, preço, desconto final nem identificador de outro cliente. Recebe `idempotencyKey`, `paymentMethodId`, `couponCode`, `useProfileAddress`, `shippingAddressLine`, `shippingCity`, `shippingStateId`, `shippingZipCode`, `notes`, `addressId` opcional. Usar endereço salvo (`addressId`) e `useProfileAddress` juntos é inválido. Sem ambos, os campos de entrega são usados. Produtos físicos exigem endereço válido.

@@ -125,7 +125,9 @@ public static class DependencyInjection
             Client.Timeout = TimeSpan.FromSeconds(30);
         });
         services.AddScoped<MercadoPagoApi>();
-        services.AddOptions<MelhorEnvioOptions>();
+        services.AddOptions<MelhorEnvioOptions>()
+            .Validate(Options => !Options.ShippingEnvironment.HasValue || Enum.IsDefined(Options.ShippingEnvironment.Value),
+                "MelhorEnvio:ShippingEnvironment deve ser Sandbox ou Production.");
 
         if (configuration is not null)
             services.Configure<MelhorEnvioOptions>(configuration.GetSection("MelhorEnvio"));
@@ -141,6 +143,15 @@ public static class DependencyInjection
         });
         services.AddScoped<IMelhorEnvioAuthorizationClient>(Provider => Provider.GetRequiredService<MelhorEnvioAuthorizationClient>());
         services.AddScoped<IProviderTokenRefresher>(Provider => Provider.GetRequiredService<MelhorEnvioAuthorizationClient>());
+        services.AddHttpClient<IMelhorEnvioQuoteClient, MelhorEnvioQuoteClient>(Client =>
+        {
+            Client.Timeout = TimeSpan.FromSeconds(25);
+            Client.MaxResponseContentBufferSize = 256 * 1024;
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false,
+            UseCookies = false
+        });
 
         services.AddOptions<PlatformBillingOptions>();
 

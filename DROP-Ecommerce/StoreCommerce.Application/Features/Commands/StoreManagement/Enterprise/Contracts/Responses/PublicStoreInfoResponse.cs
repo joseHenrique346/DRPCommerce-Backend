@@ -11,4 +11,5 @@ public sealed record PublicStoreInfoResponse(
     decimal MinOrderValue,
     int? MaxItemsPerOrder,
     string? StorefrontSlug,
-    string? StorefrontUrl);
+    string? StorefrontUrl,
+    bool AllowsPickup = false);

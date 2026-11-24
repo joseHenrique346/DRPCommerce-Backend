@@ -23,7 +23,9 @@ public sealed class PlaceOrderCommandHandler(
     IOrderRepository orders,
     IRepository<Transaction> transactions,
     ICartRepository carts,
-    ICustomerAddressRepository addresses,
+    CheckoutAddressReader addresses,
+    CheckoutShippingConnectionReader shippingConnections,
+    CheckoutShippingQuoteProtector shippingQuotes,
     ICustomerRepository customers,
     ICouponRepository coupons,
     IRepository<CouponRedemption> redemptions,
@@ -61,9 +63,6 @@ public sealed class PlaceOrderCommandHandler(
         if (categories.IsFailure)
             throw new SecurityFailure(404, "Store.Unavailable", "Loja indisponível.");
 
-        var customer = await customers.FindAsync(item => item.Id == customerId && item.IsActive, ct, tracking: false)
-            ?? throw new SecurityFailure(401, "Identity.InvalidCredentials", "Credenciais inválidas ou acesso temporariamente indisponível.");
-        var settings = await storeSettings.GetCurrentAsync(ct);
         var visible = categories.Content!.Select(category => category.Id).ToHashSet();
         var now = time.GetUtcNow().UtcDateTime;
         long orderId;
@@ -72,7 +71,7 @@ public sealed class PlaceOrderCommandHandler(
         {
             await products.LockCatalogAsync(enterpriseId, ct);
             await customers.LockAsync(customerId, ct);
-            customer = await customers.FindAsync(Customer => Customer.Id == customerId && Customer.EnterpriseId == enterpriseId &&
+            var customer = await customers.FindAsync(Customer => Customer.Id == customerId && Customer.EnterpriseId == enterpriseId &&
                 Customer.IsActive && !Customer.IsDeleted && Customer.PersonalDataErasedAt == null, ct, tracking: false)
                 ?? throw new SecurityFailure(401, "Identity.InvalidCredentials", "A conta não está disponível para novas compras.");
 
@@ -86,6 +85,7 @@ public sealed class PlaceOrderCommandHandler(
                 return await CompleteAsync(enterpriseId, customerId, concurrent.Id, ct);
             }
 
+            var settings = await storeSettings.GetCurrentAsync(ct);
             var cart = await carts.GetForCustomerAsync(enterpriseId, customerId, tracking: true, ct);
             var selected = cart?.ListCartItem.Where(item => item.IsSelected).OrderBy(item => item.Id).ToList() ?? [];
 
@@ -104,15 +104,30 @@ public sealed class PlaceOrderCommandHandler(
             if (!settings.IsWithinItemLimit(quantity))
                 throw new SecurityFailure(400, "Checkout.MaxItemsExceeded", $"O pedido excede o limite de {settings.MaxItemsPerOrder} itens da loja.");
 
-            var (addressLine, city, stateId, zipCode) = await ResolveAddressAsync(request, customer, ct);
+            var physical = selected.Any(Item => !Item.Product.IsDigital);
+
+            if (request.PickupAtStore && (!settings.AllowPickup || !physical))
+                throw new SecurityFailure(409, "Checkout.PickupUnavailable", "Retirada indisponível para este pedido.");
+
+            var destination = request.PickupAtStore
+                ? await addresses.StoreAsync(enterpriseId, ct)
+                : await addresses.ResolveAsync(new ShippingAddressRequest(request.UseProfileAddress, request.ShippingAddressLine,
+                    request.ShippingCity, request.ShippingStateId, request.ShippingZipCode, request.AddressId), customer, ct);
+            var freight = await ResolveShippingAsync(request, settings, selected, destination, customer, physical, ct);
 
             var expiresAt = now.AddMinutes(settings.PendingOrderExpirationMinutes);
-            var order = Order.CreateCheckout(enterpriseId, customerId, addressLine, city, stateId, zipCode, request.Notes?.Trim() ?? string.Empty,
-                key, request.PaymentMethodId, expiresAt, now);
+            var order = Order.CreateCheckout(enterpriseId, customerId, destination.AddressLine, destination.City, destination.StateId,
+                destination.ZipCode, request.Notes?.Trim() ?? string.Empty, key, request.PaymentMethodId, expiresAt, now);
             order.AssignNumber(await orders.GetNextOrderNumberAsync(enterpriseId, ct));
 
             foreach (var item in selected)
                 order.AddProductItem(item.Product, item.ProductVariant, item.Quantity, settings);
+
+            if (request.PickupAtStore)
+                order.SelectPickup();
+
+            if (freight is not null)
+                order.ApplyShippingQuote(freight, settings);
 
             await ApplyCouponAsync(order, request.CouponCode, customerId, settings, now, ct);
 
@@ -151,26 +166,42 @@ public sealed class PlaceOrderCommandHandler(
         return await CompleteAsync(enterpriseId, customerId, orderId, ct);
     }
 
-    private async Task<(string AddressLine, string City, long StateId, string ZipCode)> ResolveAddressAsync(CheckoutRequest request, Customer customer,
-            CancellationToken ct)
+    private async Task<OrderShippingSnapshot?> ResolveShippingAsync(CheckoutRequest request, StoreSettings settings, List<CartItem> selected,
+        CheckoutDeliveryAddress destination, Customer customer, bool physical, CancellationToken ct)
     {
-        if (!request.AddressId.HasValue && !request.UseProfileAddress)
-            return (request.ShippingAddressLine!, request.ShippingCity!, request.ShippingStateId!.Value, request.ShippingZipCode!);
+        var connection = physical && !request.PickupAtStore
+            ? await shippingConnections.FindAsync(customer.EnterpriseId, ct)
+            : null;
+        var token = request.ShippingQuoteToken;
 
-        var saved = await addresses.ListForCustomerAsync(customer.EnterpriseId, customer.Id, tracking: false, ct);
-        var address = request.AddressId.HasValue
-            ? saved.FirstOrDefault(item => item.Id == request.AddressId)
-                ?? throw new SecurityFailure(404, "CustomerAddress.NotFound", "Endereço não encontrado.")
-            : saved.FirstOrDefault(item => item.IsDefault);
+        if (connection is null)
+        {
+            if (!string.IsNullOrWhiteSpace(token))
+                throw new SecurityFailure(409, "Checkout.ShippingUnavailable", "A cotação deixou de estar disponível para este pedido.");
 
-        if (address is not null)
-            return (address.AddressLine, address.City, address.StateId, address.ZipCode);
+            return null;
+        }
 
-        if (string.IsNullOrWhiteSpace(customer.AddressLine) || string.IsNullOrWhiteSpace(customer.City) ||
-            string.IsNullOrWhiteSpace(customer.ZipCode) || !customer.StateId.HasValue)
-            throw new SecurityFailure(400, "Checkout.AddressRequired", "Cadastre um endereço de entrega para finalizar a compra.");
+        if (string.IsNullOrWhiteSpace(token))
+            throw new SecurityFailure(409, "Checkout.ShippingQuoteRequired", "Escolha uma cotação de frete para finalizar a compra.");
 
-        return (customer.AddressLine, customer.City, customer.StateId.Value, customer.ZipCode);
+        var quote = shippingQuotes.Read(customer.EnterpriseId, customer.Id, token);
+        var snapshot = quote.Snapshot;
+
+        if (snapshot.ExpiresAt <= Now)
+            throw new SecurityFailure(409, "Checkout.ShippingQuoteExpired", "A cotação expirou. Consulte o frete novamente.");
+
+        if (snapshot.ConnectionId != connection.Id || snapshot.Environment != connection.Environment ||
+            snapshot.ConnectedAt != connection.ConnectedAt || snapshot.Provider != connection.Provider)
+            throw new SecurityFailure(409, "Checkout.ShippingQuoteChanged", "A conexão de frete mudou. Consulte o frete novamente.");
+
+        var origin = await addresses.StoreAsync(customer.EnterpriseId, ct);
+        var current = CheckoutShippingQuoteInput.Create(selected, destination, origin.ZipCode, settings.CurrencyCode);
+
+        if (quote.Fingerprint != current.Fingerprint)
+            throw new SecurityFailure(409, "Checkout.ShippingQuoteChanged", "O carrinho ou o endereço mudou. Consulte o frete novamente.");
+
+        return snapshot;
     }
 
     private async Task ApplyCouponAsync(Order order, string? couponCode, long customerId, StoreSettings settings, DateTime now, CancellationToken ct)

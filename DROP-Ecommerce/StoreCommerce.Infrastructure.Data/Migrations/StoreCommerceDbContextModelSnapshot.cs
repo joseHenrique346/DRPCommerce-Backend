@@ -2689,6 +2689,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("payment_method_id");
 
+                    b.Property<bool>("PickupAtStore")
+                        .HasColumnType("boolean")
+                        .HasColumnName("pickup_at_store");
+
                     b.Property<string>("ShippingAddressLine")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -2705,6 +2709,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("shipping_cost");
+
+                    b.Property<string>("ShippingQuote")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("shipping_quote");
 
                     b.Property<long>("ShippingStateId")
                         .HasColumnType("bigint")
@@ -5215,6 +5223,10 @@ namespace StoreCommerce.Infrastructure.Data.Migrations
                     b.Property<bool>("AllowBackorder")
                         .HasColumnType("boolean")
                         .HasColumnName("allow_backorder");
+
+                    b.Property<bool>("AllowPickup")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allow_pickup");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

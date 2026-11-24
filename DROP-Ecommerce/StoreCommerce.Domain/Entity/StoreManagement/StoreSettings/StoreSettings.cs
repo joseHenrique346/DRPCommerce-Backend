@@ -24,6 +24,7 @@ public class StoreSettings : BaseEntity, ITenantEntity
     public decimal MinOrderValue { get; private set; }
     public int? MaxItemsPerOrder { get; private set; }
     public bool AllowBackorder { get; private set; }
+    public bool AllowPickup { get; private set; }
     public int PendingOrderExpirationMinutes { get; private set; }
 
     #region Navigation Properties
@@ -95,5 +96,10 @@ public class StoreSettings : BaseEntity, ITenantEntity
     /// Indica se o valor dos produtos (subtotal) atinge o pedido mínimo da loja.
     /// </summary>
     public bool MeetsMinOrderValue(decimal subTotal) => subTotal >= MinOrderValue;
+
+    public void SetPickupAvailability(bool allowPickup)
+    {
+        AllowPickup = allowPickup;
+    }
     #endregion
 }

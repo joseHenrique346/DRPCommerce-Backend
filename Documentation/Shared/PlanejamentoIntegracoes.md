@@ -6,10 +6,10 @@ O [roteiro do TCC](ValidacaoComercialTcc.md) valida as APIs com provedores simul
 isso não conclui homologação externa. Melhor Envio é a próxima integração, após essas partes.
 As atualizações datadas abaixo preservam o histórico do planejamento.
 
-Atualização de 23/11/2026. O OAuth do Melhor Envio foi implementado no Store,
-com conexões por loja e ambiente e renovação de tokens. A próxima validação é
-conectar uma conta de sandbox. Cotação, checkout e etiquetas seguem como etapas
-próprias. [OAuth do Melhor Envio](MelhorEnvio.md)
+Atualização de 23/11/2026. O Store implementa o OAuth do Melhor Envio, a
+cotação dos itens selecionados e o registro do frete no pedido antes da
+tentativa de pagamento. Os próximos marcos são validar uma conta no Sandbox
+e implementar o ciclo de etiquetas. [Melhor Envio no Store](MelhorEnvio.md)
 
 Atualização de 18/11/2026: [backend Mercado Pago](MercadoPago.md) implementado com OAuth, Checkout Pro, webhook assinado e reconciliação. Desabilitado por padrão; faltam URLs/segredos, frontend e homologação real em sandbox. Os registros anteriores abaixo devem ser lidos como histórico.
 
@@ -59,12 +59,10 @@ Detalhes de endpoint, autenticação, requisitos de conta e disponibilidade deve
 
 ## Melhor Envio — entrega mínima pendente
 
-1. Configurar ambiente, aplicação/conexão da loja, remetente e credenciais separadas.
-2. Estruturar endereço e contato/documentação exigidos; padronizar unidades de peso/dimensões e embalagem do recorte.
-3. Cotar carrinho/endereço no backend e persistir opções, validade, serviço e valor. Checkout seleciona uma cotação válida, não um preço arbitrário do navegador.
-4. Congelar o frete no pedido e incluí-lo uma vez no total enviado ao pagamento.
-5. Após pagamento e documento fiscal quando exigido, permitir ao operador contratar/gerar etiqueta, consultar pendências e imprimir com acesso restrito.
-6. Persistir IDs externos para recuperar timeout sem comprar duas etiquetas; separar etiqueta comprada, gerada, postada e entregue.
+1. Validar a autorização e a cotação no Sandbox da API publicada.
+2. Estruturar o endereço, o contato e os documentos exigidos para a contratação do envio.
+3. Após pagamento e documento fiscal quando exigido, permitir ao operador contratar e gerar a etiqueta, consultar pendências e imprimir com acesso restrito.
+4. Persistir IDs externos para recuperar timeouts e evitar compras duplicadas. Separar etiqueta comprada, gerada, postada e entregue.
 
 Receber a venda no Mercado Pago não compra o frete automaticamente. O custo/saldo do envio, regras da transportadora e disponibilidade do serviço precisam fazer parte da operação da loja. Cancelar pedido, etiqueta e pagamento são efeitos distintos.
 

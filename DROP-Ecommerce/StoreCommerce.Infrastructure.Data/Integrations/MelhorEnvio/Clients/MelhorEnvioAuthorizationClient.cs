@@ -28,7 +28,7 @@ public sealed class MelhorEnvioAuthorizationClient(
     {
         var settings = Settings.RequireOAuth(environment);
 
-        return QueryHelpers.AddQueryString(Origin(environment) + "/oauth/authorize", new Dictionary<string, string?>
+        return QueryHelpers.AddQueryString(MelhorEnvioHttp.Origin(environment) + "/oauth/authorize", new Dictionary<string, string?>
         {
             ["client_id"] = settings.ClientId.ToString(CultureInfo.InvariantCulture),
             ["response_type"] = "code",
@@ -41,7 +41,7 @@ public sealed class MelhorEnvioAuthorizationClient(
     public async Task<MelhorEnvioAuthorizedAccount> ExchangeAsync(IntegrationEnvironment environment, string code, CancellationToken ct)
     {
         var settings = Settings.RequireOAuth(environment);
-        using var request = NewRequest(HttpMethod.Post, environment, "/oauth/token");
+        using var request = MelhorEnvioHttp.Request(HttpMethod.Post, environment, "/oauth/token", Settings.ContactEmail);
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code",
@@ -61,7 +61,7 @@ public sealed class MelhorEnvioAuthorizationClient(
     {
         var environment = connection.Environment;
         var settings = Settings.RequireOAuth(environment);
-        using var request = NewRequest(HttpMethod.Post, environment, "/oauth/token");
+        using var request = MelhorEnvioHttp.Request(HttpMethod.Post, environment, "/oauth/token", Settings.ContactEmail);
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string?>
         {
             ["grant_type"] = "refresh_token",
@@ -82,7 +82,7 @@ public sealed class MelhorEnvioAuthorizationClient(
     private async Task<ProviderTokens> RequestTokensAsync(HttpRequestMessage request, bool refreshing, CancellationToken ct)
     {
         var requestedAt = time.GetUtcNow().UtcDateTime;
-        using var response = await SendAsync(request, ct);
+        using var response = await MelhorEnvioHttp.SendAsync(http, request, ct);
 
         if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
@@ -106,9 +106,9 @@ public sealed class MelhorEnvioAuthorizationClient(
 
     private async Task<string> GetAccountIdAsync(IntegrationEnvironment environment, string accessToken, CancellationToken ct)
     {
-        using var request = NewRequest(HttpMethod.Get, environment, "/api/v2/me");
+        using var request = MelhorEnvioHttp.Request(HttpMethod.Get, environment, "/api/v2/me", Settings.ContactEmail);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        using var response = await SendAsync(request, ct);
+        using var response = await MelhorEnvioHttp.SendAsync(http, request, ct);
         var profile = await ReadAsync<JsonElement>(response, ct);
 
         if (profile.ValueKind != JsonValueKind.Object || !profile.TryGetProperty("id", out var id))
@@ -127,31 +127,6 @@ public sealed class MelhorEnvioAuthorizationClient(
         return accountId;
     }
 
-    private HttpRequestMessage NewRequest(HttpMethod method, IntegrationEnvironment environment, string path)
-    {
-        var request = new HttpRequestMessage(method, Origin(environment) + path);
-        request.Headers.Accept.ParseAdd("application/json");
-        request.Headers.UserAgent.ParseAdd($"DRPCommerce ({Settings.ContactEmail})");
-
-        return request;
-    }
-
-    private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
-    {
-        try
-        {
-            return await http.SendAsync(request, ct);
-        }
-        catch (HttpRequestException)
-        {
-            throw new SecurityFailure(502, "MelhorEnvio.Unavailable", "O Melhor Envio está indisponível.");
-        }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
-        {
-            throw new SecurityFailure(504, "MelhorEnvio.Timeout", "O Melhor Envio não respondeu a tempo.");
-        }
-    }
-
     private static async Task<T> ReadAsync<T>(HttpResponseMessage response, CancellationToken ct)
     {
         if (!response.IsSuccessStatusCode)
@@ -165,16 +140,6 @@ public sealed class MelhorEnvioAuthorizationClient(
         {
             throw InvalidResponse();
         }
-    }
-
-    private static string Origin(IntegrationEnvironment environment)
-    {
-        return environment switch
-        {
-            IntegrationEnvironment.Sandbox => "https://sandbox.melhorenvio.com.br",
-            IntegrationEnvironment.Production => "https://melhorenvio.com.br",
-            _ => throw new ArgumentOutOfRangeException(nameof(environment))
-        };
     }
 
     private static SecurityFailure InvalidResponse()

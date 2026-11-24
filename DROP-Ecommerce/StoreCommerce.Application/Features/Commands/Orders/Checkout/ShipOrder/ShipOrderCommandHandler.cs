@@ -8,6 +8,7 @@ using StoreCommerce.Domain.Enums.Orders;
 using StoreCommerce.Domain.Interfaces.Catalog;
 using StoreCommerce.Domain.Interfaces.Orders;
 using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.StaticEntity;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -57,10 +58,15 @@ public sealed class ShipOrderCommandHandler(
         Task ApplyAsync()
         {
             var now = Now;
-            var physical = order.ListOrderItem.Any(item => item.ProductId.HasValue && item.ProductVariant?.Product.IsDigital != true);
+            var physical = order.PickupAtStore || order.ShippingQuote is not null ||
+                order.ListOrderItem.Any(Item => Item.ProductId.HasValue && Item.ProductVariant?.Product.IsDigital != true);
 
             if (physical && details is null)
                 throw new SecurityFailure(400, "Order.ShipmentRequired", "Informe o tipo de envio, a transportadora e a previsão de entrega.");
+
+            if (order.PickupAtStore && details?.ShipmentTypeId != ShipmentType.Pickup.Id ||
+                order.ShippingQuote is not null && details?.ShipmentTypeId == ShipmentType.Pickup.Id)
+                throw new SecurityFailure(409, "Order.FulfillmentMismatch", "A forma de envio precisa seguir a opção escolhida no checkout.");
 
             var shipment = details is null ? null : Shipment.CreateForOrder(order, details.ShipmentTypeId, details.CarrierName, details.TrackingCode,
                 details.EstimatedDelivery, now);

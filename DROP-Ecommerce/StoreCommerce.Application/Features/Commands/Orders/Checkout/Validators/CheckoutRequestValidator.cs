@@ -30,7 +30,11 @@ public sealed class CheckoutRequestValidator : AbstractValidator<CheckoutRequest
         RuleFor(request => request.UseProfileAddress).Equal(false).When(request => request.AddressId.HasValue)
             .WithMessage("Informe addressId ou useProfileAddress, não os dois.");
 
-        When(request => !request.UseProfileAddress && !request.AddressId.HasValue, () =>
+        RuleFor(request => request.ShippingQuoteToken).MaximumLength(CheckoutShippingQuoteProtector.MaxTokenLength);
+        RuleFor(request => request.ShippingQuoteToken).Empty().When(request => request.PickupAtStore)
+            .WithMessage("Retirada e cotação de frete são opções distintas.");
+
+        When(request => !request.PickupAtStore && !request.UseProfileAddress && !request.AddressId.HasValue, () =>
         {
             RuleFor(request => request.ShippingAddressLine)
                 .NotEmpty().WithMessage("{PropertyName} não pode ser vazio.")

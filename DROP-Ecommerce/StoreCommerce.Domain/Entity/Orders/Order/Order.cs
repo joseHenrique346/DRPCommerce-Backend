@@ -298,10 +298,11 @@ public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
     public int TotalQuantity => _listOrderItem.Sum(item => item.Quantity);
 
     /// <summary>
-    /// O endereço de entrega só pode mudar até o pedido ser enviado (pendente, confirmado ou em processamento).
+    /// O endereço pode mudar antes do envio quando a instrução de entrega ficou a cargo da loja.
     /// </summary>
     public bool CanChangeShippingAddress =>
-        OrderStatusId == OrderStatus.Pending.Id || OrderStatusId == OrderStatus.Confirmed.Id || OrderStatusId == OrderStatus.Processing.Id;
+        !PickupAtStore && ShippingQuote is null &&
+        (OrderStatusId == OrderStatus.Pending.Id || OrderStatusId == OrderStatus.Confirmed.Id || OrderStatusId == OrderStatus.Processing.Id);
 
     public bool IsShippingAddressDifferent(string shippingAddressLine, string shippingCity, long shippingStateId, string shippingZipCode) =>
         ShippingAddressLine != shippingAddressLine || ShippingCity != shippingCity || ShippingStateId != shippingStateId || ShippingZipCode != shippingZipCode;
@@ -311,7 +312,7 @@ public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
         ValidateShippingAddress(shippingAddressLine, shippingCity, shippingStateId, shippingZipCode, notes);
 
         if (!CanChangeShippingAddress && IsShippingAddressDifferent(shippingAddressLine, shippingCity, shippingStateId, shippingZipCode))
-            throw new ArgumentException("O endereço de entrega não pode ser alterado depois que o pedido foi enviado.");
+            throw new ArgumentException("O endereço de entrega está vinculado à forma de entrega ou ao envio do pedido.");
 
         ShippingAddressLine = shippingAddressLine;
         ShippingCity = shippingCity;
@@ -415,7 +416,6 @@ public partial class Order : BaseEntity, ISoftDeletable, ITenantEntity
 
     /// <summary>
     /// Recalcula subtotal, desconto (com rateio entre os itens) e total do pedido.
-    /// O frete permanece zerado até a integração com o serviço de envio.
     /// </summary>
     public void Recalculate(StoreSettings settings)
     {
