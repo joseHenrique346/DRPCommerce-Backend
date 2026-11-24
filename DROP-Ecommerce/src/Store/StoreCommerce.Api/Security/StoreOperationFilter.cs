@@ -33,6 +33,7 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "StorefrontAuth" or
             "User" or
             "Enterprise" or
+            "EnterpriseContract" or
             "EnterpriseMembership" or
             "AccessRole" or
             "AccessRolePermission" or
@@ -72,6 +73,9 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
         var verb = context.HttpContext.Request.Method;
         string? permission = controller switch
         {
+            "Product" when action.StartsWith("PreviewReactivation", StringComparison.OrdinalIgnoreCase) ||
+                action.StartsWith("Reactivate", StringComparison.OrdinalIgnoreCase) => PermissionCodes.ProductsEdit,
+            "StoreActivity" => PermissionCodes.StoreHistoryView,
             "Product" or "ProductVariant" when action.StartsWith("UpdatePricing", StringComparison.OrdinalIgnoreCase) => PermissionCodes.ProductsChangePrice,
             "ProductVariant" => read ? PermissionCodes.ProductsView : verb == "POST" ? PermissionCodes.ProductsCreate :
                 verb == "DELETE" ? PermissionCodes.ProductsDelete : PermissionCodes.ProductsEdit,
@@ -87,7 +91,7 @@ public sealed class StoreOperationFilter : IAsyncAuthorizationFilter
             "Order" or "OrderItem" => read ? PermissionCodes.OrdersView : PermissionCodes.OrdersManage,
             "Customer" => read ? PermissionCodes.CustomersView : PermissionCodes.CustomersManage,
             "Employee" or "EmployeePosition" or "Department" => PermissionCodes.EmployeesManage,
-            "StoreSettings" => PermissionCodes.SettingsManage,
+            "StoreSettings" or "ProviderConnection" or "MercadoPago" or "MelhorEnvio" => PermissionCodes.SettingsManage,
             _ => null
         };
         var allowed = permission is null ? user.FindFirst(SecurityNames.Kind)?.Value == "primary_owner" : SecurityNames.HasPermission(user, permission);

@@ -1,5 +1,5 @@
+using SharedCommerce.Application.Interfaces.Appearance;
 using MediatR;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Domain.StaticEntity;
 

@@ -422,3 +422,9 @@ FodyWeavers.xsd
 
 # Local database backups before development migrations
 /.local/database-backups/
+
+# Local conversation attachments
+/.codex-attachments/
+
+# Local commercial validation helper
+/scripts/Test-CommercialFlow.ps1

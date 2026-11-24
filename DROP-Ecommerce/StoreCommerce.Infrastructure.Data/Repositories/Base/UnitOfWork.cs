@@ -1,5 +1,6 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Persistence;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;

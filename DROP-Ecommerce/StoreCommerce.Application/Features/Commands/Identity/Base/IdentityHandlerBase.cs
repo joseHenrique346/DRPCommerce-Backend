@@ -1,10 +1,12 @@
+using StoreCommerce.Application.Interfaces.StoreManagement;
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Options;
 using MediatR;
 using StoreCommerce.Application.Identity;
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 
 namespace StoreCommerce.Application.Features.Commands;
 
@@ -184,7 +186,9 @@ public abstract class IdentityHandlerBase<TRequest, TResponse>(IdentityHandlerCo
         var access = await jwt.IssueUserAsync(user, family, membership, ct);
 
         return new(access.Token, access.Expires, membership is null && memberships.Count > 0,
-            memberships.Select(x => new MembershipChoice(x.Id, x.EnterpriseId, x.Enterprise.TradeName, x.KindId)).ToList(), token, expires);
+            memberships.Select(Membership => new MembershipChoice(
+                Membership.Id, Membership.EnterpriseId, Membership.Enterprise.TradeName, Membership.KindId,
+                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision)).ToList(), token, expires);
     }
 
     protected Task RevokeFamilyAsync(long accountId, Guid family, bool customer, CancellationToken ct)

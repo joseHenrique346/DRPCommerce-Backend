@@ -63,7 +63,7 @@ public static class DependencyInjectionConfig
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new InvalidOperationException("Configure STORECOMMERCE_CONNECTION_STRING ou ConnectionStrings:DefaultConnection.");
 
-        services.AddStoreInfrastructure(connectionString);
+        services.AddStoreInfrastructure(connectionString, configuration);
         services.AddStoreApplication();
         services.AddStoreSecurity(configuration);
 

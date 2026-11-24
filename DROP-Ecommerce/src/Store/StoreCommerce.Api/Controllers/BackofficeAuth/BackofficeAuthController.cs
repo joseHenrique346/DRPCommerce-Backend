@@ -1,3 +1,4 @@
+using StoreCommerce.Domain.Enums.Identity;
 using SharedCommerce.Application.Security;
 using MediatR;
 using StoreCommerce.Api.Extensions;
@@ -79,7 +80,7 @@ public sealed class BackofficeAuthController(IMediator mediator, IAntiforgery an
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
-        if (Request.Cookies.ContainsKey(CustomerContext ? "__Host-DRP-StorefrontRefresh" : "__Host-DRP-BackofficeRefresh"))
+        if (Request.Cookies.ContainsKey(CookieName))
         {
             var result = await Mediator.Send(new LogoutCommand(RefreshCookie(), CustomerContext), ct);
 
@@ -213,4 +214,3 @@ public sealed class BackofficeAuthController(IMediator mediator, IAntiforgery an
         return NoContent();
     }
 }
-

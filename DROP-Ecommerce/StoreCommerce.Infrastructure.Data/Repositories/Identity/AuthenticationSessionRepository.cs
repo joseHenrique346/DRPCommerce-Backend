@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Interfaces.Identity;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Infrastructure.Data.Context;

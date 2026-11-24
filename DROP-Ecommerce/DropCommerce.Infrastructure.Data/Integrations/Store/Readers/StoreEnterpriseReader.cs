@@ -1,7 +1,7 @@
+using SharedCommerce.Application.Contracts.Drop;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Interfaces;
 using DropCommerce.Application.Integrations.Store.Contracts;
 using DropCommerce.Application.Integrations.Store.Interfaces;
-using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
-using DropCommerce.Infrastructure.Data.Integrations.Store.Contracts;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
 using Refit;

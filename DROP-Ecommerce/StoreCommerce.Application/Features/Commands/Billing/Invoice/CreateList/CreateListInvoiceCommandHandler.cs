@@ -1,0 +1,15 @@
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Application.Features.Commands.Base.Handlers;
+using StoreCommerce.Domain.Entity;
+
+namespace StoreCommerce.Application.Features.Commands;
+
+public class CreateListInvoiceCommandHandler(IRepository<Invoice> repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
+    : BaseCreateListHandler<CreateInvoiceCommand, CreateListInvoiceCommand, Invoice>(repository, unitOfWork)
+{
+    protected override IReadOnlyCollection<CreateInvoiceCommand> GetCommandList(CreateListInvoiceCommand request) => request.commands;
+
+    protected override Invoice CreateEntity(CreateInvoiceCommand command) =>
+        Invoice.Create(command.orderId, command.customerId, tenantProvider.GetEnterpriseId(), command.number, command.series, command.accessKey, command.typeId, command.statusId, command.totalAmount, command.taxAmount, command.fileUrl, command.issuedAt);
+}

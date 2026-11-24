@@ -1,7 +1,7 @@
 using SharedCommerce.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Application.Identity;
+using SharedCommerce.Application.Contracts.Drop;
 using StoreCommerce.Security.Services;
 
 namespace StoreCommerce.Api.Controllers;
@@ -23,7 +23,7 @@ public sealed class InternalIdentityController(JwtSessionService sessions) : Con
         {
             var principal = sessions.ValidateSignature(request.AccessToken);
 
-            return Ok(new SessionValidationResponse(await sessions.ValidateAsync(principal, request.Host, ct)));
+            return Ok(new SessionValidationResponse(await sessions.ValidateAsync(principal, request.StorefrontEnterpriseId, ct)));
         }
         catch (SecurityFailure)
         {
@@ -31,4 +31,3 @@ public sealed class InternalIdentityController(JwtSessionService sessions) : Con
         }
     }
 }
-

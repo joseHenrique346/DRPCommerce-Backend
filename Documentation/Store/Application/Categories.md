@@ -48,9 +48,9 @@ O backoffice usa o envelope `Result` e exige `categories.view` para leitura ou `
 | DELETE `/api/categories/{id}?moveProductsToCategoryId=2` | Exclusão individual com transferência opcional |
 | DELETE `/api/categories/delete-with-products` | Body `{ "ids": [1, 3], "moveProductsToCategoryId": 2 }`; destino opcional |
 | DELETE `/api/categories/delete/{id}` e `/delete-range` | Rotas anteriores; exclusão protegida sem transferência |
-| GET `/api/storefront/categories/tree` | Árvore pública visível, sem autenticação |
-| GET `/api/storefront/categories/by-slug/{slug}` | Categoria pública visível pelo slug, sem autenticação; aceita inclusive o slug `tree` |
-| GET `/api/storefront/products` | Produtos ativos em categorias visíveis, com paginação |
+| GET `/api/storefront/{storeSlug}/categories/tree` | Árvore pública visível, sem autenticação |
+| GET `/api/storefront/{storeSlug}/categories/by-slug/{slug}` | Categoria pública visível pelo slug, sem autenticação; aceita inclusive o slug `tree` |
+| GET `/api/storefront/{storeSlug}/products` | Produtos ativos em categorias visíveis, com paginação |
 
 As rotas de consulta administrativa anteriores continuam disponíveis. Os comandos individuais também têm handlers registrados e reutilizam as regras do lote.
 

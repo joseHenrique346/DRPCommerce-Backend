@@ -1,6 +1,6 @@
+using SharedCommerce.Application.Interfaces.Appearance;
 using MediatR;
 using SharedCommerce.Application.Contracts.Appearance;
-using SharedCommerce.Application.Interfaces;
 using static SharedCommerce.Application.Mappings.AppearanceResponseMapper;
 
 namespace SharedCommerce.Application.Features.Commands;

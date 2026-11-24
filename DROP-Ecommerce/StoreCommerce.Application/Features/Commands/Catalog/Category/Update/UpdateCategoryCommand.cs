@@ -1,0 +1,9 @@
+using MediatR;
+using SharedCommerce.Application.Result;
+using StoreCommerce.Domain.Entity;
+
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class UpdateCategoryCommand(
+    long id, long? parentCategoryId, string name, string? slug, string? description,
+    string? imageUrl, int displayOrder, bool isActive) : IRequest<Result<Category>>;

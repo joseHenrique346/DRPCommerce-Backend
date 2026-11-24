@@ -1,4 +1,5 @@
 using SharedCommerce.Domain.Exceptions;
+
 namespace SharedCommerce.Domain.Entity.Base;
 
 public static class BaseValidate

@@ -60,7 +60,7 @@ public sealed class AppearanceWriteScope
 
             if (entry.Entity is ThemeRelease && entry.State == EntityState.Modified)
             {
-                foreach (var name in new[] { "AppearanceChannelId", "Key", "Version", "RendererContract", "SchemaJson", "DefaultsJson", "Checksum", "Name" })
+                foreach (var name in new[] { "AppearanceChannelId", "Key", "Version", "RendererContract", "SchemaJson", "DefaultsJson", "Checksum", "Name", "CatalogPosition" })
                 {
                     if (entry.Property(name).IsModified)
                         throw new AppearanceFailure(409, "Appearance.ImmutableRelease", "O conteúdo de uma versão de tema é imutável.");

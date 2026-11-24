@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<AppearanceResourceValidator>();
         services.AddScoped<AppearanceMigration>();
         services.AddScoped<ThemeDefinitionValidator>();
+        services.AddScoped<AppearanceCommercialPolicy>();
 
         return services;
     }

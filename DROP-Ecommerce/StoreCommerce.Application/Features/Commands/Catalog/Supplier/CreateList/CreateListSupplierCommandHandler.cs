@@ -1,0 +1,15 @@
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Application.Features.Commands.Base.Handlers;
+using StoreCommerce.Domain.Entity;
+
+namespace StoreCommerce.Application.Features.Commands;
+
+public class CreateListSupplierCommandHandler(IRepository<Supplier> repository, IUnitOfWork unitOfWork, ITenantProvider tenantProvider)
+    : BaseCreateListHandler<CreateSupplierCommand, CreateListSupplierCommand, Supplier>(repository, unitOfWork)
+{
+    protected override IReadOnlyCollection<CreateSupplierCommand> GetCommandList(CreateListSupplierCommand request) => request.commands;
+
+    protected override Supplier CreateEntity(CreateSupplierCommand command) =>
+        Supplier.Create(tenantProvider.GetEnterpriseId(), command.companyName, command.contactName, command.email, command.phone, command.addressLine, command.city, command.stateId, command.zipCode, command.country, command.isActive);
+}

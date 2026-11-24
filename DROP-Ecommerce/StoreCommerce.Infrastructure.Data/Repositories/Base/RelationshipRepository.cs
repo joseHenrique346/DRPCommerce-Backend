@@ -1,6 +1,6 @@
+using StoreCommerce.Domain.Interfaces.Persistence;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;

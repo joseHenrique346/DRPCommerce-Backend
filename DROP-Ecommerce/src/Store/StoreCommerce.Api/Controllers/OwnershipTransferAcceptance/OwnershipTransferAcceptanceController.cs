@@ -29,4 +29,3 @@ public sealed class OwnershipTransferAcceptanceController(IMediator mediator) : 
         return NoContent();
     }
 }
-

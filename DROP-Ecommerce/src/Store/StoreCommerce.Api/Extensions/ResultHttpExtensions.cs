@@ -1,5 +1,6 @@
+using SharedCommerce.Application.Enums.Results;
 using Microsoft.AspNetCore.Mvc;
-using StoreCommerce.Application.Result;
+using SharedCommerce.Application.Result;
 
 namespace StoreCommerce.Api.Extensions;
 

@@ -1,4 +1,4 @@
-using DropCommerce.Domain.Interfaces;
+using DropCommerce.Domain.Interfaces.Persistence;
 using DropCommerce.Infrastructure.Data.Context;
 
 namespace DropCommerce.Infrastructure.Data.Repositories;

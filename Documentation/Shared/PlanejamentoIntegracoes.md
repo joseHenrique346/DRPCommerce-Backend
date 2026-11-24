@@ -1,5 +1,20 @@
 # Integrações externas — situação e próximos passos
 
+Situação de 21/11/2026: as sete partes comerciais incluem [assinatura mensal da plataforma](PlanosEContratos.md)
+e [catálogo, fila, reserva e pagamento DROP](../Drop/Application/FluxoComercial.md).
+O [roteiro do TCC](ValidacaoComercialTcc.md) valida as APIs com provedores simulados;
+isso não conclui homologação externa. Melhor Envio é a próxima integração, após essas partes.
+As atualizações datadas abaixo preservam o histórico do planejamento.
+
+Atualização de 23/11/2026. O Store implementa o OAuth do Melhor Envio, a
+cotação dos itens selecionados e o registro do frete no pedido antes da
+tentativa de pagamento. Os próximos marcos são validar uma conta no Sandbox
+e implementar o ciclo de etiquetas. [Melhor Envio no Store](MelhorEnvio.md)
+
+Atualização de 18/11/2026: [backend Mercado Pago](MercadoPago.md) implementado com OAuth, Checkout Pro, webhook assinado e reconciliação. Desabilitado por padrão; faltam URLs/segredos, frontend e homologação real em sandbox. Os registros anteriores abaixo devem ser lidos como histórico.
+
+Atualização de 16/11/2026 na #93: implementada a [fundação de conexões e tentativas de pagamento](PreparacaoPagamentos.md), com tokens protegidos, snapshot financeiro, IDs separados e recuperação de criação interrompida. O adapter ativo continua manual; OAuth, webhooks e adapters reais permanecem pendentes. As tabelas abaixo descrevem a base anterior e devem ser lidas junto dessa atualização.
+
 Atualizado em 03/11/2026. O Store já possui catálogo por SKU, estoque, carrinho, checkout, cupons e ciclo do pedido. **Mercado Pago e Melhor Envio foram escolhidos**, e as contas já existem; os adapters ainda não foram implementados. Emissão fiscal depende de definição/contratação de API e habilitação do emitente.
 
 O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisito para escolher essas duas integrações. Este documento registra a preparação restante; não significa que houve homologação, transação real ou contratação fiscal.
@@ -9,23 +24,28 @@ O roteiro antigo de comparar gateways e serviços de envio deixa de ser requisit
 | Capacidade | Implementado | Pendente |
 | --- | --- | --- |
 | Venda Store | Checkout idempotente, totais do servidor, compromisso de estoque/cupom, numeração e histórico. | Ligar pagamento e frete reais preservando essas invariantes. |
-| Pagamento | IPaymentGateway, sessão/instruções e aplicação interna de resultado; ManualPaymentGateway registrado. | Adapter Mercado Pago, conexão por loja, notificações validadas, consulta e reconciliação. |
-| Reembolso | Permissão orders.refund no cancelamento pago, devolução de estoque/cupom e registro manual. | Dinheiro devolvido pelo provedor, estado pendente e recuperação; chamada externa fora da transação com lock. |
+| Pagamento | Seleção por loja, adapter Mercado Pago, OAuth, webhook assinado e consulta/reconciliação; modo manual preservado. | Configuração do ambiente, frontend e homologação em sandbox. |
+| Contratação SaaS | Assinatura mensal, upgrade, downgrade, sete dias de carência, concessão confirmada e reconciliação. | Configuração da conta da plataforma, frontend e homologação externa da recorrência. |
+| Reembolso | Intenção persistida, I/O fora do lock, adapter de estorno integral e recuperação por consulta. | Homologação no provedor e fluxo operacional de parcial/contestação. |
 | Frete | Dimensões/peso por produto e sobrescritas por SKU; Shipment com dados de envio. | Cotar, selecionar, congelar custo, comprar/gerar/imprimir etiqueta e rastrear pelo Melhor Envio. ShippingCost permanece zero no cálculo atual. |
 | Fiscal | Entidade Invoice e referências comerciais. | Emitente/perfil fiscal, transmissão, autorização, XML/DANFE, consulta e cancelamento. |
-| Drop | Evento, inscrição, entrada na fila e consultas privadas. | Admissão, reserva no estoque canônico, correlação com venda Store e recuperação entre bancos. |
+| Drop | Catálogo próprio, admissão, CPF/evento, reserva por variação, estoque exclusivo, pedido próprio e ponte financeira Store com recuperação. | Frontend, homologação externa, operação de revisão financeira e capacidade sob carga. |
 
 Fontes internas: [checkout/pedidos](../Store/Application/OrdersAndCheckout.md), [endpoints](../Store/Api/Endpoints.md), [estoque](../Store/Application/ProductsAndInventory.md), [Store/Drop](../Drop/Infrastructure/StoreIntegration.md).
 
 ## Decisões do recorte
 
 - A loja cliente deve receber a venda na própria conta; configuração, credencial e IDs externos precisam distinguir loja e ambiente.
-- A implementação inicial de pagamento deve priorizar o caminho completo de uma venda, confirmação e estorno integral. Não ampliar para cobrança de assinatura ou divisão financeira complexa do SaaS agora.
-- O Store continua dono do estoque por SKU e de seu pedido financeiro. A venda originada no Drop precisa de correlação que impeça duas cobranças, duas notas ou duas baixas.
+- A assinatura SaaS foi aprovada e implementada em fluxo separado das vendas dos lojistas. A investigação de estorno foi adiada; divisão financeira complexa continua fora do MVP.
+- Estoque fica sob controle exclusivo de um módulo. Após transferência comprovada, o DROP controla seu saldo/pedido e usa uma intenção financeira separada no Store; não cria outro pedido Store ou outra baixa.
 - Homologação de pagamento/frete/fiscal não representa dinheiro liquidado, postagem real ou documento fiscal válido em produção.
 - CRM e ERP completos ficam fora do MVP; manter contratos internos claros não exige contratar esses sistemas agora.
 
-## Mercado Pago — entrega mínima pendente
+## Mercado Pago — base implementada e homologação pendente
+
+Os itens de infraestrutura abaixo já possuem implementação descrita em [Mercado Pago](MercadoPago.md)
+e [planos/assinaturas](PlanosEContratos.md). Conferir configuração e homologação conforme o
+ambiente; não executar novamente o planejamento como se não houvesse adapter ou webhook.
 
 1. Definir aplicação, ambiente, conexão autorizada da conta de cada vendedor e guarda/renovação de credenciais no backend.
 2. Implementar adapter atrás de IPaymentGateway, com tentativa persistida, referência do pedido e IDs externos separados conforme o produto/API escolhido.
@@ -33,18 +53,16 @@ Fontes internas: [checkout/pedidos](../Store/Application/OrdersAndCheckout.md), 
 4. Validar notificação e consultar o pagamento na API; retorno do navegador não confirma venda. Conferir conta, ambiente, valor, moeda e correlação antes de aplicar resultado.
 5. Deduplicar callbacks e manter worker de reconciliação. Timeout pode ter resultado desconhecido; não repetir efeitos financeiros cegamente.
 6. Tratar pagamento depois de expiração do pedido sem vender novamente o estoque já liberado.
-7. Refatorar estorno para intenção persistida, chamada externa fora do lock e confirmação/reconciliação. O comportamento do adapter manual não basta para um provedor real.
+7. A base de [cancelamento/estorno persistido e recuperável](CancelamentoEstorno.md) está implementada. Falta ligar e homologar execução/consulta no adapter real.
 
 Detalhes de endpoint, autenticação, requisitos de conta e disponibilidade devem ser confirmados na documentação oficial do produto escolhido durante a implementação. Não há webhook público Mercado Pago pronto apenas por existir ApplyPaymentResultCommand.
 
 ## Melhor Envio — entrega mínima pendente
 
-1. Configurar ambiente, aplicação/conexão da loja, remetente e credenciais separadas.
-2. Estruturar endereço e contato/documentação exigidos; padronizar unidades de peso/dimensões e embalagem do recorte.
-3. Cotar carrinho/endereço no backend e persistir opções, validade, serviço e valor. Checkout seleciona uma cotação válida, não um preço arbitrário do navegador.
-4. Congelar o frete no pedido e incluí-lo uma vez no total enviado ao pagamento.
-5. Após pagamento e documento fiscal quando exigido, permitir ao operador contratar/gerar etiqueta, consultar pendências e imprimir com acesso restrito.
-6. Persistir IDs externos para recuperar timeout sem comprar duas etiquetas; separar etiqueta comprada, gerada, postada e entregue.
+1. Validar a autorização e a cotação no Sandbox da API publicada.
+2. Estruturar o endereço, o contato e os documentos exigidos para a contratação do envio.
+3. Após pagamento e documento fiscal quando exigido, permitir ao operador contratar e gerar a etiqueta, consultar pendências e imprimir com acesso restrito.
+4. Persistir IDs externos para recuperar timeouts e evitar compras duplicadas. Separar etiqueta comprada, gerada, postada e entregue.
 
 Receber a venda no Mercado Pago não compra o frete automaticamente. O custo/saldo do envio, regras da transportadora e disponibilidade do serviço precisam fazer parte da operação da loja. Cancelar pedido, etiqueta e pagamento são efeitos distintos.
 

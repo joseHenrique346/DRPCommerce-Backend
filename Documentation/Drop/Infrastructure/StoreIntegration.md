@@ -1,6 +1,9 @@
 # Integração Store / Drop
 
-O Store é fonte canônica de identidade, clientes, funcionários, produtos, lojas e memberships. O Drop mantém banco próprio; IDs externos não são FKs entre bancos.
+O Store é fonte canônica de identidade, clientes, funcionários, lojas e memberships, além dos
+produtos da Vitrine. O DROP também possui catálogo próprio. Mantém banco próprio; IDs externos
+não são FKs entre bancos. O [fluxo comercial](../Application/FluxoComercial.md) documenta a
+sincronização durável de contrato, a transferência de estoque e a ponte de pagamentos.
 
 ## Validação de sessão
 
@@ -8,20 +11,20 @@ O Store é fonte canônica de identidade, clientes, funcionários, produtos, loj
 Requisição ao Drop
   → valida assinatura, emissor, audience e validade do JWT
   → chama Store /api/internal/identity/validate com chave interna
-  → Store confere conta, família de sessão, versões, membership ou Customer e domínio
+  → Store confere conta, família de sessão e versões, além da membership ou da loja do cliente
   → Drop aplica tenant, propriedade do recurso e permissão operacional
 ```
 
 Não há cache de sessão nesta etapa. Revogações e alterações de acesso são observadas na próxima requisição protegida. Se o Store não puder ser consultado, o Drop falha fechado; a operação não é liberada.
 
-O storefront resolve o Host consultando `/api/internal/tenants/resolve`. Domínio deve estar verificado/ativo e a loja ativa. CustomerId vem do JWT e não é um identificador selecionável pelo comprador.
+O storefront lê o slug da rota e consulta `/api/internal/tenants/resolve`. O Store retorna o ID da loja ativa. O DROP passa esse ID ao validar a sessão do cliente. O JWT precisa pertencer à mesma loja.
 
 ## Endpoints internos do Store
 
 | Método | Endpoint | Contrato |
 |---|---|---|
-| POST | /api/internal/identity/validate | accessToken, host → isValid |
-| GET | /api/internal/tenants/resolve?host=... | enterpriseId |
+| POST | /api/internal/identity/validate | accessToken, storefrontEnterpriseId → isValid |
+| GET | /api/internal/tenants/resolve?slug=... | enterpriseId |
 | GET | /api/internal/products/get-by-id/{id} | Produto canônico |
 | GET | /api/internal/products/{id}/variants | SKUs, opções e dados administrativos do produto |
 | POST | /api/internal/products/get-list-by-list-id | Lista de IDs |
@@ -39,7 +42,10 @@ Essas rotas não substituem autenticação pública com um header de tenant. Nã
 
 Application define IStoreProductReader, IStoreEnterpriseReader, IStoreCustomerReader e IStoreEmployeeReader, com contratos próprios, sem depender de Refit.
 
-O Store já expõe consulta de variantes, mas `IStoreProductRefitApi`/leitor atual ainda usa os contratos básicos de produto. Consumir SKUs nessa integração e criar os comandos internos de reserva/conversão em pedido são trabalhos pendentes; a nova rota de consulta não executa essas operações.
+O leitor básico de produtos continua disponível. A transferência usa snapshots próprios de
+variações e confirmações duráveis; não reserva estoque remoto duplicado. `IStoreCommercialReader`
+consulta direitos atuais e `IStoreDropPayments` inicia/consulta a operação financeira da venda
+DROP com a conexão do lojista, sem criar pedido Store.
 
 Infrastructure contém os clients Refit, DTOs HTTP, adapters e StoreIntegrationResponseReader. DropCommerce.Security contém StoreServiceAuthenticationHandler, que injeta chave e tenant autenticado; lê o contexto da requisição por IHttpContextAccessor, evitando dependência de escopo incorreto no HttpClientFactory. Os clients dependem do contrato abstrato StoreAuthenticationHandler em Application, sem referenciar o projeto Security.
 

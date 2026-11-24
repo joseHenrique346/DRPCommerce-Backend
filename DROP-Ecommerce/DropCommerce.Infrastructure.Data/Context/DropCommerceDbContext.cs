@@ -1,8 +1,10 @@
+using DropCommerce.Application.Interfaces.Identity;
+using SharedCommerce.Domain.Interfaces.Persistence;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data.Context;
 using DropCommerce.Application.Integrations.Store.Interfaces;
 using DropCommerce.Application.Security;
 using DropCommerce.Domain.Entity;
-using DropCommerce.Domain.Interfaces;
 using DropCommerce.Domain.StaticEntity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,9 @@ public partial class DropCommerceDbContext : DbContext
     private readonly IDropOperationScope _operationScope;
     private readonly IStoreCustomerReader _storeCustomers;
     private readonly IStoreProductReader _storeProducts;
+    private readonly IStoreAppearanceReader _storeAppearance;
+    private readonly IStoreCommercialReader _commercialReader;
+    private readonly DropCommerce.Application.Contracts.DropCommercialWriteScope _commercialWrites;
 
     public DropCommerceDbContext(
         DbContextOptions<DropCommerceDbContext> options,
@@ -26,7 +31,10 @@ public partial class DropCommerceDbContext : DbContext
         IDropOperationScope operationScope,
         IStoreCustomerReader storeCustomers,
         IStoreProductReader storeProducts,
-        AppearanceWriteScope appearanceWrites)
+        AppearanceWriteScope appearanceWrites,
+        IStoreAppearanceReader storeAppearance,
+        IStoreCommercialReader commercialReader,
+        DropCommerce.Application.Contracts.DropCommercialWriteScope commercialWrites)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -35,6 +43,9 @@ public partial class DropCommerceDbContext : DbContext
         _operationScope = operationScope;
         _storeCustomers = storeCustomers;
         _storeProducts = storeProducts;
+        _storeAppearance = storeAppearance;
+        _commercialReader = commercialReader;
+        _commercialWrites = commercialWrites;
     }
 
     #region DbSets
@@ -118,6 +129,15 @@ public partial class DropCommerceDbContext : DbContext
         ApplySoftDeleteFilter<DropRegistration>(modelBuilder);
         ApplySoftDeleteFilter<DropNotification>(modelBuilder);
         ConfigureSecurityFilters(modelBuilder);
+        modelBuilder.Entity<DropContractState>().HasQueryFilter(DropContractState => DropContractState.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropCommercialActivity>().HasQueryFilter(DropCommercialActivity => DropCommercialActivity.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropCatalogProduct>().HasQueryFilter(DropCatalogProduct => DropCatalogProduct.EnterpriseId == _tenantProvider.GetEnterpriseId() && !DropCatalogProduct.IsDeleted);
+        modelBuilder.Entity<DropCatalogVariant>().HasQueryFilter(DropCatalogVariant => DropCatalogVariant.CatalogProduct.EnterpriseId == _tenantProvider.GetEnterpriseId() && !DropCatalogVariant.CatalogProduct.IsDeleted);
+        modelBuilder.Entity<DropStockImportReceipt>().HasQueryFilter(DropStockImportReceipt => DropStockImportReceipt.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropStockReturnIntent>().HasQueryFilter(DropStockReturnIntent => DropStockReturnIntent.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropReservationLine>().HasQueryFilter(DropReservationLine =>
+            DropReservationLine.Reservation.DropEvent.EnterpriseId == _tenantProvider.GetEnterpriseId() &&
+            (CurrentCustomerId == null || DropReservationLine.Reservation.CustomerId == CurrentCustomerId));
     }
 
     private static void ApplySoftDeleteFilter<T>(ModelBuilder modelBuilder)
@@ -140,10 +160,20 @@ public partial class DropCommerceDbContext : DbContext
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
+        await using var commercialTransaction = Database.CurrentTransaction is null && ChangeTracker.HasChanges()
+            ? await Database.BeginTransactionAsync(cancellationToken) : null;
+        await GuardCommercialContractsAsync(cancellationToken);
         _appearanceWrites.Guard(this);
+        await AppearanceContractGuard.GuardAsync(this, _storeAppearance.RightsAsync, cancellationToken);
         await GuardWritesAsync(cancellationToken);
 
-        return await SaveWithAppearanceActivationAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var affected = await SaveWithAppearanceActivationAsync(acceptAllChangesOnSuccess, cancellationToken);
+        _commercialGenerated.Clear();
+
+        if (commercialTransaction is not null)
+            await commercialTransaction.CommitAsync(cancellationToken);
+
+        return affected;
     }
 
     private void UpdateChangedDates()

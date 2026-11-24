@@ -1,21 +1,26 @@
 # Drop — Application
 
-O módulo possui Commands/Queries, validators e contratos de leitores do Store para eventos, produtos, inscrições, fila, reservas e pedidos. Parte do storefront atual consulta/grava por controllers com DbContext; a organização não é idêntica à dos novos fluxos comerciais do Store.
+O módulo possui Commands/Queries, validators e contratos de leitores do Store para eventos, produtos, inscrições, fila, reservas e pedidos. Nos fluxos comerciais das Partes 5 e 6, os validators conferem os dados de entrada e os handlers executam as regras, conforme [Arquitetura dos fluxos comerciais](../../Shared/ArquiteturaComercial.md). Os controllers legados de consulta de waitlist, notificações, pedidos e reservas ainda usam DbContext; eles não foram modificados nesta correção.
 
 ## Implementado
 
 - Inscrição e entrada autenticada na fila, com elegibilidade e janela do evento.
-- Entrada na fila sob transação/bloqueio do evento; repetição normal retorna a entrada existente do cliente.
+- Catálogo próprio, cotas comerciais e sincronização durável do contrato.
+- Admissão FIFO, franquia de unidades por CPF/principal/evento e sessão fixa de quinze minutos.
+- Reserva de variações com snapshots e compromisso do estoque DROP apenas na confirmação.
+- Transferência exclusiva de estoque entre módulos, com confirmação e recuperação entre bancos.
+- Checkout pela conexão Mercado Pago da loja, intenção durável e revisão de aprovação tardia.
 - Consultas privadas limitadas ao cliente/loja; autenticação e recursos canônicos conferidos no Store.
 - Resolução da aparência do evento/padrão, preview, publicação e fixação da revisão visual.
 
 ## Pendente
 
-- Admissão controlada e expiração comercial completa da sessão.
-- Reserva/consumo do mesmo SKU do Store e conversão em venda sem duas cobranças.
-- Reconciliação entre bancos, recuperação de falhas e painel operacional da fila.
+- Frontend, painel operacional da fila e homologação externa de pagamentos.
+- Frete/Melhor Envio, resolução financeira/estorno e workflows avançados de reposição de estoque.
 - Limitação/cache distribuídos e medição de capacidade para milhares de pessoas esperando.
 
-Não copiar o estoque para um contador independente no Drop como se ele fosse o saldo físico autoritativo. O Store já dispõe de [variantes/inventário](../../Store/Application/ProductsAndInventory.md) e [checkout/pedidos](../../Store/Application/OrdersAndCheckout.md), mas os comandos internos de integração dessa venda ainda precisam ser definidos.
+O saldo físico tem controle exclusivo por módulo. Para transferir, o Store retira suas unidades
+antes da importação DROP; não há cópia que mantenha o mesmo saldo disponível nos dois bancos.
+Veja [Fluxo comercial DROP](FluxoComercial.md) para contratos, rotas, migrations e limites atuais.
 
 Veja [integração Store/Drop](../Infrastructure/StoreIntegration.md) e [integrações externas pendentes](../../Shared/PlanejamentoIntegracoes.md).

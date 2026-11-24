@@ -31,4 +31,3 @@ public sealed class CookieCsrfAttribute : Attribute, IAsyncAuthorizationFilter
         }
     }
 }
-

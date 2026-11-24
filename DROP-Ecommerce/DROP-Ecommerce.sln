@@ -41,6 +41,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Infrastructu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedCommerce.Api", "Shared\SharedCommerce.Api\SharedCommerce.Api.csproj", "{B21EEAF0-6F15-40DF-88B9-DD4332109A71}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Tests", "5. Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreCommerce.Contracts.Tests", "tests\StoreCommerce.Contracts.Tests\StoreCommerce.Contracts.Tests.csproj", "{65A5C57D-3D62-4E66-9205-CB3112FAD944}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +111,10 @@ Global
 		{B21EEAF0-6F15-40DF-88B9-DD4332109A71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B21EEAF0-6F15-40DF-88B9-DD4332109A71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B21EEAF0-6F15-40DF-88B9-DD4332109A71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65A5C57D-3D62-4E66-9205-CB3112FAD944}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65A5C57D-3D62-4E66-9205-CB3112FAD944}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65A5C57D-3D62-4E66-9205-CB3112FAD944}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65A5C57D-3D62-4E66-9205-CB3112FAD944}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,6 +135,7 @@ Global
 		{52086270-B0F0-43A3-9E7D-8B327B669C9C} = {B260A077-01BF-4F39-8299-01B39472C2D0}
 		{69D8CF67-39EA-49C0-8901-EBC51C264AF4} = {B260A077-01BF-4F39-8299-01B39472C2D0}
 		{B21EEAF0-6F15-40DF-88B9-DD4332109A71} = {B260A077-01BF-4F39-8299-01B39472C2D0}
+		{65A5C57D-3D62-4E66-9205-CB3112FAD944} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {92A075FD-36F1-488E-8C1E-8000DF1D68B6}

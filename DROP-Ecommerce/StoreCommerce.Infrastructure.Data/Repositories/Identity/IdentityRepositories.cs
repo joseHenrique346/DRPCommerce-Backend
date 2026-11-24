@@ -1,7 +1,11 @@
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.AccessControl;
+using StoreCommerce.Domain.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Persistence;
+using StoreCommerce.Domain.Interfaces.StoreManagement;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Infrastructure.Data.Context;
 
 namespace StoreCommerce.Infrastructure.Data.Repositories;
@@ -55,10 +59,12 @@ public sealed class IdentityRepositories(
 
     public async Task<IReadOnlyList<MembershipChoice>> GetMembershipChoicesAsync(long userId, CancellationToken cancellationToken)
     {
-        return await context.EnterpriseMemberships.IgnoreQueryFilters().AsNoTracking()
-            .Where(Membership => Membership.UserId == userId && Membership.IsActive)
-            .OrderBy(Membership => Membership.Enterprise.TradeName)
-            .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId, Membership.Enterprise.TradeName, Membership.KindId))
-            .ToListAsync(cancellationToken);
+        var memberships = await EnterpriseMemberships.GetActiveForUserAsync(userId, cancellationToken);
+
+        return memberships
+            .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId,
+                Membership.Enterprise.TradeName, Membership.KindId,
+                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision))
+            .ToList();
     }
 }

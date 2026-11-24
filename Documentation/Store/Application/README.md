@@ -7,5 +7,6 @@ Esta pasta documenta casos de uso, handlers, validações e contratos da camada 
 - [Produtos, variantes e estoque](ProductsAndInventory.md): catálogo por SKU, opções, reservas, movimentações e consultas.
 - [Limite de usos dos cupons](Coupons.md): compromisso no checkout, confirmação e liberação de utilizações.
 - [Carrinho, checkout, pedidos e clientes](OrdersAndCheckout.md): configurações, seleção, endereços, cobrança manual, numeração, histórico, cancelamento e expiração.
+- [Arquitetura dos fluxos comerciais](../../Shared/ArquiteturaComercial.md): regras nos handlers, validators e persistência da cobrança SaaS e do DROP.
 
 Os handlers comerciais trabalham com tenant/identidade autenticados, repositórios e escopos de gravação. Preço, estoque e estado de pagamento não são campos livres controlados pelo comprador. Os contratos HTTP estão em [Endpoints](../Api/Endpoints.md); integrações externas continuam descritas como [trabalho pendente](../../Shared/PlanejamentoIntegracoes.md).

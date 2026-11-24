@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Application.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

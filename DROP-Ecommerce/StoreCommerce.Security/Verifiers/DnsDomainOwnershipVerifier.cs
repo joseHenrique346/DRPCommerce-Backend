@@ -1,3 +1,4 @@
+using StoreCommerce.Application.Interfaces.StoreManagement;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Security;
 using System.Text.Json;

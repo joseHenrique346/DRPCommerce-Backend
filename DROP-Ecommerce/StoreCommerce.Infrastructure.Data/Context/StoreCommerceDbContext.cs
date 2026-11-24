@@ -1,9 +1,12 @@
+using SharedCommerce.Domain.Interfaces.Persistence;
+using SharedCommerce.Domain.Interfaces.Tenancy;
+using StoreCommerce.Application.Interfaces.Identity;
+using StoreCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using StoreCommerce.Application.Identity;
 using StoreCommerce.Application.Inventory;
 using StoreCommerce.Domain.Entity;
-using StoreCommerce.Domain.Interfaces;
 using StoreCommerce.Domain.StaticEntity;
 using AppearanceBaseEntity = SharedCommerce.Domain.Entity.Base.BaseEntity;
 
@@ -19,12 +22,30 @@ public partial class StoreCommerceDbContext : DbContext
     private readonly StoreCommerce.Application.Carts.CartWriteScope _cartWrites;
     private readonly StoreCommerce.Application.Orders.OrderWorkflowScope _orderWorkflow;
     private readonly StoreCommerce.Application.Carts.CustomerAddressWriteScope _customerAddressWrites;
+    private readonly StoreCommerce.Application.Integrations.IntegrationWriteScope _integrationWrites;
+    private readonly StoreCommerce.Application.Contracts.EnterpriseContractWriteScope _contractWrites;
+    private readonly StoreCommerce.Application.Contracts.ProductReactivationScope _productReactivation;
+    private readonly StoreCommerce.Application.Contracts.OwnershipTransferWriteScope _ownershipTransfer;
+    private readonly StoreCommerce.Application.Media.MediaWriteScope _mediaWrites;
+    private readonly StoreCommerce.Application.Billing.PlatformBillingWriteScope _billingWrites;
+    private readonly StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope _dropAcknowledgments;
+    private readonly StoreCommerce.Application.Contracts.DropStockTransferScope _dropStockTransfers;
+    private readonly StoreCommerce.Application.Payments.DropSalePaymentWriteScope _dropSalePayments;
 
     public StoreCommerceDbContext(DbContextOptions<StoreCommerceDbContext> options, ITenantProvider tenantProvider,
         IIdentityOperationScope identityScope, Microsoft.AspNetCore.Http.IHttpContextAccessor httpAccessor, AppearanceWriteScope appearanceWrites,
         InventoryWriteScope inventoryWrites, StoreCommerce.Application.Carts.CartWriteScope cartWrites,
         StoreCommerce.Application.Orders.OrderWorkflowScope orderWorkflow,
-        StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites)
+        StoreCommerce.Application.Carts.CustomerAddressWriteScope customerAddressWrites,
+        StoreCommerce.Application.Integrations.IntegrationWriteScope integrationWrites,
+        StoreCommerce.Application.Contracts.EnterpriseContractWriteScope contractWrites,
+        StoreCommerce.Application.Contracts.ProductReactivationScope productReactivation,
+        StoreCommerce.Application.Contracts.OwnershipTransferWriteScope ownershipTransfer,
+        StoreCommerce.Application.Media.MediaWriteScope mediaWrites,
+        StoreCommerce.Application.Billing.PlatformBillingWriteScope billingWrites,
+        StoreCommerce.Application.Contracts.DropContractAcknowledgmentScope dropAcknowledgments,
+        StoreCommerce.Application.Contracts.DropStockTransferScope dropStockTransfers,
+        StoreCommerce.Application.Payments.DropSalePaymentWriteScope dropSalePayments)
         : base(options)
     {
         _tenantProvider = tenantProvider;
@@ -35,6 +56,15 @@ public partial class StoreCommerceDbContext : DbContext
         _cartWrites = cartWrites;
         _orderWorkflow = orderWorkflow;
         _customerAddressWrites = customerAddressWrites;
+        _integrationWrites = integrationWrites;
+        _contractWrites = contractWrites;
+        _productReactivation = productReactivation;
+        _ownershipTransfer = ownershipTransfer;
+        _mediaWrites = mediaWrites;
+        _billingWrites = billingWrites;
+        _dropAcknowledgments = dropAcknowledgments;
+        _dropStockTransfers = dropStockTransfers;
+        _dropSalePayments = dropSalePayments;
     }
 
     #region DbSets
@@ -60,6 +90,11 @@ public partial class StoreCommerceDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<Enterprise> Enterprises => Set<Enterprise>();
+    public DbSet<EnterprisePlan> EnterprisePlans => Set<EnterprisePlan>();
+    public DbSet<EnterpriseAddOn> EnterpriseAddOns => Set<EnterpriseAddOn>();
+    public DbSet<EnterprisePlanAddOn> EnterprisePlanAddOns => Set<EnterprisePlanAddOn>();
+    public DbSet<EnterpriseContractChange> EnterpriseContractChanges => Set<EnterpriseContractChange>();
+    public DbSet<StoreActivity> StoreActivities => Set<StoreActivity>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<EmployeePosition> EmployeePositions => Set<EmployeePosition>();
@@ -142,6 +177,10 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<EmployeePosition>(modelBuilder);
         ApplyTenantFilter<Department>(modelBuilder);
         ApplyTenantFilter<EnterpriseMembership>(modelBuilder);
+        modelBuilder.Entity<EnterpriseContractChange>().HasQueryFilter(EnterpriseContractChange =>
+            EnterpriseContractChange.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<StoreActivity>().HasQueryFilter(StoreActivity =>
+            StoreActivity.EnterpriseId == _tenantProvider.GetEnterpriseId());
         ApplyTenantFilter<EnterpriseDomain>(modelBuilder);
         ApplyTenantFilter<AccessRole>(modelBuilder);
         modelBuilder.Entity<AccessRolePermission>().HasQueryFilter(e => e.EnterpriseId == _tenantProvider.GetEnterpriseId());
@@ -155,14 +194,26 @@ public partial class StoreCommerceDbContext : DbContext
         ApplyTenantFilter<CustomerAddress>(modelBuilder);
         ApplyTenantFilter<OrderStatusHistory>(modelBuilder);
         ApplyTenantFilter<StoreSettings>(modelBuilder);
+        modelBuilder.Entity<ProviderConnection>().HasQueryFilter(ProviderConnection => ProviderConnection.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentAttempt>().HasQueryFilter(PaymentAttempt => PaymentAttempt.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentOperation>().HasQueryFilter(PaymentOperation => PaymentOperation.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<ProviderAuthorization>().HasQueryFilter(ProviderAuthorization => ProviderAuthorization.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentProviderSelection>().HasQueryFilter(PaymentProviderSelection => PaymentProviderSelection.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<ProviderNotification>().HasQueryFilter(ProviderNotification => ProviderNotification.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PaymentExternalPayment>().HasQueryFilter(PaymentExternalPayment => PaymentExternalPayment.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PlatformSubscription>().HasQueryFilter(PlatformSubscription => PlatformSubscription.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<PlatformBillingInvoice>().HasQueryFilter(PlatformBillingInvoice => PlatformBillingInvoice.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropContractPublication>().HasQueryFilter(DropContractPublication => DropContractPublication.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropStockTransfer>().HasQueryFilter(DropStockTransfer => DropStockTransfer.EnterpriseId == _tenantProvider.GetEnterpriseId());
+        modelBuilder.Entity<DropSalePaymentIntent>().HasQueryFilter(DropSalePaymentIntent => DropSalePaymentIntent.EnterpriseId == _tenantProvider.GetEnterpriseId());
 
         // Dependents of filtered aggregates must use the same visibility rules.
         modelBuilder.Entity<OrderItem>().HasQueryFilter(e =>
             e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
         modelBuilder.Entity<Shipment>().HasQueryFilter(e =>
             e.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Order.IsDeleted);
-        modelBuilder.Entity<Transaction>().HasQueryFilter(e =>
-            e.Customer.EnterpriseId == _tenantProvider.GetEnterpriseId() && !e.Customer.IsDeleted);
+        modelBuilder.Entity<Transaction>().HasQueryFilter(Transaction =>
+            Transaction.Order.EnterpriseId == _tenantProvider.GetEnterpriseId() && !Transaction.Order.IsDeleted);
     }
 
     private void ApplyTenantAndSoftDeleteFilter<T>(ModelBuilder modelBuilder)
@@ -183,12 +234,7 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        _appearanceWrites.Guard(this);
-        GuardWritesAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-        UpdateChangedDates();
-
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        return SaveChangesAsync(acceptAllChangesOnSuccess, CancellationToken.None).GetAwaiter().GetResult();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
@@ -196,12 +242,44 @@ public partial class StoreCommerceDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        // A criação administrativa também precisa manter o lock do comprador até a gravação do pedido.
+        var needsTransaction = Database.CurrentTransaction is null &&
+            (ChangeTracker.Entries<Order>().Any(Entry => Entry.State == EntityState.Added) ||
+                ProductContractTenants().Count > 0 || AccessContractTenants().Count > 0 ||
+                ChangeTracker.Entries<MediaAsset>().Any(Entry => Entry.State is EntityState.Added or EntityState.Modified) ||
+                ChangeTracker.Entries().Any(Entry => Entry.State is EntityState.Added or EntityState.Modified &&
+                    Entry.Entity is SharedCommerce.Domain.Entity.Appearance or SharedCommerce.Domain.Entity.AppearanceEditSession or
+                        SharedCommerce.Domain.Entity.AppearanceRevision));
+        await using var localTransaction = needsTransaction
+            ? await Database.BeginTransactionAsync(cancellationToken)
+            : null;
+
+        GuardContractWrites();
+        GuardDropContractPublications();
+        GuardDropSalePayments();
+        await GuardDropStockAsync(cancellationToken);
+        GuardPlatformBillingWrites();
+        await GuardMediaWritesAsync(cancellationToken);
+        await GuardAccessContractsAsync(cancellationToken);
+        await GuardProductContractsAsync(cancellationToken);
         _appearanceWrites.Guard(this);
+        await SharedCommerce.Infrastructure.Data.Context.AppearanceContractGuard.GuardAsync(this,
+            ReadAppearanceWriteCapabilitiesAsync, cancellationToken);
+        await CaptureOrderBuyerSnapshotsAsync(cancellationToken);
         await GuardWritesAsync(cancellationToken);
+        await CaptureDropContractPublicationsAsync(cancellationToken);
 
         UpdateChangedDates();
 
-        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var affected = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        _generatedStoreActivities.Clear();
+        _productContractSystemChanges.Clear();
+        _membershipContractChanges.Clear();
+
+        if (localTransaction is not null)
+            await localTransaction.CommitAsync(cancellationToken);
+
+        return affected;
     }
 
     private void UpdateChangedDates()

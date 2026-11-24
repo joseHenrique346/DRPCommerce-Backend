@@ -1,7 +1,8 @@
+using SharedCommerce.Application.Interfaces.Appearance;
+using SharedCommerce.Application.Interfaces.Media;
 using MediatR;
 using SharedCommerce.Application.Contracts.Appearance;
 using SharedCommerce.Application.Features.Notifications;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Application.Validation;
 using SharedCommerce.Domain.Entity;
 using SharedCommerce.Domain.Exceptions;
@@ -17,6 +18,8 @@ public sealed class RollbackAppearanceCommandHandler(
     IAppearanceResources resources,
     AppearanceSettingsValidator settingsValidator,
     AppearanceResourceValidator resourceValidator,
+    AppearanceCommercialPolicy policy,
+    IMediaAssetReader media,
     TimeProvider clock,
     IMediator mediator) : IRequestHandler<RollbackAppearanceCommand, AppearanceManifest>
 {
@@ -48,7 +51,8 @@ public sealed class RollbackAppearanceCommandHandler(
         await repository.SaveAsync(ct);
         await transaction.CommitAsync(ct);
 
-        return Manifest(repository.Channel, revision, release, revision.SettingsJson, TargetCode(target), revision.PublishedAt);
+        return await SharedCommerce.Application.Mappings.AppearanceAssetBindings.ResolveAsync(media,
+            Manifest(repository.Channel, revision, release, revision.SettingsJson, TargetCode(target), revision.PublishedAt), context.EnterpriseId, ct);
     }
 
     private async Task RequireUnlockedAsync(long tenant, long appearanceId, CancellationToken ct)
@@ -84,6 +88,7 @@ public sealed class RollbackAppearanceCommandHandler(
     {
         EnsureReleaseAvailable(release);
         var settings = settingsValidator.Validate(release.SchemaJson, settingsJson);
+        await policy.EnsureAsync(tenant, release, settings, ct);
         await resourceValidator.ValidateAsync(tenant, target, release.SchemaJson, settings, ct);
 
         return settings;

@@ -1,0 +1,7 @@
+using SharedCommerce.Application.Result;
+using DropCommerce.Domain.Entity;
+using MediatR;
+
+namespace DropCommerce.Application.Features.Commands;
+
+public record class CreateListDropAuditLogCommand(List<CreateDropAuditLogCommand> commands) : IRequest<Result<List<DropAuditLog>>> { }

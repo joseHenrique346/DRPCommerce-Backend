@@ -1,6 +1,7 @@
+using SharedCommerce.Application.Contracts.Drop;
+using SharedCommerce.Application.Interfaces.Identity;
 using SharedCommerce.Domain.Exceptions;
 using SharedCommerce.Application.Options;
-using SharedCommerce.Application.Interfaces;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +17,7 @@ public sealed class StoreSessionValidator(HttpClient client, IHttpContextAccesso
     /// <summary>
     /// Confirma a sessão no Store para rejeitar acessos revogados, expirados ou cuja validação esteja indisponível.
     /// </summary>
-    public async Task<bool> ValidateAsync(ClaimsPrincipal principal, string? host, CancellationToken ct)
+    public async Task<bool> ValidateAsync(ClaimsPrincipal principal, long? storefrontEnterpriseId, CancellationToken ct)
     {
         var header = accessor.HttpContext?.Request.Headers.Authorization.ToString() ?? "";
 
@@ -28,7 +29,7 @@ public sealed class StoreSessionValidator(HttpClient client, IHttpContextAccesso
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "api/internal/identity/validate")
         {
-            Content = JsonContent.Create(new { accessToken = header[7..], host = host ?? "" })
+            Content = JsonContent.Create(new SessionValidationRequest(header[7..], storefrontEnterpriseId))
         };
 
         request.Headers.Add("X-Service-Key", options.Value.InternalServiceKey);
@@ -40,7 +41,7 @@ public sealed class StoreSessionValidator(HttpClient client, IHttpContextAccesso
             if (!response.IsSuccessStatusCode) 
                 throw new SecurityFailure(503, "Security.StoreUnavailable", "Validação de identidade indisponível.");
 
-            var result = await response.Content.ReadFromJsonAsync<ValidationResponse>(cancellationToken: ct);
+            var result = await response.Content.ReadFromJsonAsync<SessionValidationResponse>(cancellationToken: ct);
             return result?.IsValid == true;
         }
         catch (HttpRequestException) 
@@ -56,8 +57,4 @@ public sealed class StoreSessionValidator(HttpClient client, IHttpContextAccesso
             throw new SecurityFailure(503, "Security.StoreUnavailable", "Validação de identidade indisponível."); 
         }
     }
-    /// <summary>
-    /// Recebe o resultado da validação sem transportar dados sensíveis da conta entre os módulos.
-    /// </summary>
-    private sealed record ValidationResponse(bool IsValid);
 }

@@ -1,4 +1,5 @@
-using DropCommerce.Application.Result;
+using SharedCommerce.Application.Enums.Results;
+using SharedCommerce.Application.Result;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DropCommerce.Api.Extensions;

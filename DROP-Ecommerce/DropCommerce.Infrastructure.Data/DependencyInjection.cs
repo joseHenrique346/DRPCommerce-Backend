@@ -1,13 +1,19 @@
+using DropCommerce.Application.Interfaces.Appearance;
+using DropCommerce.Domain.Interfaces.Catalog;
+using DropCommerce.Domain.Interfaces.Events;
+using DropCommerce.Domain.Interfaces.Orders;
+using DropCommerce.Domain.Interfaces.Persistence;
+using DropCommerce.Domain.Interfaces.Queue;
+using DropCommerce.Infrastructure.Data.Integrations.Store.Interfaces;
+using SharedCommerce.Application.Interfaces.Appearance;
+using SharedCommerce.Application.Interfaces.Media;
+using SharedCommerce.Domain.Interfaces.Tenancy;
 using SharedCommerce.Infrastructure.Data;
 using SharedCommerce.Infrastructure.Data.Repositories;
 using SharedCommerce.Infrastructure.Data.Context;
-using SharedCommerce.Application.Interfaces;
 using SharedCommerce.Domain.StaticEntity;
-using DropCommerce.Application.Appearance;
 using DropCommerce.Application.Integrations.Store.Interfaces;
-using DropCommerce.Domain.Interfaces;
 using DropCommerce.Infrastructure.Data.Context;
-using DropCommerce.Infrastructure.Data.Integrations.Store.Clients;
 using DropCommerce.Infrastructure.Data.Integrations.Store.Readers;
 using DropCommerce.Infrastructure.Data.Providers;
 using DropCommerce.Infrastructure.Data.Repositories;
@@ -29,9 +35,19 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITenantProvider, TenantProvider>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Identity.ICurrentDropActor, CurrentDropActor>();
         services.AddSingleton<StoreIntegrationScope>();
         services.AddSharedInfrastructure();
+        services.AddScoped<DropCommerce.Application.Interfaces.Reconciliation.IDropReconciliationReader, DropReconciliationReader>();
+        services.AddScoped<DropCommerce.Application.Interfaces.Storefront.IDropStorefrontReader, DropStorefrontReader>();
         services.AddScoped<IAppearanceContext, DropAppearanceContext>();
+        services.AddScoped<IAppearanceEntitlements, DropAppearanceEntitlements>();
+        services.AddScoped<IStoreAppearanceReader, StoreAppearanceReader>();
+        services.AddScoped<IStoreCommercialReader, StoreCommercialReader>();
+        services.AddScoped<DropCommerce.Application.Contracts.DropCommercialWriteScope>();
+        services.AddOptions<DropCommerce.Application.Contracts.DropQueueOptions>();
+        services.AddScoped<IStoreDropPayments, StoreDropPayments>();
+        services.AddScoped<IMediaAssetReader, DropMediaAssetReader>();
         services.AddScoped<IAppearanceResources, DropAppearanceResources>();
         services.AddScoped<IDropAppearanceEventRepository, DropAppearanceEventRepository>();
         services.AddScoped<IAppearanceRepository>(provider => new AppearanceRepository<DropCommerceDbContext>(
@@ -49,7 +65,26 @@ public static class DependencyInjection
         services.AddScoped<IQueueEntryRepository, QueueEntryRepository>();
 
         if (!string.IsNullOrWhiteSpace(storeApiBaseUrl))
+        {
             AddStoreIntegration(services, storeApiBaseUrl);
+            services.AddHttpClient("DropContractSync", Client =>
+            {
+                Client.BaseAddress = new Uri(storeApiBaseUrl);
+                Client.Timeout = TimeSpan.FromSeconds(10);
+            });
+            services.AddHostedService<Workers.DropContractReconciliationWorker>();
+            services.AddHostedService<Workers.DropQueueExpirationWorker>();
+        }
+
+        services.AddScoped<DropCommerce.Application.Interfaces.Catalog.IDropCatalogRepository, DropCatalogRepository>();
+
+        services.AddScoped<DropCommerce.Application.Interfaces.Queue.IDropQueueRepository, DropQueueRepository>();
+
+        services.AddScoped<DropCommerce.Application.Interfaces.Orders.IDropCheckoutRepository, DropCheckoutRepository>();
+
+        services.AddScoped<DropCommerce.Application.Interfaces.Inventory.IDropStockSagaRepository, DropStockSagaRepository>();
+
+        services.AddScoped<DropCommerce.Application.Interfaces.Storefront.IDropStorefrontRepository, DropStorefrontRepository>();
 
         return services;
     }

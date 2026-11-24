@@ -19,13 +19,18 @@ Referência dos endpoints acrescentados pelas regras do Store e integrados à `m
 
 ## Como chamar e interpretar
 
-- As rotas abaixo são as rotas **do serviço Store**. No Gateway atual, `/api/store` é removido antes do encaminhamento: `/api/store/api/storefront/cart` chega ao Store como `/api/storefront/cart`. O Gateway envia o domínio da vitrine em `X-Forwarded-Host`; Store e Drop o aceitam dos proxies confiáveis antes de resolver a loja. A configuração padrão permite o Gateway local (`127.0.0.1` e `::1`), mantendo o Host do destino para validar o certificado HTTPS do backend. Conferir o endereço publicado do ambiente.
+O catálogo e as cinco rotas da Parte 1 de planos/contratos estão documentados separadamente em
+[Planos e contratos por loja](../../Shared/PlanosEContratos.md). Seus sucessos usam DTO direto;
+solicitar mudança retorna 202 e não concede acesso ou inicia cobrança. Essas rotas não alteram
+a contagem histórica das regras comerciais apresentada neste documento.
+
+- As rotas abaixo são as rotas **do serviço Store**. O Gateway remove `/api/store` antes do encaminhamento. Assim, `/api/store/api/storefront/{storeSlug}/cart` chega ao Store como `/api/storefront/{storeSlug}/cart`. [Storefront por loja](../../Shared/StorefrontPorLoja.md)
 - JSON usa propriedades em camelCase. `{id:long}` representa um inteiro de 64 bits positivo; não enviar as chaves nem `:long` na URL.
 - Backoffice exige Bearer de usuário com vínculo ativo na loja e a permissão indicada. O dono principal segue as regras de autorização central. Ter um ID de outra loja não concede acesso.
-- Vitrine pública resolve loja pelo host/domínio. Cliente usa Bearer de cliente daquela loja. Não enviar `enterpriseId` para escolher arbitrariamente a loja; cabeçalhos internos não são autoridade para navegador.
+- A vitrine resolve a loja pelo slug na rota. Nas operações privadas, o Bearer do cliente precisa pertencer à loja resolvida.
 - Sucesso das novas rotas comerciais normalmente é HTTP **200**, com `Result<T>` e dado em `content`: `isSuccess`, `isFailure`, `content`, `errors`, `listMessageErrors`. Não presumir 201 em POST. A exceção nova é desativação de funcionário, HTTP 204.
 - Erros de aplicação usam ProblemDetails, com códigos conforme a falha. Considerar 400 (validação), 401 (identidade), 403 (permissão), 404 (recurso), 409 (conflito/estoque/estado) e 503 (dependência indisponível); limites podem produzir 429. Alguns retornos de middleware/legado podem não usar o mesmo corpo.
-- Não generalizar o envelope para o legado: perfil usa DTO direto; `GET /api/storefront/store` usa `Result<PublicStoreInfoResponse>`, com os dados da loja em `content`; a listagem antiga de produtos retorna array direto; DELETE do próprio perfil retorna 204.
+- Não generalizar o envelope para o legado: perfil usa DTO direto; `GET /api/storefront/{storeSlug}/store` usa `Result<PublicStoreInfoResponse>`, com os dados da loja em `content`; a listagem antiga de produtos retorna array direto; DELETE do próprio perfil retorna 204.
 - Leituras paginadas usam contratos próprios; conferir `PagedResponse<T>` e os DTOs vinculados abaixo. Não depender de `get-all` para grandes catálogos.
 
 ## Índice das rotas novas
@@ -222,14 +227,14 @@ Ambas as operações retornam 200 com `Result<StoreSettings>` e dados em `conten
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `GET /api/storefront/cart` | `Cliente autenticado` | Consulta o carrinho. Itens sem estoque ou indisponíveis vêm com requiresDecision = true. Query opcional couponCode; carrinho atualizado. |
-| `POST /api/storefront/cart/items` | `Cliente autenticado` | Adiciona um produto (ou soma a quantidade do SKU que já está no carrinho). productId, productVariantId opcional, quantity. |
-| `PUT /api/storefront/cart/items/{id:long}` | `Cliente autenticado` | Altera a quantidade de um item. quantity; id do item na rota. |
-| `DELETE /api/storefront/cart/items/{id:long}` | `Cliente autenticado` | Remove um item do carrinho. Sem corpo; id do item na rota. |
-| `DELETE /api/storefront/cart/items` | `Cliente autenticado` | Remove vários itens do carrinho. Array JSON de IDs de itens. |
-| `DELETE /api/storefront/cart` | `Cliente autenticado` | Esvazia o carrinho. Sem corpo; esvazia carrinho. |
-| `PUT /api/storefront/cart/selection` | `Cliente autenticado` | Marca ou desmarca itens para a compra. Sem itemIds, aplica a todos. itemIds e selected. |
-| `PUT /api/storefront/cart/items/{id:long}/await-stock` | `Cliente autenticado` | Mantém um item sem estoque no carrinho, fora da compra, aguardando reposição. Sem corpo; id do item na rota. |
+| `GET /api/storefront/{storeSlug}/cart` | `Cliente autenticado` | Consulta o carrinho. Itens sem estoque ou indisponíveis vêm com requiresDecision = true. Query opcional couponCode; carrinho atualizado. |
+| `POST /api/storefront/{storeSlug}/cart/items` | `Cliente autenticado` | Adiciona um produto (ou soma a quantidade do SKU que já está no carrinho). productId, productVariantId opcional, quantity. |
+| `PUT /api/storefront/{storeSlug}/cart/items/{id:long}` | `Cliente autenticado` | Altera a quantidade de um item. quantity; id do item na rota. |
+| `DELETE /api/storefront/{storeSlug}/cart/items/{id:long}` | `Cliente autenticado` | Remove um item do carrinho. Sem corpo; id do item na rota. |
+| `DELETE /api/storefront/{storeSlug}/cart/items` | `Cliente autenticado` | Remove vários itens do carrinho. Array JSON de IDs de itens. |
+| `DELETE /api/storefront/{storeSlug}/cart` | `Cliente autenticado` | Esvazia o carrinho. Sem corpo; esvazia carrinho. |
+| `PUT /api/storefront/{storeSlug}/cart/selection` | `Cliente autenticado` | Marca ou desmarca itens para a compra. Sem itemIds, aplica a todos. itemIds e selected. |
+| `PUT /api/storefront/{storeSlug}/cart/items/{id:long}/await-stock` | `Cliente autenticado` | Mantém um item sem estoque no carrinho, fora da compra, aguardando reposição. Sem corpo; id do item na rota. |
 
 Todas as operações retornam o carrinho atualizado, com totais dos selecionados, disponibilidade e avisos (`requiresDecision`, reposição). Os IDs de itens são os do carrinho, não IDs de produto. Adicionar o mesmo SKU soma quantidade. `GET` pode receber `couponCode` para prévia. `selection` recebe `itemIds` e `selected`; sem lista aplica a todos conforme disponibilidade. `await-stock` mantém o item indisponível fora da seleção de compra. Limites técnicos atuais: 500 itens distintos e 10.000 unidades por item; o limite comercial do pedido é conferido no checkout. Preços são recalculados pelo servidor.
 
@@ -239,8 +244,8 @@ Todas as operações retornam o carrinho atualizado, com totais dos selecionados
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `GET /api/storefront/categories/tree` | `Público na loja resolvida` | Consulta a árvore visível da loja, ordenada por ordem de exibição. Sem corpo; árvore de categorias. |
-| `GET /api/storefront/categories/by-slug/{slug}` | `Público na loja resolvida` | Consulta uma categoria pelo slug quando ela e todos os seus ancestrais estão ativos. slug na rota. |
+| `GET /api/storefront/{storeSlug}/categories/tree` | `Público na loja resolvida` | Consulta a árvore visível da loja, ordenada por ordem de exibição. Sem corpo; árvore de categorias. |
+| `GET /api/storefront/{storeSlug}/categories/by-slug/{slug}` | `Público na loja resolvida` | Consulta uma categoria pelo slug quando ela e todos os seus ancestrais estão ativos. slug na rota. |
 
 Retorna somente categorias visíveis: uma categoria ativa com ancestral inativo também fica oculta. Consulta por slug permite montar navegação e páginas sem expor a árvore administrativa.
 
@@ -250,7 +255,7 @@ Retorna somente categorias visíveis: uma categoria ativa com ancestral inativo 
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `GET /api/storefront/coupons/validate` | `Público; cliente opcional` | Valida um código de cupom para o carrinho. Com cliente autenticado, também avalia clientes novos/recorrentes e uso único. Query code, subTotal, itemQuantity. |
+| `GET /api/storefront/{storeSlug}/coupons/validate` | `Público; cliente opcional` | Valida um código de cupom para o carrinho. Com cliente autenticado, também avalia clientes novos/recorrentes e uso único. Query code, subTotal, itemQuantity. |
 
 Query: `code`, `subTotal`, `itemQuantity`. Pode aproveitar o cliente autenticado para condições pessoais; não aceita escolher outro `customerId`. Os totais desta chamada são apenas simulação. O checkout relê o carrinho e valida o desconto com os valores reais antes de ocupar o uso.
 
@@ -260,11 +265,11 @@ Query: `code`, `subTotal`, `itemQuantity`. Pode aproveitar o cliente autenticado
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `GET /api/storefront/me/addresses` | `Cliente autenticado` | Lista os endereços de entrega do cliente (o padrão primeiro). Sem corpo; lista endereços próprios. |
-| `POST /api/storefront/me/addresses` | `Cliente autenticado` | Cadastra um endereço de entrega. O primeiro endereço vira o padrão. CustomerAddressRequest. |
-| `PUT /api/storefront/me/addresses/{id:long}` | `Cliente autenticado` | Atualiza um endereço de entrega. Pedidos já feitos mantêm o endereço da compra. CustomerAddressRequest; id do endereço na rota. |
-| `PUT /api/storefront/me/addresses/{id:long}/default` | `Cliente autenticado` | Define o endereço padrão do checkout. Sem corpo; id do endereço na rota. |
-| `DELETE /api/storefront/me/addresses/{id:long}` | `Cliente autenticado` | Exclui um endereço. Se era o padrão, o mais recente que restar vira o padrão. Sem corpo; id do endereço na rota. |
+| `GET /api/storefront/{storeSlug}/me/addresses` | `Cliente autenticado` | Lista os endereços de entrega do cliente (o padrão primeiro). Sem corpo; lista endereços próprios. |
+| `POST /api/storefront/{storeSlug}/me/addresses` | `Cliente autenticado` | Cadastra um endereço de entrega. O primeiro endereço vira o padrão. CustomerAddressRequest. |
+| `PUT /api/storefront/{storeSlug}/me/addresses/{id:long}` | `Cliente autenticado` | Atualiza um endereço de entrega. Pedidos já feitos mantêm o endereço da compra. CustomerAddressRequest; id do endereço na rota. |
+| `PUT /api/storefront/{storeSlug}/me/addresses/{id:long}/default` | `Cliente autenticado` | Define o endereço padrão do checkout. Sem corpo; id do endereço na rota. |
+| `DELETE /api/storefront/{storeSlug}/me/addresses/{id:long}` | `Cliente autenticado` | Exclui um endereço. Se era o padrão, o mais recente que restar vira o padrão. Sem corpo; id do endereço na rota. |
 
 Corpo de criação/atualização: `label`, `recipientName`, `addressLine`, `city`, `stateId`, `zipCode`, `country`, `isDefault`. País omitido usa Brasil. O primeiro endereço vira padrão. Excluir o padrão escolhe o mais recente restante. Alterar ou excluir um endereço não altera o snapshot dos pedidos feitos. Só é possível acessar endereços do próprio cliente na loja atual.
 
@@ -274,8 +279,9 @@ Corpo de criação/atualização: `label`, `recipientName`, `addressLine`, `city
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `POST /api/storefront/checkout` | `Cliente autenticado` | Finaliza a compra dos itens selecionados do carrinho. Repetir a mesma idempotencyKey devolve o mesmo pedido. A resposta traz a cobrança (link, código Pix ou instruções) e o prazo para pagamento. CheckoutRequest; pedido e instruções de pagamento. |
-| `POST /api/storefront/orders/{id:long}/cancel` | `Cliente autenticado` | Cancela um pedido que ainda aguarda pagamento. O estoque reservado é liberado. CancelOrderRequest (ver diferença cliente/backoffice). |
+| `POST /api/storefront/{storeSlug}/checkout` | `Cliente autenticado` | Finaliza a compra dos itens selecionados do carrinho. Repetir a mesma idempotencyKey devolve o mesmo pedido. A resposta traz a cobrança (link, código Pix ou instruções) e o prazo para pagamento. CheckoutRequest; pedido e instruções de pagamento. |
+| `POST /api/storefront/{storeSlug}/checkout/shipping-quotes` | `Cliente autenticado` | Cota a entrega dos SKUs físicos selecionados. O checkout recebe a opção escolhida por `shippingQuoteToken`. |
+| `POST /api/storefront/{storeSlug}/orders/{id:long}/cancel` | `Cliente autenticado` | Cancela um pedido que ainda aguarda pagamento. O estoque reservado é liberado. CancelOrderRequest (ver diferença cliente/backoffice). |
 
 O checkout compra os itens **selecionados do carrinho**. Não recebe lista de itens, preço, desconto final nem identificador de outro cliente. Recebe `idempotencyKey`, `paymentMethodId`, `couponCode`, `useProfileAddress`, `shippingAddressLine`, `shippingCity`, `shippingStateId`, `shippingZipCode`, `notes`, `addressId` opcional. Usar endereço salvo (`addressId`) e `useProfileAddress` juntos é inválido. Sem ambos, os campos de entrega são usados. Produtos físicos exigem endereço válido.
 
@@ -289,8 +295,8 @@ O cliente só cancela pedido próprio ainda pendente. O corpo `reason` é opcion
 
 | Método e rota nova | Acesso | Entrada e efeito |
 | --- | --- | --- |
-| `GET /api/storefront/products/search` | `Público na loja resolvida` | Pesquisa o catálogo público com filtros e resposta paginada. ProductSearchRequest na query; página de produtos. |
-| `GET /api/storefront/products/by-slug/{slug}` | `Público na loja resolvida` | Consulta um produto e seus SKUs disponíveis pelo slug, incluindo opções e preços efetivos. slug na rota. |
+| `GET /api/storefront/{storeSlug}/products/search` | `Público na loja resolvida` | Pesquisa o catálogo público com filtros e resposta paginada. ProductSearchRequest na query; página de produtos. |
+| `GET /api/storefront/{storeSlug}/products/by-slug/{slug}` | `Público na loja resolvida` | Consulta um produto e seus SKUs disponíveis pelo slug, incluindo opções e preços efetivos. slug na rota. |
 
 `search` usa os filtros de produto descritos acima, sem aceitar `isActive` administrativo. Retorna paginação, produtos ativos, preços públicos e disponibilidade. Detalhe por slug inclui SKUs ativos e opções sem custo interno. Produtos em categoria/ancestral inativo não aparecem. O GET antigo de listagem continua por compatibilidade e tem resposta diferente (array direto).
 
@@ -347,13 +353,13 @@ Não criar reserva avulsa para depois duplicá-la no checkout. O checkout gerenc
 
 ### Carrinho e checkout
 
-`POST /api/storefront/cart/items`
+`POST /api/storefront/{storeSlug}/cart/items`
 
 ```json
 { "productId": 123, "productVariantId": 456, "quantity": 1 }
 ```
 
-`POST /api/storefront/checkout`
+`POST /api/storefront/{storeSlug}/checkout`
 
 ```json
 {
@@ -400,13 +406,13 @@ O comportamento desses endpoints foi endurecido na branch: preços e snapshots d
 | --- | --- |
 | GET `/api/internal/products/get-by-id/{id:long}` | Serviço interno; dados básicos de produto da loja. |
 | POST `/api/internal/products/get-list-by-list-id` | Serviço interno; consulta array de IDs de produtos. |
-| GET `/api/storefront/me` | Cliente; perfil próprio, DTO direto. |
-| PUT `/api/storefront/me` | Cliente; atualiza perfil próprio, DTO direto. |
-| DELETE `/api/storefront/me` | Cliente; desativa conta própria, sucesso 204. |
-| GET `/api/storefront/store` | Público; `Result<PublicStoreInfoResponse>` com dados públicos e configurações expostas da loja em `content`. |
-| GET `/api/storefront/orders` | Cliente; lista seus pedidos, `page` e `pageSize`. |
-| GET `/api/storefront/orders/{id:long}` | Cliente; detalhe de pedido próprio, com cobrança e histórico. |
-| GET `/api/storefront/products` | Público; listagem antiga paginada por query, array direto por compatibilidade. |
+| GET `/api/storefront/{storeSlug}/me` | Cliente; perfil próprio, DTO direto. |
+| PUT `/api/storefront/{storeSlug}/me` | Cliente; atualiza perfil próprio, DTO direto. |
+| DELETE `/api/storefront/{storeSlug}/me` | Cliente; desativa conta própria, sucesso 204. |
+| GET `/api/storefront/{storeSlug}/store` | Público; `Result<PublicStoreInfoResponse>` com dados públicos e configurações expostas da loja em `content`. |
+| GET `/api/storefront/{storeSlug}/orders` | Cliente; lista seus pedidos, `page` e `pageSize`. |
+| GET `/api/storefront/{storeSlug}/orders/{id:long}` | Cliente; detalhe de pedido próprio, com cobrança e histórico. |
+| GET `/api/storefront/{storeSlug}/products` | Público; listagem antiga paginada por query, array direto por compatibilidade. |
 
 Controllers não alterados e todas as rotas de autenticação, aparência, convites, domínios, entidades estáticas etc. ficam fora desta contagem. Alguns handlers compartilhados (como OrderItem e cadastro de loja) mudaram regras sem criar rotas: o cadastro de loja inicializa configurações e papéis padrão; itens de pedido passam a usar preço e snapshot do servidor.
 

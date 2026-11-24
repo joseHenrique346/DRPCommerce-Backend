@@ -1,0 +1,7 @@
+using MediatR;
+using SharedCommerce.Application.Result;
+using StoreCommerce.Domain.Entity;
+
+namespace StoreCommerce.Application.Features.Commands;
+
+public record class UpdateProductCommand(long id, long categoryId, long? supplierId, string name, string slug, string description, string sku, string barCode, decimal price, decimal costPrice, decimal weight, decimal height, decimal width, decimal length, string brand, string imageUrls, bool isActive, bool isDigital) : IRequest<Result<Product>> { }

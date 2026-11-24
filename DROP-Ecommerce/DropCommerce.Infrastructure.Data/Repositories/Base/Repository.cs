@@ -1,5 +1,6 @@
+using DropCommerce.Domain.Interfaces.Persistence;
+using SharedCommerce.Domain.Interfaces.Persistence;
 using DropCommerce.Domain.Entity;
-using DropCommerce.Domain.Interfaces;
 using DropCommerce.Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
 
