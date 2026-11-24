@@ -2,6 +2,7 @@ using StoreCommerce.Application.Billing;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using SharedCommerce.Domain.Exceptions;
 using StoreCommerce.Infrastructure.Data.Billing;
@@ -59,7 +60,7 @@ public sealed class MercadoPagoSubscriptionsProviderTests
         Assert.Equal(101, invoices.Count);
         Assert.All(invoices, Invoice => Assert.Equal(49m, Invoice.Amount));
         Assert.All(invoices, Invoice => Assert.Equal(DateTimeKind.Utc, Invoice.DebitDate.Kind));
-        Assert.Contains(test.Handler.Paths, Path => Path.Contains("offset=100"));
+        Assert.Contains(test.Handler.Paths, Path => Path.Contains("offset=12"));
         Assert.Empty(test.Handler.Writes);
     }
 
@@ -161,11 +162,14 @@ public sealed class MercadoPagoSubscriptionsProviderTests
             }
             else if (path == "/authorized_payments/search")
             {
-                var offset = request.RequestUri.Query.Contains("offset=100") ? 100 : 0;
-                var count = Paginate && offset == 0 ? 100 : 1;
+                var query = QueryHelpers.ParseQuery(request.RequestUri.Query);
+                Assert.Equal("12", query["limit"].ToString());
+                var offset = int.Parse(query["offset"].ToString());
+                var total = Paginate ? 101 : 1;
+                var count = Math.Min(12, total - offset);
                 result = new
                 {
-                    paging = new { total = Paginate ? 101 : 1 },
+                    paging = new { total },
                     results = Enumerable.Range(offset, count).Select(Index => new
                     {
                         id = Index + 1000,

@@ -11,6 +11,7 @@ namespace StoreCommerce.Infrastructure.Data.Billing;
 public sealed class MercadoPagoSubscriptionProvider(MercadoPagoApi api, IOptions<PlatformBillingOptions> options)
     : IPlatformSubscriptionProvider
 {
+    private const int InvoicePageSize = 12;
     private PlatformBillingOptions Settings => options.Value;
 
     public async Task<PlatformRecurringSubscription> CreateAsync(string reference, string payerEmail, decimal monthlyAmount, CancellationToken ct)
@@ -90,17 +91,18 @@ public sealed class MercadoPagoSubscriptionProvider(MercadoPagoApi api, IOptions
         var invoices = new List<PlatformRecurringInvoice>();
 
         // Consulta paginada. Uma busca truncada jamais é tratada como ausência de dívida.
-        for (var offset = 0; offset < 10000; offset += 100)
+        for (var offset = 0; offset < 10000; offset += InvoicePageSize)
         {
             using var json = await api.SendAsync(HttpMethod.Get, "/authorized_payments/search?preapproval_id=" +
-                Uri.EscapeDataString(subscriptionId) + "&limit=100&offset=" + offset.ToString(CultureInfo.InvariantCulture),
+                Uri.EscapeDataString(subscriptionId) + "&limit=" + InvoicePageSize.ToString(CultureInfo.InvariantCulture) +
+                "&offset=" + offset.ToString(CultureInfo.InvariantCulture),
                 Settings.AccessToken, null, null, ct);
             var root = json.RootElement;
             var results = root.GetProperty("results");
             var total = root.GetProperty("paging").GetProperty("total").GetInt32();
 
-            if (total < 0 || total > 10000 || results.ValueKind != JsonValueKind.Array ||
-                results.GetArrayLength() > 100 || results.GetArrayLength() == 0 && offset < total)
+            if (total < offset || total > 10000 || results.ValueKind != JsonValueKind.Array ||
+                results.GetArrayLength() != Math.Min(InvoicePageSize, total - offset))
                 throw Mismatch();
 
             foreach (var item in results.EnumerateArray())
