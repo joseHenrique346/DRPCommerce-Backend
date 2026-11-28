@@ -70,14 +70,24 @@ public sealed class StorefrontPathContractsTests(ContractsApiFixture fixture)
     [PostgresFact]
     public async Task Registration_creates_unique_storefront_path_without_domain_and_returns_public_url()
     {
-        var admin = await fixture.CreateUserAsync();
+        var credentials = new { email = Guid.NewGuid().ToString("N") + "@example.invalid", password = "P4ssword-test-storefront!" };
+        using var browser = fixture.Client();
+        var api = new Uri(browser.BaseAddress!, "/api/");
+        var csrf = await CsrfAsync(browser, api);
+        using var account = await AuthAsync(browser, api, "register", csrf,
+            JsonContent.Create(new { fullName = "Lojista", credentials.email, credentials.password }));
+        account.EnsureSuccessStatusCode();
+        using var firstLogin = await AuthAsync(browser, api, "login", csrf, JsonContent.Create(credentials));
+        firstLogin.EnsureSuccessStatusCode();
+        using var firstSession = JsonDocument.Parse(await firstLogin.Content.ReadAsStringAsync());
+
         var slug = "loja-" + Guid.NewGuid().ToString("N");
-        using var client = fixture.Client(admin.Token);
+        using var client = fixture.Client(firstSession.RootElement.GetProperty("accessToken").GetString());
         var registration = new
         {
             tradeName = "Loja por caminho",
             legalName = "Loja por caminho Ltda.",
-            email = admin.Email,
+            credentials.email,
             phone = "11999999999",
             addressLine = "Rua Teste",
             city = "São Paulo",
@@ -93,6 +103,18 @@ public sealed class StorefrontPathContractsTests(ContractsApiFixture fixture)
         Assert.Equal("https://shops.example.invalid/" + slug, json.RootElement.GetProperty("storefrontUrl").GetString());
         using var duplicate = await client.PostAsJsonAsync("/api/enterprises/register", registration with { slug = slug.ToUpperInvariant() });
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+
+        using var login = await AuthAsync(browser, api, "login", csrf, JsonContent.Create(credentials));
+        login.EnsureSuccessStatusCode();
+        using var session = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        var sessionMembership = Assert.Single(session.RootElement.GetProperty("enterprises").EnumerateArray());
+        Assert.Equal(slug, sessionMembership.GetProperty("storefrontSlug").GetString());
+
+        using var mine = await client.GetAsync("/api/enterprises/mine");
+        mine.EnsureSuccessStatusCode();
+        using var memberships = JsonDocument.Parse(await mine.Content.ReadAsStringAsync());
+        var listedMembership = Assert.Single(memberships.RootElement.EnumerateArray());
+        Assert.Equal(slug, listedMembership.GetProperty("storefrontSlug").GetString());
 
         using var storefront = fixture.Client();
         using var info = await storefront.GetAsync($"https://shops.example.invalid/api/storefront/{slug}/store");

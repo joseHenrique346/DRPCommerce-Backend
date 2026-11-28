@@ -64,7 +64,8 @@ public sealed class IdentityRepositories(
         return memberships
             .Select(Membership => new MembershipChoice(Membership.Id, Membership.EnterpriseId,
                 Membership.Enterprise.TradeName, Membership.KindId,
-                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision))
+                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision,
+                Membership.Enterprise.StorefrontSlug))
             .ToList();
     }
 }

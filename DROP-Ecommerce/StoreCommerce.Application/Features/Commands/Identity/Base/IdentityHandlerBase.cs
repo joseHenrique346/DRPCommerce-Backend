@@ -188,7 +188,8 @@ public abstract class IdentityHandlerBase<TRequest, TResponse>(IdentityHandlerCo
         return new(access.Token, access.Expires, membership is null && memberships.Count > 0,
             memberships.Select(Membership => new MembershipChoice(
                 Membership.Id, Membership.EnterpriseId, Membership.Enterprise.TradeName, Membership.KindId,
-                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision)).ToList(), token, expires);
+                Membership.Enterprise.PlanId, Membership.Enterprise.ContractRevision,
+                Membership.Enterprise.StorefrontSlug)).ToList(), token, expires);
     }
 
     protected Task RevokeFamilyAsync(long accountId, Guid family, bool customer, CancellationToken ct)
